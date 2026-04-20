@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Training Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg:     #f7f7f5;
+    --text:   #1a1a1a;
+    --muted:  #999;
+    --border: #e0e0e0;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── LOCK SCREEN ── */
+  #lock-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    z-index: 10;
+    transition: opacity 0.5s ease;
+  }
+
+  #lock-screen.fade-out {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .lock-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .lock-input-row {
+    display: flex;
+    border: 1px solid var(--border);
+  }
+
+  .lock-input-row input {
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    letter-spacing: 4px;
+    padding: 12px 20px;
+    border: none;
+    background: #fff;
+    color: var(--text);
+    width: 200px;
+    outline: none;
+  }
+
+  .lock-input-row input::placeholder {
+    color: var(--border);
+    letter-spacing: 2px;
+  }
+
+  .lock-input-row input.error {
+    animation: shake 0.3s ease;
+  }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25%      { transform: translateX(-6px); }
+    75%      { transform: translateX(6px); }
+  }
+
+  .lock-input-row button {
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 12px 20px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: opacity 0.2s;
+  }
+
+  .lock-input-row button:hover { opacity: 0.7; }
+
+  .lock-error {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: #c0392b;
+    text-transform: uppercase;
+    height: 12px;
+  }
+
+  /* ── DASHBOARD ── */
+  #dashboard {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    max-width: 520px;
+    padding: 60px 24px;
+    gap: 48px;
+  }
+
+  #dashboard.visible { display: flex; }
+
+  .site-title {
+    font-weight: 300;
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  /* ── MODULE LIST ── */
+  .module-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .module-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--border);
+    text-decoration: none;
+    color: var(--text);
+    transition: padding-left 0.2s ease;
+    gap: 16px;
+  }
+
+  .module-item:first-child { border-top: 1px solid var(--border); }
+
+  .module-item:hover { padding-left: 10px; }
+
+  .module-item:hover .module-arrow {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .module-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .module-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    min-width: 20px;
+  }
+
+  .module-name {
+    font-size: 15px;
+    font-weight: 400;
+  }
+
+  .module-arrow {
+    font-size: 14px;
+    color: var(--muted);
+    opacity: 0;
+    transform: translateX(-6px);
+    transition: opacity 0.2s, transform 0.2s;
+  }
+
+  .footer {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--border);
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<!-- LOCK SCREEN -->
+<div id="lock-screen">
+  <div class="lock-label">Enter password</div>
+  <div class="lock-input-row">
+    <input type="password" id="pw-input" placeholder="········" maxlength="20" autocomplete="off" />
+    <button onclick="checkPassword()">Enter</button>
+  </div>
+  <div class="lock-error" id="pw-error"></div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <div class="site-title">Training Modules</div>
+
+  <nav class="module-list">
+    <a class="module-item" href="Joystick.html">
+      <div class="module-left">
+        <span class="module-num">01</span>
+        <span class="module-name">Dual Task</span>
+      </div>
+      <span class="module-arrow">→</span>
+    </a>
+    <a class="module-item" href="Bearings.html">
+      <div class="module-left">
+        <span class="module-num">02</span>
+        <span class="module-name">Bearings</span>
+      </div>
+      <span class="module-arrow">→</span>
+    </a>
+    <a class="module-item" href="SituationalAwareness.html">
+      <div class="module-left">
+        <span class="module-num">03</span>
+        <span class="module-name">Situational Awareness</span>
+      </div>
+      <span class="module-arrow">→</span>
+    </a>
+    <a class="module-item" href="Grid.html">
+      <div class="module-left">
+        <span class="module-num">04</span>
+        <span class="module-name">Grid Aptitude</span>
+      </div>
+      <span class="module-arrow">→</span>
+    </a>
+    <a class="module-item" href="NumberRecall.html">
+      <div class="module-left">
+        <span class="module-num">05</span>
+        <span class="module-name">Number Recall</span>
+      </div>
+      <span class="module-arrow">→</span>
+    </a>
+  </nav>
+
+  <div class="footer">Select a module to begin</div>
+</div>
+
+<script>
+  const PASSWORD = 'admin';
+
+  document.getElementById('pw-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') checkPassword();
+  });
+
+  function checkPassword() {
+    const input = document.getElementById('pw-input');
+    const error = document.getElementById('pw-error');
+    const lock  = document.getElementById('lock-screen');
+    const dash  = document.getElementById('dashboard');
+
+    if (input.value === PASSWORD) {
+      lock.classList.add('fade-out');
+      setTimeout(() => {
+        lock.style.display = 'none';
+        dash.classList.add('visible');
+      }, 500);
+    } else {
+      error.textContent = 'Incorrect password';
+      input.classList.add('error');
+      input.value = '';
+      setTimeout(() => {
+        input.classList.remove('error');
+        error.textContent = '';
+      }, 1800);
+    }
+  }
+</script>
+</body>
+</html>
