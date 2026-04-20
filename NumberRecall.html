@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Number Memory Quiz</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: #f5f5f3;
+      color: #1a1a18;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    #quiz-root { width: 100%; max-width: 620px; }
+
+    .card {
+      background: #fff;
+      border: 1px solid rgba(0,0,0,0.09);
+      border-radius: 16px;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .quiz-title { font-size: 1.35rem; font-weight: 500; color: #1a1a18; margin-bottom: 0.3rem; }
+    .label { font-size: 13px; color: #888780; }
+
+    .number-display {
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      color: #1a1a18;
+      margin: 1.4rem 0 1.2rem;
+      font-family: 'Courier New', Courier, monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      width: 100%;
+      text-align: center;
+    }
+
+    .timer-dot-row {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+      margin: 0.4rem 0 0.15rem;
+      opacity: 0.6;
+    }
+
+    .timer-dot { width: 6px; height: 6px; border-radius: 50%; background: #e0deda; transition: background 0.3s; }
+    .timer-dot.active { background: #9FE1CB; }
+    .timer-label { font-size: 11px; color: #d3d1c7; text-align: center; margin-bottom: 0.2rem; }
+
+    .question-text { font-size: 1.1rem; color: #1a1a18; margin: 1rem 0 1.5rem; line-height: 1.6; }
+
+    .answer-input {
+      width: 100%;
+      padding: 0.65rem 1rem;
+      font-size: 1.2rem;
+      border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 8px;
+      background: #f7f7f5;
+      color: #1a1a18;
+      text-align: center;
+      margin-bottom: 1rem;
+      outline: none;
+      transition: box-shadow 0.15s, border-color 0.15s;
+    }
+
+    .answer-input:focus { box-shadow: 0 0 0 3px rgba(29,158,117,0.2); border-color: #1D9E75; }
+
+    .btn {
+      padding: 0.6rem 1.6rem;
+      font-size: 0.95rem;
+      border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 8px;
+      background: transparent;
+      color: #1a1a18;
+      cursor: pointer;
+      transition: background 0.12s, transform 0.08s;
+    }
+
+    .btn:hover { background: #f0f0ec; }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: #1D9E75; color: #fff; border-color: #1D9E75; }
+    .btn-primary:hover { background: #0F6E56; border-color: #0F6E56; }
+    .btn-danger { background: #fff; color: #993C1D; border-color: rgba(153,60,29,0.35); }
+    .btn-danger:hover { background: #FAECE7; }
+    .btn-wide { width: 100%; }
+
+    .progress { display: flex; justify-content: space-between; font-size: 13px; color: #888780; margin-bottom: 0.8rem; }
+
+    .feedback { font-size: 14px; padding: 0.7rem 1rem; border-radius: 8px; margin-bottom: 1rem; line-height: 1.5; }
+    .feedback-ok { background: #E1F5EE; color: #085041; }
+    .feedback-wrong { background: #FAECE7; color: #4A1B0C; }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      padding: 7px 0;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+      text-align: left;
+    }
+
+    .result-row:last-child { border-bottom: none; }
+
+    .badge { padding: 2px 10px; border-radius: 99px; font-size: 12px; font-weight: 500; flex-shrink: 0; margin-left: 8px; }
+    .badge-ok { background: #E1F5EE; color: #085041; }
+    .badge-wrong { background: #FAECE7; color: #4A1B0C; }
+
+    .score-big { font-size: 2.8rem; font-weight: 500; color: #1a1a18; margin: 0.8rem 0 0.4rem; }
+    .score-label { color: #888780; font-size: 14px; margin-bottom: 1.5rem; }
+    .results-list { margin-bottom: 1.5rem; text-align: left; max-height: 380px; overflow-y: auto; }
+
+    .intro-desc { color: #888780; font-size: 14px; line-height: 1.75; margin-bottom: 1.2rem; }
+
+    .diff-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.6rem; }
+
+    .diff-btn {
+      padding: 0.9rem 0.5rem;
+      border-radius: 10px;
+      border: 1.5px solid rgba(0,0,0,0.1);
+      background: #fff;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s, transform 0.08s;
+      text-align: center;
+    }
+
+    .diff-btn:hover { background: #f5f5f3; }
+    .diff-btn:active { transform: scale(0.97); }
+    .diff-btn.selected { border-color: #1D9E75; background: #E1F5EE; }
+    .diff-name { font-size: 0.95rem; font-weight: 500; color: #1a1a18; margin-bottom: 2px; }
+    .diff-time { font-size: 12px; color: #888780; }
+    .diff-btn.selected .diff-name { color: #085041; }
+    .diff-btn.selected .diff-time { color: #0F6E56; }
+
+    /* Pip row — 20 pips */
+    .round-pip-row { display: flex; justify-content: center; gap: 3px; margin-bottom: 1rem; flex-wrap: wrap; }
+    .round-pip { width: 14px; height: 4px; border-radius: 99px; background: #e0deda; transition: background 0.3s; }
+    .round-pip.done { background: #1D9E75; }
+    .round-pip.current { background: #9FE1CB; }
+
+    /* Group separator pips */
+    .round-pip.gap-before { margin-left: 6px; }
+
+    .mode-tabs { display: flex; gap: 8px; margin-bottom: 1.4rem; }
+    .mode-tab {
+      flex: 1; padding: 0.65rem;
+      border-radius: 10px;
+      border: 1.5px solid rgba(0,0,0,0.1);
+      background: #fff;
+      cursor: pointer;
+      font-size: 0.9rem; font-weight: 500; color: #888780;
+      transition: all 0.15s; text-align: center;
+    }
+    .mode-tab:hover { background: #f5f5f3; color: #1a1a18; }
+    .mode-tab.active { border-color: #1D9E75; background: #E1F5EE; color: #085041; }
+
+    .config-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; text-align: left; }
+    .config-label { font-size: 14px; color: #1a1a18; }
+    .config-sublabel { font-size: 12px; color: #888780; margin-top: 1px; }
+
+    .stepper { display: flex; align-items: center; gap: 8px; }
+    .stepper-val { font-size: 1rem; font-weight: 500; min-width: 56px; text-align: center; color: #1a1a18; font-family: 'Courier New', monospace; }
+    .stepper-btn {
+      width: 30px; height: 30px; border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.15); background: #f7f7f5;
+      cursor: pointer; font-size: 1.1rem; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.12s; color: #1a1a18; user-select: none;
+    }
+    .stepper-btn:hover { background: #eeecea; }
+    .stepper-btn:disabled { opacity: 0.3; cursor: default; }
+
+    .train-stats { display: flex; gap: 12px; margin-bottom: 1rem; }
+    .stat-chip { flex: 1; background: #f7f7f5; border-radius: 8px; padding: 0.5rem 0.75rem; text-align: center; }
+    .stat-val { font-size: 1.2rem; font-weight: 500; color: #1a1a18; }
+    .stat-lbl { font-size: 11px; color: #888780; margin-top: 1px; }
+
+    .hint { font-size: 11px; color: #d3d1c7; margin-top: 0.6rem; }
+    .divider { height: 1px; background: rgba(0,0,0,0.06); margin: 1.2rem 0; }
+
+    /* Quiz structure breakdown on intro */
+    .structure-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-bottom: 1.4rem;
+    }
+
+    .struct-cell {
+      background: #f7f7f5;
+      border-radius: 8px;
+      padding: 0.5rem 0.25rem;
+      text-align: center;
+    }
+
+    .struct-count { font-size: 1rem; font-weight: 500; color: #1a1a18; }
+    .struct-len { font-size: 11px; color: #888780; margin-top: 2px; }
+
+    .result-group-header {
+      font-size: 11px;
+      color: #b4b2a9;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      padding: 8px 0 4px;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+<div id="quiz-root"><div id="app"></div></div>
+
+<script>
+(function () {
+  // ── Quiz structure: 20 questions ──────────────────────────────────
+  // 3×6, 3×7, 3×8, 2×9, 2×10, 2×11, 2×12, 1×13, 1×14, 1×15
+  const QUIZ_STRUCTURE = [
+    { len: 6,  count: 3 },
+    { len: 7,  count: 3 },
+    { len: 8,  count: 3 },
+    { len: 9,  count: 2 },
+    { len: 10, count: 2 },
+    { len: 11, count: 2 },
+    { len: 12, count: 2 },
+    { len: 13, count: 1 },
+    { len: 14, count: 1 },
+    { len: 15, count: 1 },
+  ];
+  const QUIZ_TOTAL = QUIZ_STRUCTURE.reduce((s, g) => s + g.count, 0); // 20
+
+  // Build a flat array of lengths in order, shuffled within each group
+  function buildLengthSequence() {
+    const seq = [];
+    QUIZ_STRUCTURE.forEach(({ len, count }) => {
+      for (let i = 0; i < count; i++) seq.push(len);
+    });
+    return seq; // already in order — groups are fixed, questions within group are same length
+  }
+
+  // Group boundaries for pip gap rendering
+  // pip index -> does it start a new group?
+  const GROUP_STARTS = (() => {
+    const starts = new Set();
+    let idx = 0;
+    QUIZ_STRUCTURE.forEach(({ count }, gi) => {
+      if (gi > 0) starts.add(idx);
+      idx += count;
+    });
+    return starts;
+  })();
+
+  const DIFFICULTIES = {
+    easy:   { label: 'Easy',   ms: 10000, dots: 10 },
+    medium: { label: 'Medium', ms: 5000,  dots: 5  },
+    hard:   { label: 'Hard',   ms: 3000,  dots: 3  }
+  };
+
+  let mode = 'quiz';
+  let difficulty = 'medium';
+  let trainLen = 8;
+  const TRAIN_LEN_MIN = 4;
+  const TRAIN_LEN_MAX = 20;
+  let trainMs = 5000;
+  const TRAIN_TIME_OPTIONS = [0, 3000, 5000, 10000, 15000, 30000];
+
+  let state = {
+    phase: 'intro',
+    qIndex: 0, questions: [],
+    trainRound: 0, trainCorrect: 0, trainResults: [],
+    currentQ: null,
+    timerPct: 100, activeDots: 5,
+    userAnswer: '', lastFeedback: null, results: []
+  };
+
+  let timerRAF = null;
+
+  function randInt(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+
+  // ── number generation ─────────────────────────────────────────────
+  function generateBiasedNumber(len) {
+    const seedCount = len > 12 ? 4 : randInt(2, 3);
+    const seeds = Array.from({ length: seedCount }, () => randInt(0, 9));
+    const digits = Array.from({ length: len }, () =>
+      Math.random() < 0.65 ? seeds[randInt(0, seeds.length - 1)] : randInt(0, 9)
+    );
+    for (let i = digits.length - 1; i > 0; i--) {
+      const j = randInt(0, i);
+      [digits[i], digits[j]] = [digits[j], digits[i]];
+    }
+    return digits.join('');
+  }
+
+  function makeQuestion(num) {
+    let digit;
+    if (Math.random() < 0.80) {
+      const unique = [...new Set(num.split(''))];
+      const frequent = unique.filter(d => num.split('').filter(x => x === d).length > 1);
+      const pool = frequent.length > 0 ? frequent : unique;
+      digit = pool[randInt(0, pool.length - 1)];
+    } else {
+      digit = String(randInt(0, 9));
+    }
+    const count = num.split('').filter(d => d === digit).length;
+    return { num, digit, answer: String(count) };
+  }
+
+  function buildQuizQuestions() {
+    const lengths = buildLengthSequence();
+    return lengths.map(len => makeQuestion(generateBiasedNumber(len)));
+  }
+
+  // ── state ─────────────────────────────────────────────────────────
+  function setState(patch) {
+    state = Object.assign({}, state, patch);
+    render();
+  }
+
+  // ── timer ─────────────────────────────────────────────────────────
+  function startDisplayTimer(totalMs, totalDots, onExpire) {
+    if (timerRAF) cancelAnimationFrame(timerRAF);
+    if (totalMs === 0) return;
+    const start = Date.now();
+    function tick() {
+      const elapsed = Date.now() - start;
+      const pct = Math.max(0, 100 * (1 - elapsed / totalMs));
+      const activeDots = Math.ceil((pct / 100) * totalDots);
+      if (elapsed >= totalMs) {
+        cancelAnimationFrame(timerRAF);
+        onExpire();
+        return;
+      }
+      document.querySelectorAll('.timer-dot').forEach((d, i) => {
+        d.classList.toggle('active', i < activeDots);
+      });
+      const lbl = document.getElementById('timer-lbl');
+      if (lbl) lbl.textContent = ((totalMs - elapsed) / 1000).toFixed(1) + 's';
+      timerRAF = requestAnimationFrame(tick);
+    }
+    timerRAF = requestAnimationFrame(tick);
+  }
+
+  function stopTimer() {
+    if (timerRAF) { cancelAnimationFrame(timerRAF); timerRAF = null; }
+  }
+
+  // ── quiz flow ─────────────────────────────────────────────────────
+  function startQuiz() {
+    stopTimer();
+    const questions = buildQuizQuestions();
+    const dots = DIFFICULTIES[difficulty].dots;
+    setState({ phase: 'quiz-display', qIndex: 0, questions, currentQ: questions[0], timerPct: 100, activeDots: dots, userAnswer: '', lastFeedback: null, results: [] });
+    startDisplayTimer(DIFFICULTIES[difficulty].ms, dots, () => {
+      setState({ phase: 'quiz-question', activeDots: 0 });
+    });
+  }
+
+  function submitQuizAnswer() {
+    const q = state.currentQ;
+    const ua = state.userAnswer.trim();
+    if (ua === '') return;
+    const correct = ua === q.answer;
+    const results = [...state.results, { correct, userAnswer: ua, question: q }];
+    setState({ lastFeedback: { correct, q, ua }, results, userAnswer: '' });
+  }
+
+  function nextQuizQuestion() {
+    const next = state.qIndex + 1;
+    if (next >= QUIZ_TOTAL) { setState({ phase: 'quiz-results' }); return; }
+    const dots = DIFFICULTIES[difficulty].dots;
+    const q = state.questions[next];
+    setState({ phase: 'quiz-display', qIndex: next, currentQ: q, timerPct: 100, activeDots: dots, userAnswer: '', lastFeedback: null });
+    startDisplayTimer(DIFFICULTIES[difficulty].ms, dots, () => {
+      setState({ phase: 'quiz-question', activeDots: 0 });
+    });
+  }
+
+  // ── training flow ─────────────────────────────────────────────────
+  function startTraining() {
+    stopTimer();
+    const num = generateBiasedNumber(trainLen);
+    const q = makeQuestion(num);
+    const dots = trainMs === 0 ? 0 : 5;
+    setState({ phase: 'train-display', currentQ: q, trainRound: 0, trainCorrect: 0, trainResults: [], timerPct: 100, activeDots: dots, userAnswer: '', lastFeedback: null });
+    if (trainMs > 0) {
+      startDisplayTimer(trainMs, 5, () => setState({ phase: 'train-question', activeDots: 0 }));
+    }
+  }
+
+  function nextTrainingQuestion() {
+    stopTimer();
+    const num = generateBiasedNumber(trainLen);
+    const q = makeQuestion(num);
+    const dots = trainMs === 0 ? 0 : 5;
+    setState({ phase: 'train-display', currentQ: q, timerPct: 100, activeDots: dots, userAnswer: '', lastFeedback: null });
+    if (trainMs > 0) {
+      startDisplayTimer(trainMs, 5, () => setState({ phase: 'train-question', activeDots: 0 }));
+    }
+  }
+
+  function submitTrainAnswer() {
+    const q = state.currentQ;
+    const ua = state.userAnswer.trim();
+    if (ua === '') return;
+    const correct = ua === q.answer;
+    const trainResults = [...state.trainResults, { correct, userAnswer: ua, question: q }];
+    setState({
+      lastFeedback: { correct, q, ua },
+      trainResults,
+      trainRound: state.trainRound + 1,
+      trainCorrect: state.trainCorrect + (correct ? 1 : 0),
+      userAnswer: ''
+    });
+  }
+
+  function endTraining() {
+    stopTimer();
+    setState({ phase: 'train-results' });
+  }
+
+  // ── Enter key ─────────────────────────────────────────────────────
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter') return;
+    if (state.phase === 'quiz-question') {
+      state.lastFeedback ? nextQuizQuestion() : submitQuizAnswer();
+    } else if (state.phase === 'train-question') {
+      state.lastFeedback ? nextTrainingQuestion() : submitTrainAnswer();
+    } else if (state.phase === 'train-display' && trainMs === 0) {
+      stopTimer(); setState({ phase: 'train-question' });
+    }
+    // results pages: Enter does nothing
+  });
+
+  // ── render helpers ────────────────────────────────────────────────
+  function fitNumberDisplay() {
+    const el = document.getElementById('num-display');
+    if (!el) return;
+    const available = el.parentElement.clientWidth - 64;
+    let size = 52;
+    el.style.fontSize = size + 'px';
+    while (el.scrollWidth > available && size > 14) {
+      size--;
+      el.style.fontSize = size + 'px';
+    }
+  }
+
+  function pipRow(qIndex, total) {
+    return Array.from({ length: total }, (_, i) => {
+      let cls = 'round-pip';
+      if (GROUP_STARTS.has(i)) cls += ' gap-before';
+      if (i < qIndex) cls += ' done';
+      else if (i === qIndex) cls += ' current';
+      return `<div class="${cls}"></div>`;
+    }).join('');
+  }
+
+  function dotRow(totalDots, activeDots) {
+    if (totalDots === 0) return '';
+    return Array.from({ length: totalDots }, (_, i) =>
+      `<div class="timer-dot${i < activeDots ? ' active' : ''}"></div>`
+    ).join('');
+  }
+
+  function trainTimeLabel(ms) {
+    return ms === 0 ? 'Unlimited' : (ms / 1000) + 's';
+  }
+
+  // Which group does qIndex belong to?
+  function groupLabel(qIndex) {
+    let idx = 0;
+    for (const { len, count } of QUIZ_STRUCTURE) {
+      if (qIndex < idx + count) return `${len} digits`;
+      idx += count;
+    }
+    return '';
+  }
+
+  // Results grouped by digit length
+  function buildGroupedResults(results) {
+    const groups = [];
+    let qi = 0;
+    QUIZ_STRUCTURE.forEach(({ len, count }) => {
+      const slice = results.slice(qi, qi + count);
+      if (slice.length > 0) groups.push({ len, results: slice, startIndex: qi });
+      qi += count;
+    });
+    return groups;
+  }
+
+  // ── main render ───────────────────────────────────────────────────
+  function render() {
+    const el = document.getElementById('app');
+    const s = state;
+    const diff = DIFFICULTIES[difficulty];
+
+    // INTRO
+    if (s.phase === 'intro') {
+      el.innerHTML = `
+        <div class="card">
+          <p class="quiz-title">Number Memory</p>
+          <p class="label" style="margin-bottom:1.2rem;">How sharp is your digit recall?</p>
+          <div class="mode-tabs">
+            <div class="mode-tab${mode === 'quiz' ? ' active' : ''}" onclick="window.__setMode('quiz')">Quiz</div>
+            <div class="mode-tab${mode === 'training' ? ' active' : ''}" onclick="window.__setMode('training')">Training</div>
+          </div>
+
+          ${mode === 'quiz' ? `
+            <p class="intro-desc">
+              20 questions — memorise each number, then count how many times a specific digit appears.
+            </p>
+            <div class="structure-grid">
+              ${QUIZ_STRUCTURE.map(({ len, count }) => `
+                <div class="struct-cell">
+                  <div class="struct-count">${count}×</div>
+                  <div class="struct-len">${len} digits</div>
+                </div>`).join('')}
+            </div>
+            <p style="font-size:12px; color:#c8c6bc; margin-bottom:0.8rem; letter-spacing:0.06em; text-transform:uppercase;">Difficulty</p>
+            <div class="diff-grid">
+              ${Object.entries(DIFFICULTIES).map(([key, d]) => `
+                <div class="diff-btn${difficulty === key ? ' selected' : ''}" onclick="window.__setDiff('${key}')">
+                  <div class="diff-name">${d.label}</div>
+                  <div class="diff-time">${d.ms / 1000}s to view</div>
+                </div>`).join('')}
+            </div>
+            <button class="btn btn-primary" style="padding:0.7rem 2.5rem;" onclick="window.__startQuiz()">Start Quiz</button>
+          ` : `
+            <p class="intro-desc" style="margin-bottom:1.2rem;">
+              Practice at your own pace. Configure number length and viewing time, then keep going until you're done.
+            </p>
+            <div class="config-row">
+              <div>
+                <div class="config-label">Number length</div>
+                <div class="config-sublabel">digits per round</div>
+              </div>
+              <div class="stepper">
+                <button class="stepper-btn" onclick="window.__trainLen(-1)" ${trainLen <= TRAIN_LEN_MIN ? 'disabled' : ''}>−</button>
+                <span class="stepper-val">${trainLen}</span>
+                <button class="stepper-btn" onclick="window.__trainLen(1)" ${trainLen >= TRAIN_LEN_MAX ? 'disabled' : ''}>+</button>
+              </div>
+            </div>
+            <div class="config-row">
+              <div>
+                <div class="config-label">Viewing time</div>
+                <div class="config-sublabel">seconds to memorise</div>
+              </div>
+              <div class="stepper">
+                <button class="stepper-btn" onclick="window.__trainTime(-1)" ${TRAIN_TIME_OPTIONS.indexOf(trainMs) <= 0 ? 'disabled' : ''}>−</button>
+                <span class="stepper-val">${trainTimeLabel(trainMs)}</span>
+                <button class="stepper-btn" onclick="window.__trainTime(1)" ${TRAIN_TIME_OPTIONS.indexOf(trainMs) >= TRAIN_TIME_OPTIONS.length - 1 ? 'disabled' : ''}>+</button>
+              </div>
+            </div>
+            <div style="margin-top:0.4rem;">
+              <button class="btn btn-primary" style="padding:0.7rem 2.5rem;" onclick="window.__startTraining()">Start Training</button>
+            </div>
+          `}
+        </div>`;
+
+    // QUIZ DISPLAY
+    } else if (s.phase === 'quiz-display') {
+      const q = s.currentQ;
+      el.innerHTML = `
+        <div class="progress">
+          <span>Question ${s.qIndex + 1} of ${QUIZ_TOTAL}</span>
+          <span style="font-size:12px; font-family:monospace;">${q.num.length} digits &nbsp;·&nbsp; ${diff.label}</span>
+        </div>
+        <div class="round-pip-row">${pipRow(s.qIndex, QUIZ_TOTAL)}</div>
+        <div class="card">
+          <p class="label">Memorise this number</p>
+          <div class="number-display" id="num-display">${q.num}</div>
+          <div class="timer-dot-row">${dotRow(diff.dots, s.activeDots)}</div>
+          <p class="timer-label" id="timer-lbl">${(diff.ms / 1000).toFixed(1)}s</p>
+        </div>`;
+      requestAnimationFrame(fitNumberDisplay);
+
+    // QUIZ QUESTION
+    } else if (s.phase === 'quiz-question') {
+      const q = s.currentQ;
+      const fb = s.lastFeedback;
+      el.innerHTML = `
+        <div class="progress">
+          <span>Question ${s.qIndex + 1} of ${QUIZ_TOTAL}</span>
+          <span style="font-size:12px; font-family:monospace;">${q.num.length} digits</span>
+        </div>
+        <div class="round-pip-row">${pipRow(s.qIndex, QUIZ_TOTAL)}</div>
+        <div class="card">
+          ${fb ? `
+            <div class="feedback ${fb.correct ? 'feedback-ok' : 'feedback-wrong'}">
+              ${fb.correct
+                ? `✓ Correct! <b>${fb.q.digit}</b> appeared ${fb.q.answer} time${fb.q.answer === '1' ? '' : 's'}.`
+                : `✗ <b>${fb.q.digit}</b> appeared <b>${fb.q.answer}</b> time${fb.q.answer === '1' ? '' : 's'}, not ${fb.ua}.`}
+            </div>
+            <p style="font-family:'Courier New',monospace; font-size:12px; color:#c8c6bc; letter-spacing:0.06em; margin-bottom:1.2rem; word-break:break-all;">${fb.q.num}</p>
+            <button class="btn btn-primary btn-wide" onclick="window.__nextQuizQ()">${s.qIndex + 1 >= QUIZ_TOTAL ? 'See results' : 'Next question'} &rarr;</button>
+            <p class="hint">or press Enter</p>
+          ` : `
+            <p class="question-text">How many times does the digit <b>${q.digit}</b> appear?</p>
+            <input class="answer-input" id="ans-input" type="number" inputmode="numeric" min="0" placeholder="0"
+              value="${s.userAnswer}" oninput="window.__setAnswer(this.value)" />
+            <button class="btn btn-primary btn-wide" onclick="window.__submitQuiz()">Submit answer</button>
+            <p class="hint">or press Enter</p>
+          `}
+        </div>`;
+      if (!fb) { const inp = document.getElementById('ans-input'); if (inp) inp.focus(); }
+
+    // QUIZ RESULTS
+    } else if (s.phase === 'quiz-results') {
+      const score = s.results.filter(r => r.correct).length;
+      const msg = score === QUIZ_TOTAL ? 'Perfect score!' : score >= 17 ? 'Excellent memory!' : score >= 13 ? 'Great effort!' : score >= 9 ? 'Keep practising!' : 'Room to improve!';
+      const grouped = buildGroupedResults(s.results);
+      const groupRows = grouped.map(({ len, results, startIndex }) => {
+        const gScore = results.filter(r => r.correct).length;
+        const rows = results.map((r, i) => `
+          <div class="result-row">
+            <span style="color:#888780; font-size:13px;">
+              ${startIndex + i + 1}. How many <b style="color:#1a1a18;">${r.question.digit}</b>s?
+              <span style="font-family:'Courier New',monospace; color:#d3d1c7; font-size:11px; display:block; margin-top:1px; word-break:break-all;">${r.question.num}</span>
+            </span>
+            <span class="badge ${r.correct ? 'badge-ok' : 'badge-wrong'}">${r.correct ? '✓ ' + r.question.answer : r.userAnswer + ' ✗'}</span>
+          </div>`).join('');
+        return `
+          <div class="result-group-header">${len} digits &nbsp;·&nbsp; ${gScore}/${results.length}</div>
+          ${rows}`;
+      }).join('');
+
+      el.innerHTML = `
+        <div class="card">
+          <p class="label">Quiz complete &nbsp;·&nbsp; ${diff.label}</p>
+          <div class="score-big">${score}<span style="font-size:1.6rem; color:#c8c6bc;"> / ${QUIZ_TOTAL}</span></div>
+          <p class="score-label">${msg}</p>
+          <div class="results-list">${groupRows}</div>
+          <div style="display:flex; gap:10px; justify-content:center;">
+            <button class="btn" onclick="window.__goIntro()">Back to menu</button>
+            <button class="btn btn-primary" onclick="window.__startQuiz()">Play again</button>
+          </div>
+        </div>`;
+
+    // TRAINING DISPLAY
+    } else if (s.phase === 'train-display') {
+      const q = s.currentQ;
+      const unlimited = trainMs === 0;
+      el.innerHTML = `
+        <div class="progress">
+          <span>Training &nbsp;·&nbsp; Round ${s.trainRound + 1}</span>
+          <span style="font-size:12px; font-family:monospace;">${q.num.length} digits</span>
+        </div>
+        <div class="card">
+          <p class="label">Memorise this number</p>
+          <div class="number-display" id="num-display">${q.num}</div>
+          ${unlimited ? `
+            <button class="btn btn-primary" style="margin-top:0.4rem;" onclick="window.__trainReveal()">I'm ready &rarr;</button>
+            <p class="hint">or press Enter</p>
+          ` : `
+            <div class="timer-dot-row">${dotRow(5, s.activeDots)}</div>
+            <p class="timer-label" id="timer-lbl">${(trainMs / 1000).toFixed(1)}s</p>
+          `}
+        </div>`;
+      requestAnimationFrame(fitNumberDisplay);
+
+    // TRAINING QUESTION
+    } else if (s.phase === 'train-question') {
+      const q = s.currentQ;
+      const fb = s.lastFeedback;
+      const total = s.trainRound;
+      const score = s.trainCorrect;
+      el.innerHTML = `
+        <div class="progress">
+          <span>Training &nbsp;·&nbsp; Round ${s.trainRound + 1}</span>
+          <span style="font-size:12px; font-family:monospace;">${q.num.length} digits</span>
+        </div>
+        <div class="train-stats">
+          <div class="stat-chip">
+            <div class="stat-val">${total > 0 ? score : '—'}</div>
+            <div class="stat-lbl">correct</div>
+          </div>
+          <div class="stat-chip">
+            <div class="stat-val">${total > 0 ? (total - score) : '—'}</div>
+            <div class="stat-lbl">wrong</div>
+          </div>
+          <div class="stat-chip">
+            <div class="stat-val">${total > 0 ? Math.round(score / total * 100) + '%' : '—'}</div>
+            <div class="stat-lbl">accuracy</div>
+          </div>
+        </div>
+        <div class="card">
+          ${fb ? `
+            <div class="feedback ${fb.correct ? 'feedback-ok' : 'feedback-wrong'}">
+              ${fb.correct
+                ? `✓ Correct! <b>${fb.q.digit}</b> appeared ${fb.q.answer} time${fb.q.answer === '1' ? '' : 's'}.`
+                : `✗ <b>${fb.q.digit}</b> appeared <b>${fb.q.answer}</b> time${fb.q.answer === '1' ? '' : 's'}, not ${fb.ua}.`}
+            </div>
+            <p style="font-family:'Courier New',monospace; font-size:12px; color:#c8c6bc; letter-spacing:0.06em; margin-bottom:1.2rem; word-break:break-all;">${fb.q.num}</p>
+            <button class="btn btn-primary btn-wide" onclick="window.__nextTrainQ()">Next &rarr;</button>
+            <p class="hint">or press Enter</p>
+            <div class="divider"></div>
+            <button class="btn btn-danger btn-wide" onclick="window.__endTraining()">End session &amp; see results</button>
+          ` : `
+            <p class="question-text">How many times does the digit <b>${q.digit}</b> appear?</p>
+            <input class="answer-input" id="ans-input" type="number" inputmode="numeric" min="0" placeholder="0"
+              value="${s.userAnswer}" oninput="window.__setAnswer(this.value)" />
+            <button class="btn btn-primary btn-wide" onclick="window.__submitTrain()">Submit answer</button>
+            <p class="hint">or press Enter</p>
+            <div class="divider"></div>
+            <button class="btn btn-danger btn-wide" onclick="window.__endTraining()">End session &amp; see results</button>
+          `}
+        </div>`;
+      if (!fb) { const inp = document.getElementById('ans-input'); if (inp) inp.focus(); }
+
+    // TRAINING RESULTS
+    } else if (s.phase === 'train-results') {
+      const total = s.trainRound;
+      const score = s.trainCorrect;
+      const pct = total > 0 ? Math.round(score / total * 100) : 0;
+      const msg = total === 0 ? 'No rounds completed.' : pct === 100 ? 'Flawless session!' : pct >= 80 ? 'Excellent work!' : pct >= 60 ? 'Good effort!' : 'Keep training!';
+      const rows = s.trainResults.map((r, i) => `
+        <div class="result-row">
+          <span style="color:#888780; font-size:13px;">
+            ${i + 1}. How many <b style="color:#1a1a18;">${r.question.digit}</b>s?
+            <span style="font-family:'Courier New',monospace; color:#d3d1c7; font-size:11px; display:block; margin-top:1px; word-break:break-all;">${r.question.num}</span>
+          </span>
+          <span class="badge ${r.correct ? 'badge-ok' : 'badge-wrong'}">${r.correct ? '✓ ' + r.question.answer : r.userAnswer + ' ✗'}</span>
+        </div>`).join('');
+      el.innerHTML = `
+        <div class="card">
+          <p class="label">Training session complete</p>
+          <div class="score-big">${score}<span style="font-size:1.6rem; color:#c8c6bc;"> / ${total}</span></div>
+          <p class="score-label">${msg}${total > 0 ? ' &nbsp;·&nbsp; ' + pct + '% accuracy' : ''}</p>
+          <div class="results-list">${rows}</div>
+          <div style="display:flex; gap:10px; justify-content:center;">
+            <button class="btn" onclick="window.__goIntro()">Back to menu</button>
+            <button class="btn btn-primary" onclick="window.__startTraining()">Train again</button>
+          </div>
+        </div>`;
+    }
+  }
+
+  // ── global handlers ───────────────────────────────────────────────
+  window.__setMode = (m) => { mode = m; render(); };
+  window.__setDiff = (key) => { difficulty = key; render(); };
+  window.__trainLen = (dir) => { trainLen = Math.min(TRAIN_LEN_MAX, Math.max(TRAIN_LEN_MIN, trainLen + dir)); render(); };
+  window.__trainTime = (dir) => {
+    const idx = TRAIN_TIME_OPTIONS.indexOf(trainMs);
+    trainMs = TRAIN_TIME_OPTIONS[Math.min(TRAIN_TIME_OPTIONS.length - 1, Math.max(0, idx + dir))];
+    render();
+  };
+  window.__startQuiz = startQuiz;
+  window.__startTraining = startTraining;
+  window.__goIntro = () => { stopTimer(); setState({ phase: 'intro', lastFeedback: null }); };
+  window.__setAnswer = v => { state.userAnswer = v; };
+  window.__submitQuiz = submitQuizAnswer;
+  window.__nextQuizQ = nextQuizQuestion;
+  window.__submitTrain = submitTrainAnswer;
+  window.__nextTrainQ = nextTrainingQuestion;
+  window.__endTraining = endTraining;
+  window.__trainReveal = () => { stopTimer(); setState({ phase: 'train-question' }); };
+
+  render();
+})();
+</script>
+</body>
+</html>

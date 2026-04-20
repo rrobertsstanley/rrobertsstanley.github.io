@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CBAT Training Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:      #0b0f14;
+    --panel:   #111820;
+    --border:  #1e3048;
+    --accent:  #1a6fa8;
+    --green:   #1a9e5c;
+    --red:     #d63048;
+    --text:    #c8daea;
+    --dim:     #4a6a80;
+    --glow:    rgba(26,111,168,0.35);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(26,111,168,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(26,111,168,0.06) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  /* Radar sweep overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 50%, transparent 60%, #0b0f14 100%);
+    pointer-events: none;
+  }
+
+  /* ── PASSWORD SCREEN ── */
+  #lock-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    gap: 32px;
+    transition: opacity 0.6s ease;
+  }
+
+  #lock-screen.fade-out {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .lock-icon {
+    font-size: 48px;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+  }
+
+  .lock-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 6px;
+    color: var(--dim);
+    text-transform: uppercase;
+  }
+
+  .lock-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 32px 40px;
+    width: 320px;
+  }
+
+  .lock-box label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--dim);
+    text-transform: uppercase;
+  }
+
+  .lock-box input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 18px;
+    padding: 10px 14px;
+    text-align: center;
+    letter-spacing: 6px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .lock-box input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 12px var(--glow);
+  }
+
+  .lock-box input.error {
+    border-color: var(--red);
+    animation: shake 0.3s ease;
+  }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25%      { transform: translateX(-8px); }
+    75%      { transform: translateX(8px); }
+  }
+
+  .lock-btn {
+    width: 100%;
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    padding: 12px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: background 0.2s, box-shadow 0.2s;
+    margin-top: 4px;
+  }
+
+  .lock-btn:hover {
+    background: #1e88cc;
+    box-shadow: 0 0 16px var(--glow);
+  }
+
+  .lock-error {
+    font-size: 11px;
+    color: var(--red);
+    letter-spacing: 2px;
+    height: 14px;
+    text-align: center;
+  }
+
+  /* ── MAIN DASHBOARD ── */
+  #dashboard {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 900px;
+    padding: 40px 20px;
+    gap: 40px;
+    position: relative;
+    z-index: 1;
+  }
+
+  #dashboard.visible {
+    display: flex;
+  }
+
+  .header {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .header-tag {
+    font-size: 11px;
+    letter-spacing: 5px;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  .header h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: clamp(36px, 7vw, 64px);
+    font-weight: 900;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #e8f4ff;
+    line-height: 1;
+  }
+
+  .header-sub {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--dim);
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* Divider */
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), var(--accent), var(--border), transparent);
+  }
+
+  /* ── MODULE GRID ── */
+  .module-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+    width: 100%;
+  }
+
+  .module-card {
+    display: block;
+    text-decoration: none;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 28px 24px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.25s, transform 0.2s, box-shadow 0.25s;
+    cursor: pointer;
+  }
+
+  .module-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--accent);
+    transform: scaleY(0);
+    transform-origin: bottom;
+    transition: transform 0.25s ease;
+  }
+
+  .module-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 32px rgba(26,111,168,0.2);
+  }
+
+  .module-card:hover::before {
+    transform: scaleY(1);
+  }
+
+  .module-number {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--dim);
+    margin-bottom: 14px;
+  }
+
+  .module-icon {
+    font-size: 28px;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .module-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #e8f4ff;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .module-desc {
+    font-size: 11px;
+    color: var(--dim);
+    letter-spacing: 1px;
+    line-height: 1.6;
+  }
+
+  .module-arrow {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    color: var(--accent);
+    font-size: 18px;
+    opacity: 0;
+    transform: translateX(-6px);
+    transition: opacity 0.2s, transform 0.2s;
+  }
+
+  .module-card:hover .module-arrow {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  /* Footer */
+  .footer {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--dim);
+    text-transform: uppercase;
+    opacity: 0.5;
+  }
+
+  /* Scan-line animation on load */
+  @keyframes scanline {
+    0%   { top: -2px; }
+    100% { top: 100%; }
+  }
+
+  .scanline {
+    position: fixed;
+    left: 0; top: 0;
+    width: 100%;
+    height: 2px;
+    background: rgba(26,111,168,0.3);
+    animation: scanline 3s linear infinite;
+    pointer-events: none;
+    z-index: 200;
+  }
+</style>
+</head>
+<body>
+
+<div class="scanline"></div>
+
+<!-- PASSWORD SCREEN -->
+<div id="lock-screen">
+  <div class="lock-icon">🔒</div>
+  <div class="lock-title">Authorisation Required</div>
+  <div class="lock-box">
+    <label for="pw-input">Access Code</label>
+    <input type="password" id="pw-input" placeholder="········" maxlength="20" autocomplete="off" />
+    <div class="lock-error" id="pw-error"></div>
+    <button class="lock-btn" onclick="checkPassword()">Authenticate</button>
+  </div>
+</div>
+
+<!-- MAIN DASHBOARD -->
+<div id="dashboard">
+  <div class="header">
+    <div class="header-tag">▸ Cognitive Battery Assessment Tool</div>
+    <h1>CBAT Suite</h1>
+    <div class="header-sub">Select a training module to begin</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="module-grid">
+
+    <a class="module-card" href="Joystick.html">
+      <div class="module-number">MODULE 01</div>
+      <span class="module-icon">🕹️</span>
+      <div class="module-name">Dual Task Trainer</div>
+      <div class="module-desc">Simultaneous tracking and response task. Tests divided attention and motor control under cognitive load.</div>
+      <div class="module-arrow">→</div>
+    </a>
+
+    <a class="module-card" href="Bearings.html">
+      <div class="module-number">MODULE 02</div>
+      <span class="module-icon">🧭</span>
+      <div class="module-name">Bearings Test</div>
+      <div class="module-desc">Spatial orientation and compass bearing identification. Assesses directional reasoning and navigation aptitude.</div>
+      <div class="module-arrow">→</div>
+    </a>
+
+    <a class="module-card" href="SituationalAwareness.html">
+      <div class="module-number">MODULE 03</div>
+      <span class="module-icon">📡</span>
+      <div class="module-name">Situational Awareness</div>
+      <div class="module-desc">Dynamic scene monitoring and threat detection. Evaluates perception and real-time environmental tracking.</div>
+      <div class="module-arrow">→</div>
+    </a>
+
+    <a class="module-card" href="Grid.html">
+      <div class="module-number">MODULE 04</div>
+      <span class="module-icon">⊞</span>
+      <div class="module-name">Grid Aptitude</div>
+      <div class="module-desc">Pattern recognition and spatial reasoning under time pressure. Tests visual-spatial processing speed.</div>
+      <div class="module-arrow">→</div>
+    </a>
+
+    <a class="module-card" href="NumberRecall.html">
+      <div class="module-number">MODULE 05</div>
+      <span class="module-icon">🔢</span>
+      <div class="module-name">Number Recall</div>
+      <div class="module-desc">Short-term numeric memory and sequential recall. Measures working memory capacity and accuracy.</div>
+      <div class="module-arrow">→</div>
+    </a>
+
+  </div>
+
+  <div class="divider"></div>
+  <div class="footer">CBAT Training Suite — Restricted Access</div>
+</div>
+
+<script>
+  const PASSWORD = 'admin';
+
+  // Allow Enter key to submit
+  document.getElementById('pw-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') checkPassword();
+  });
+
+  function checkPassword() {
+    const input = document.getElementById('pw-input');
+    const error = document.getElementById('pw-error');
+    const lockScreen = document.getElementById('lock-screen');
+    const dashboard = document.getElementById('dashboard');
+
+    if (input.value === PASSWORD) {
+      lockScreen.classList.add('fade-out');
+      setTimeout(() => {
+        lockScreen.style.display = 'none';
+        dashboard.classList.add('visible');
+      }, 600);
+    } else {
+      error.textContent = 'ACCESS DENIED — INVALID CODE';
+      input.classList.add('error');
+      input.value = '';
+      setTimeout(() => {
+        input.classList.remove('error');
+        error.textContent = '';
+      }, 1800);
+    }
+  }
+</script>
+
+</body>
+</html>

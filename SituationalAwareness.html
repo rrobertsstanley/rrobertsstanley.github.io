@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CBAT Situational Awareness Trainer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;600&display=swap');
+
+  :root {
+    --bg:          #f0f4f8;
+    --surface:     #ffffff;
+    --surface2:    #e8edf3;
+    --border:      #c8d4e0;
+    --grid-line:   #dde5ef;
+    --grid-bg:     #f8fafc;
+    --text:        #1a2535;
+    --text2:       #5a6a7e;
+    --accent:      #1a6fd4;
+    --accent-lt:   #dbeafe;
+    --friendly:    #16a34a;   /* green  */
+    --friendly-lt: #dcfce7;
+    --enemy:       #dc2626;   /* red    */
+    --enemy-lt:    #fee2e2;
+    --unknown:     #ca8a04;   /* yellow */
+    --unknown-lt:  #fef9c3;
+    --warn:        #d97706;
+    --warn-lt:     #fef3c7;
+    --cell: 52px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; font-size: 14px; }
+
+  /* screens */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; align-items: center; }
+
+  /* ── INTRO ── */
+  #intro { justify-content: center; gap: 22px; padding: 40px 20px; }
+  .intro-header { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .intro-icon { font-size: 3rem; }
+  h1 { font-size: clamp(1.3rem,4vw,1.9rem); font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
+  .subtitle { font-family: 'Roboto Mono',monospace; font-size: 0.7rem; color: var(--text2); letter-spacing: 0.15em; text-transform: uppercase; }
+
+  .info-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; max-width: 540px; width: 100%; }
+  .info-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; font-size: 0.82rem; line-height: 1.6; color: var(--text2); }
+  .info-card strong { display: block; font-size: 0.72rem; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 5px; }
+
+  .status-dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; border: 2px solid; margin-right: 5px; vertical-align: middle; }
+  .sd-friendly { border-color: var(--friendly); background: var(--friendly-lt); }
+  .sd-enemy    { border-color: var(--enemy);    background: var(--enemy-lt); }
+  .sd-unknown  { border-color: var(--unknown);  background: var(--unknown-lt); }
+
+  .btn { background: var(--accent); border: none; color: #fff; font-family: 'Inter',sans-serif; font-size: 0.9rem; font-weight: 600; padding: 12px 32px; border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+  .btn:hover { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(26,111,212,0.3); }
+  .btn.secondary { background: var(--surface); color: var(--accent); border: 2px solid var(--accent); }
+  .btn.secondary:hover { background: var(--accent-lt); box-shadow: none; transform: none; }
+  .btn.success { background: var(--friendly); }
+  .btn.success:hover { box-shadow: 0 4px 14px rgba(22,163,74,0.3); }
+
+  .round-sel-label { font-family: 'Roboto Mono',monospace; font-size: 0.65rem; color: var(--text2); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 8px; text-align: center; }
+  .round-btns { display: flex; gap: 7px; flex-wrap: wrap; justify-content: center; margin-bottom: 4px; }
+  .rnd-btn { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--border); background: var(--surface); color: var(--text2); font-family: 'Roboto Mono',monospace; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.12s; }
+  .rnd-btn:hover, .rnd-btn.sel { border-color: var(--accent); background: var(--accent); color: #fff; }
+
+  /* ── TOPBAR ── */
+  .topbar { width: 100%; background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; flex-shrink: 0; }
+  .topbar-group { display: flex; gap: 20px; align-items: center; }
+  .topbar-stat { display: flex; flex-direction: column; }
+  .ts-label { font-size: 0.6rem; color: var(--text2); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; }
+  .ts-val { font-size: 0.95rem; font-weight: 700; font-family: 'Roboto Mono',monospace; color: var(--text); }
+  .ts-val.blue  { color: var(--accent); }
+  .ts-val.green { color: var(--friendly); }
+
+  .phase-pill { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 12px; border-radius: 999px; font-family: 'Roboto Mono',monospace; }
+  .phase-pill.observe { background: var(--accent-lt); color: var(--accent); }
+  .phase-pill.assess  { background: var(--warn-lt);   color: var(--warn); }
+
+  /* ── TIMER ── */
+  .timer-strip { width: 100%; padding: 6px 20px 8px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .timer-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+  .timer-text { font-family: 'Roboto Mono',monospace; font-size: 0.7rem; color: var(--text2); }
+  .timer-bar-bg { height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .timer-bar-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 1s linear, background 0.5s; }
+
+  /* ── STATUS BAR ── */
+  .status-bar { width: 100%; padding: 7px 20px; font-size: 0.78rem; font-weight: 600; text-align: center; font-family: 'Roboto Mono',monospace; letter-spacing: 0.06em; flex-shrink: 0; background: var(--warn-lt); color: var(--warn); border-bottom: 1px solid #fde68a; }
+  .status-bar.blue { background: #eff6ff; color: var(--accent); border-color: #bfdbfe; }
+
+  /* ── GAME SCREEN ── */
+  #game { justify-content: flex-start; }
+  .game-body { display: flex; gap: 18px; padding: 16px 20px; width: 100%; max-width: 1100px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+
+  /* ── GRID (shared styles) ── */
+  .grid-wrap { flex: 0 0 auto; }
+  .col-axis-row { display: grid; margin-bottom: 2px; }
+  .col-axis-row span { font-family: 'Roboto Mono',monospace; font-size: 0.65rem; color: var(--text2); text-align: center; line-height: 22px; font-weight: 600; }
+  .grid-with-rows { display: flex; }
+  .row-axis { display: flex; flex-direction: column; }
+  .row-axis span { width: 22px; font-family: 'Roboto Mono',monospace; font-size: 0.65rem; color: var(--text2); display: flex; align-items: center; justify-content: center; font-weight: 600; }
+
+  /* Main 10×10 grid */
+  #main-grid-wrap .col-axis-row { grid-template-columns: 22px repeat(10, var(--cell)); }
+  #main-grid-wrap .row-axis span { height: var(--cell); }
+  #main-grid { display: grid; grid-template-columns: repeat(10, var(--cell)); grid-template-rows: repeat(10, var(--cell)); background: var(--grid-bg); border: 2px solid var(--border); border-radius: 4px; position: relative; overflow: hidden; }
+  #main-grid::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent, transparent calc(var(--cell) - 1px), var(--grid-line) calc(var(--cell) - 1px), var(--grid-line) var(--cell)), repeating-linear-gradient(0deg, transparent, transparent calc(var(--cell) - 1px), var(--grid-line) calc(var(--cell) - 1px), var(--grid-line) var(--cell)); pointer-events: none; z-index: 1; }
+  .grid-cell { position: relative; display: flex; align-items: center; justify-content: center; }
+
+  /* ── UNIT ── */
+  .unit { position: absolute; width: calc(var(--cell) * 0.72); height: calc(var(--cell) * 0.72); border-radius: 50%; border-width: 3px; border-style: solid; display: flex; align-items: center; justify-content: center; z-index: 2; background: var(--surface); }
+  .unit.friendly { border-color: var(--friendly); }
+  .unit.enemy    { border-color: var(--enemy); }
+  .unit.unknown  { border-color: var(--unknown); }
+
+  .unit-sym { font-size: calc(var(--cell) * 0.3); line-height: 1; user-select: none; }
+  .unit-id  { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); font-family: 'Roboto Mono',monospace; font-size: 0.48rem; font-weight: 600; white-space: nowrap; background: var(--surface); padding: 0 3px; border-radius: 2px; }
+  .unit.friendly .unit-id { color: var(--friendly); }
+  .unit.enemy    .unit-id { color: var(--enemy); }
+  .unit.unknown  .unit-id { color: var(--unknown); }
+
+  /* ── RIGHT PANEL ── */
+  .right-panel { flex: 1 1 260px; min-width: 230px; max-width: 310px; display: flex; flex-direction: column; gap: 14px; }
+  .panel-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .panel-head { background: var(--surface2); padding: 8px 14px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text2); border-bottom: 1px solid var(--border); }
+  .panel-body { padding: 10px 12px; }
+
+  /* ── INTEL CARDS ── */
+  .intel-feed { display: flex; flex-direction: column; gap: 8px; min-height: 70px; }
+  .no-intel-msg { color: var(--text2); font-size: 0.8rem; font-style: italic; padding: 10px 0; text-align: center; }
+
+  .intel-card { border-radius: 9px; border: 2px solid; padding: 12px 14px 10px; opacity: 0; transform: translateY(8px); transition: opacity 0.3s, transform 0.3s; position: relative; overflow: hidden; }
+  .intel-card.show { opacity: 1; transform: translateY(0); }
+  .intel-card.friendly-card { border-color: var(--friendly); background: var(--friendly-lt); }
+  .intel-card.enemy-card    { border-color: var(--enemy);    background: var(--enemy-lt); }
+  .intel-card.unknown-card  { border-color: var(--unknown);  background: var(--unknown-lt); }
+
+  .ic-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .ic-sym    { font-size: 1.5rem; line-height: 1; flex-shrink: 0; }
+  .ic-id     { font-family: 'Roboto Mono',monospace; font-size: 0.9rem; font-weight: 700; }
+  .intel-card.friendly-card .ic-id { color: var(--friendly); }
+  .intel-card.enemy-card    .ic-id { color: var(--enemy); }
+  .intel-card.unknown-card  .ic-id { color: var(--unknown); }
+  .ic-meta   { font-size: 0.75rem; color: var(--text2); font-weight: 500; }
+
+  .ic-data   { display: flex; flex-direction: column; gap: 5px; }
+  .ic-row    { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 700; color: var(--text); }
+  .ic-lbl    { font-size: 0.68rem; color: var(--text2); font-weight: 500; min-width: 52px; }
+
+  .ic-countdown { height: 4px; background: var(--border); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+  .ic-countdown-fill { height: 100%; border-radius: 2px; }
+  .intel-card.friendly-card .ic-countdown-fill { background: var(--friendly); }
+  .intel-card.enemy-card    .ic-countdown-fill { background: var(--enemy); }
+  .intel-card.unknown-card  .ic-countdown-fill { background: var(--unknown); }
+
+  /* ── QUESTIONS SCREEN ── */
+  #questions { justify-content: flex-start; }
+  .q-body { display: flex; gap: 24px; padding: 20px; width: 100%; max-width: 1100px; align-items: flex-start; justify-content: center; flex-wrap: wrap; }
+  .q-stack { flex: 1 1 340px; max-width: 520px; display: flex; flex-direction: column; gap: 14px; }
+
+  .q-card { background: var(--surface); border: 2px solid var(--border); border-radius: 10px; padding: 18px 20px; }
+  .q-card.correct { border-color: var(--friendly); background: var(--friendly-lt); }
+  .q-card.wrong   { border-color: var(--enemy);    background: var(--enemy-lt); }
+
+  .q-num  { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text2); margin-bottom: 8px; }
+  .q-text { font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 14px; line-height: 1.5; }
+  .opts   { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .opt    { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 7px; color: var(--text); font-family: 'Inter',sans-serif; font-size: 0.88rem; font-weight: 500; padding: 10px 12px; cursor: pointer; text-align: left; transition: all 0.12s; line-height: 1.3; }
+  .opt:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); background: var(--accent-lt); }
+  .opt.correct-a { border-color: var(--friendly) !important; background: var(--friendly-lt); color: var(--friendly) !important; font-weight: 700; }
+  .opt.wrong-a   { border-color: var(--enemy) !important;    background: var(--enemy-lt);    color: var(--enemy) !important; }
+  .opt:disabled  { cursor: default; }
+  .q-feedback { margin-top: 10px; font-size: 0.8rem; font-weight: 600; display: none; padding: 6px 10px; border-radius: 5px; }
+  .q-feedback.show { display: block; }
+  .q-feedback.ok  { background: var(--friendly-lt); color: var(--friendly); }
+  .q-feedback.bad { background: var(--enemy-lt);    color: var(--enemy); }
+
+  /* ── REFERENCE GRID (questions screen) ── */
+  .ref-grid-wrap { flex: 0 0 auto; }
+  .ref-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text2); margin-bottom: 6px; text-align: center; }
+
+  /* ref grid is 11 cols (label + 10) and 11 rows */
+  .ref-grid { display: grid; grid-template-columns: 18px repeat(10, 30px); grid-template-rows: 18px repeat(10, 30px); border: 1.5px solid var(--border); border-radius: 4px; overflow: hidden; }
+  .rc { border-right: 1px solid var(--grid-line); border-bottom: 1px solid var(--grid-line); display: flex; align-items: center; justify-content: center; font-family: 'Roboto Mono',monospace; font-size: 0.52rem; color: var(--text2); background: var(--grid-bg); }
+  .rc.ax { background: var(--surface2); font-weight: 700; }
+  .rc.hu { font-size: 0.85rem; }
+
+  /* ── RESULTS ── */
+  #results { justify-content: center; gap: 22px; padding: 40px 20px; }
+  .res-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px 32px; max-width: 440px; width: 100%; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .res-pct  { font-size: 3.5rem; font-weight: 700; font-family: 'Roboto Mono',monospace; line-height: 1; }
+  .res-lbl  { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text2); font-weight: 700; }
+  .res-stats { display: flex; gap: 24px; justify-content: center; }
+  .res-stat { display: flex; flex-direction: column; align-items: center; }
+  .res-stat .rv { font-size: 1.6rem; font-weight: 700; font-family: 'Roboto Mono',monospace; color: var(--text); }
+  .res-stat .rl { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text2); }
+  .res-msg  { font-size: 0.88rem; color: var(--text2); line-height: 1.6; }
+  .res-btns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+  @media (max-width: 640px) {
+    :root { --cell: 32px; }
+    .right-panel { max-width: 100%; min-width: 100%; }
+    .game-body { padding: 10px; gap: 10px; }
+    .ref-grid-wrap { display: none; }
+    .q-body { padding: 12px; }
+    .opts { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════ INTRO ══════════ -->
+<div id="intro" class="screen active">
+  <div class="intro-header">
+    <div class="intro-icon">✈️</div>
+    <h1>CBAT Situational Awareness Trainer</h1>
+    <p class="subtitle">RAF Pilot Selection · Progressive Training Aid</p>
+  </div>
+
+  <div class="info-grid">
+    <div class="info-card">
+      <strong>Unit Types</strong>
+      ✈ Aircraft &nbsp;·&nbsp; ⛵ Boat<br>🚗 Vehicle &nbsp;·&nbsp; 🚶 Personnel
+    </div>
+    <div class="info-card">
+      <strong>Status Rings</strong>
+      <div style="line-height:2">
+        <span class="status-dot sd-friendly"></span>Green = Friendly<br>
+        <span class="status-dot sd-enemy"></span>Red = Enemy<br>
+        <span class="status-dot sd-unknown"></span>Yellow = Unknown
+      </div>
+    </div>
+    <div class="info-card">
+      <strong>Intel Broadcasts</strong>
+      Direction and radio frequency (1Hz / 2Hz / 3Hz) flash up one at a time in the right panel for ~10 seconds. Direction arrows are <em>not</em> shown on the grid — only in the broadcast.
+    </div>
+    <div class="info-card">
+      <strong>Procedure</strong>
+      30 sec observation → units hidden → 3 questions. The empty grid stays visible during assessment for reference. 10 rounds of increasing difficulty.
+    </div>
+  </div>
+
+  <div style="max-width:420px;width:100%;text-align:center;">
+    <div class="round-sel-label">Start from round</div>
+    <div class="round-btns" id="round-btns"></div>
+  </div>
+
+  <button class="btn" onclick="startGame(currentStartRound)">Begin Test ▶</button>
+</div>
+
+<!-- ══════════ GAME ══════════ -->
+<div id="game" class="screen">
+  <div class="topbar">
+    <div class="topbar-group">
+      <div class="topbar-stat"><span class="ts-label">Round</span><span class="ts-val blue" id="hud-round">1 / 10</span></div>
+      <div class="topbar-stat"><span class="ts-label">Units</span><span class="ts-val" id="hud-units">—</span></div>
+      <div class="topbar-stat"><span class="ts-label">Intel feeds</span><span class="ts-val" id="hud-intel">—</span></div>
+    </div>
+    <span class="phase-pill observe" id="phase-pill">OBSERVE</span>
+  </div>
+
+  <div class="timer-strip">
+    <div class="timer-row">
+      <span class="timer-text">Time remaining</span>
+      <span class="timer-text" id="timer-label">30s</span>
+    </div>
+    <div class="timer-bar-bg"><div class="timer-bar-fill" id="timer-fill"></div></div>
+  </div>
+
+  <div class="status-bar" id="status-bar">OBSERVE ALL UNIT POSITIONS AND INCOMING INTEL FEEDS</div>
+
+  <div class="game-body">
+    <div class="grid-wrap" id="main-grid-wrap">
+      <div class="col-axis-row" id="col-axis"></div>
+      <div class="grid-with-rows">
+        <div class="row-axis" id="row-axis"></div>
+        <div id="main-grid"></div>
+      </div>
+    </div>
+
+    <div class="right-panel">
+      <div class="panel-card">
+        <div class="panel-head">📡 Intel Broadcast</div>
+        <div class="panel-body">
+          <div class="intel-feed" id="intel-feed">
+            <div class="no-intel-msg" id="no-intel-msg">Waiting for first broadcast…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ QUESTIONS ══════════ -->
+<div id="questions" class="screen">
+  <div class="topbar">
+    <div class="topbar-group">
+      <div class="topbar-stat"><span class="ts-label">Round</span><span class="ts-val blue" id="q-round">1</span></div>
+      <div class="topbar-stat"><span class="ts-label">Score</span><span class="ts-val green" id="q-score">0 / 0</span></div>
+    </div>
+    <span class="phase-pill assess">ASSESSMENT</span>
+  </div>
+
+  <div class="status-bar blue">Units hidden — use the empty reference grid to recall positions</div>
+
+  <div class="q-body">
+    <!-- Empty reference grid — no units shown -->
+    <div class="ref-grid-wrap">
+      <div class="ref-label">Reference Grid (empty)</div>
+      <div class="ref-grid" id="ref-grid"></div>
+    </div>
+
+    <div class="q-stack">
+      <div id="q-container"></div>
+      <button class="btn success" id="proceed-btn" style="display:none" onclick="proceedAfterQuestions()">Next Round ▶</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ RESULTS ══════════ -->
+<div id="results" class="screen">
+  <h1 style="font-size:1.5rem">Debrief Report</h1>
+  <div class="res-card">
+    <div>
+      <div class="res-pct" id="final-pct">—</div>
+      <div class="res-lbl">Overall Accuracy</div>
+    </div>
+    <div class="res-stats">
+      <div class="res-stat"><span class="rv" id="res-correct">0</span><span class="rl">Correct</span></div>
+      <div class="res-stat"><span class="rv" id="res-total">0</span><span class="rl">Questions</span></div>
+      <div class="res-stat"><span class="rv" id="res-rounds">0</span><span class="rl">Rounds</span></div>
+    </div>
+    <div class="res-msg" id="res-msg"></div>
+    <div class="res-btns">
+      <button class="btn secondary" onclick="showIntro()">Main Menu</button>
+      <button class="btn success" onclick="startGame(1)">New Mission</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ════════════════════════════════════
+//  CONSTANTS
+// ════════════════════════════════════
+const UNIT_TYPES = [
+  { name:'Aircraft',  sym:'✈' },
+  { name:'Boat',      sym:'⛵' },
+  { name:'Vehicle',   sym:'🚗' },
+  { name:'Personnel', sym:'🚶' },
+];
+const STATUSES = ['friendly','enemy','unknown'];
+const S_LABEL  = { friendly:'Friendly', enemy:'Enemy', unknown:'Unknown' };
+const S_COLOR  = { friendly:'var(--friendly)', enemy:'var(--enemy)', unknown:'var(--unknown)' };
+const S_LT     = { friendly:'var(--friendly-lt)', enemy:'var(--enemy-lt)', unknown:'var(--unknown-lt)' };
+
+const DIRS    = ['N','NE','E','SE','S','SW','W','NW'];
+const DIR_ARR = { N:'↑', NE:'↗', E:'→', SE:'↘', S:'↓', SW:'↙', W:'←', NW:'↖' };
+const FREQS   = ['1 Hz','2 Hz','3 Hz'];
+
+// Grid: columns 0-9 across the top, rows A-J down the left
+const COLS = ['0','1','2','3','4','5','6','7','8','9'];  // top axis
+const ROWS = ['A','B','C','D','E','F','G','H','I','J'];  // left axis
+const GRID_SIZE = 10;
+
+const OBSERVE_SEC = 30;
+const INTEL_DUR   = 10000; // ms each intel card stays visible
+
+// Progressive difficulty
+const CFG = [
+  { units:2,  intel:0, hasDir:false, hasFreq:false }, // R1
+  { units:3,  intel:1, hasDir:true,  hasFreq:false }, // R2
+  { units:4,  intel:2, hasDir:true,  hasFreq:false }, // R3
+  { units:4,  intel:2, hasDir:true,  hasFreq:true  }, // R4
+  { units:5,  intel:2, hasDir:true,  hasFreq:true  }, // R5
+  { units:6,  intel:3, hasDir:true,  hasFreq:true  }, // R6
+  { units:7,  intel:3, hasDir:true,  hasFreq:true  }, // R7
+  { units:8,  intel:4, hasDir:true,  hasFreq:true  }, // R8
+  { units:9,  intel:4, hasDir:true,  hasFreq:true  }, // R9
+  { units:11, intel:5, hasDir:true,  hasFreq:true  }, // R10
+];
+
+// ════════════════════════════════════
+//  STATE
+// ════════════════════════════════════
+let currentRound = 1, currentStartRound = 1;
+let scene = null;
+let timerInterval = null, flashTimers = [];
+let totalCorrect = 0, totalQuestions = 0, roundsPlayed = 0;
+let currentQuestions = [], answeredCount = 0;
+
+// ════════════════════════════════════
+//  UTILS
+// ════════════════════════════════════
+const rnd    = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+const pick   = a => a[rnd(0,a.length-1)];
+const shuffle = a => { const r=[...a]; for(let i=r.length-1;i>0;i--){const j=rnd(0,i);[r[i],r[j]]=[r[j],r[i]];} return r; };
+const uid4   = () => Math.random().toString(36).slice(2,6).toUpperCase();
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ════════════════════════════════════
+//  SCENE GENERATION
+// ════════════════════════════════════
+function genScene(round) {
+  const cfg = CFG[Math.min(round-1, CFG.length-1)];
+  const units = [], used = new Set();
+
+  for (let i = 0; i < cfg.units; i++) {
+    let col, row, key;
+    do {
+      col = rnd(0, GRID_SIZE-1);
+      row = rnd(0, GRID_SIZE-1);
+      key = `${col},${row}`;
+    } while (used.has(key));
+    used.add(key);
+
+    const t = pick(UNIT_TYPES), s = pick(STATUSES);
+    units.push({
+      id: uid4(),
+      col, row,
+      colL: COLS[col],  // number label (0-9)
+      rowL: ROWS[row],  // letter label (A-J)
+      type: t.name, sym: t.sym, status: s,
+      direction: cfg.hasDir  ? pick(DIRS)  : null,
+      frequency: cfg.hasFreq ? pick(FREQS) : null,
+      hasIntel: false,
+    });
+  }
+
+  const n = Math.min(cfg.intel, units.length);
+  shuffle(units).slice(0, n).forEach(u => u.hasIntel = true);
+
+  // Build broadcasts: ONE fact per card (direction OR frequency, never both)
+  const broadcasts = [];
+  units.filter(u => u.hasIntel).forEach(u => {
+    const facts = [];
+    if (u.direction) facts.push({ unit: u, kind: 'direction' });
+    if (u.frequency) facts.push({ unit: u, kind: 'frequency' });
+    if (facts.length) broadcasts.push(pick(facts));
+  });
+  shuffle(broadcasts);
+
+  return { units, cfg, broadcasts };
+}
+
+// ════════════════════════════════════
+//  QUESTION GENERATION  (max 3)
+// ════════════════════════════════════
+function genQuestions(scene) {
+  const { units, cfg } = scene;
+
+  // helpers
+  const dist = (pool, correct) => {
+    const others = shuffle(pool.filter(x => x !== correct)).slice(0, 3);
+    return shuffle([correct, ...others]).slice(0, 4);
+  };
+
+  const pool = [];
+
+  // Q1: What type at position?
+  const pu = pick(units);
+  pool.push({
+    text: `What type of unit is at grid position <strong>${pu.colL}${pu.rowL}</strong>?`,
+    answer: pu.type,
+    options: dist(UNIT_TYPES.map(t => t.name), pu.type),
+  });
+
+  // Q2: Status of a unit
+  const su = pick(units);
+  pool.push({
+    text: `The unit at position <strong>${su.colL}${su.rowL}</strong> is classified as…`,
+    answer: S_LABEL[su.status],
+    options: dist(Object.values(S_LABEL), S_LABEL[su.status]),
+  });
+
+  // Q3: choose from extras
+  const extras = [];
+  const intelU = units.filter(u => u.hasIntel);
+
+  if (cfg.hasDir && intelU.length > 0) {
+    const du = pick(intelU);
+    extras.push({
+      text: `Which direction was the <strong>${du.type}</strong> (ID: ${du.id}) at ${du.colL}${du.rowL} travelling?`,
+      answer: du.direction,
+      options: dist(DIRS, du.direction),
+    });
+  }
+  if (cfg.hasFreq && intelU.some(u => u.frequency)) {
+    const fu = pick(intelU.filter(u => u.frequency));
+    extras.push({
+      text: `What comms frequency was unit <strong>${fu.id}</strong> (${fu.type}) broadcasting on?`,
+      answer: fu.frequency,
+      options: dist(FREQS, fu.frequency),
+    });
+  }
+  // count question always available
+  const sCounts = {}; STATUSES.forEach(s => sCounts[s] = 0); units.forEach(u => sCounts[u.status]++);
+  const st = pick(STATUSES.filter(s => sCounts[s] > 0));
+  extras.push({
+    text: `How many <strong>${S_LABEL[st]}</strong> units were on the grid?`,
+    answer: String(sCounts[st]),
+    options: dist(['0','1','2','3','4','5','6','7','8'], String(sCounts[st])),
+  });
+
+  pool.push(pick(extras));
+  return pool.slice(0, 3);
+}
+
+// ════════════════════════════════════
+//  RENDER MAIN GRID
+// ════════════════════════════════════
+function renderGrid(scene) {
+  const gridEl = document.getElementById('main-grid');
+  gridEl.innerHTML = '';
+
+  // Build cells
+  for (let r = 0; r < GRID_SIZE; r++) {
+    for (let c = 0; c < GRID_SIZE; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'grid-cell';
+      cell.dataset.r = r;
+      cell.dataset.c = c;
+      gridEl.appendChild(cell);
+    }
+  }
+
+  // Column axis (0-9 across top)
+  const ca = document.getElementById('col-axis');
+  ca.innerHTML = '<span></span>' + COLS.map(c => `<span>${c}</span>`).join('');
+
+  // Row axis (A-J down left)
+  const ra = document.getElementById('row-axis');
+  ra.innerHTML = ROWS.map(r => `<span>${r}</span>`).join('');
+
+  // Place units — NO direction arrows on grid
+  scene.units.forEach(u => {
+    const cell = gridEl.querySelector(`[data-r="${u.row}"][data-c="${u.col}"]`);
+    if (!cell) return;
+    const el = document.createElement('div');
+    el.className = `unit ${u.status}`;
+    el.innerHTML = `<span class="unit-sym">${u.sym}</span><span class="unit-id">${u.id}</span>`;
+    cell.appendChild(el);
+  });
+}
+
+// ════════════════════════════════════
+//  HIDE UNITS (called when time is up)
+// ════════════════════════════════════
+function hideAllUnits() {
+  document.querySelectorAll('#main-grid .unit').forEach(el => {
+    el.style.visibility = 'hidden';
+  });
+}
+
+// ════════════════════════════════════
+//  INTEL BROADCASTS
+//  Each broadcast shows ONE piece of info (direction OR frequency).
+//  scene.broadcasts is built in genScene as a flat array of {unit, kind}.
+// ════════════════════════════════════
+function scheduleIntel(scene) {
+  const feed = document.getElementById('intel-feed');
+  feed.innerHTML = '';
+  const nm = document.createElement('div');
+  nm.id = 'no-intel-msg'; nm.className = 'no-intel-msg';
+  nm.textContent = 'Waiting for first broadcast…';
+  feed.appendChild(nm);
+
+  flashTimers.forEach(t => clearTimeout(t));
+  flashTimers = [];
+
+  const broadcasts = scene.broadcasts;   // [{unit, kind:'direction'|'frequency'}, …]
+  if (!broadcasts.length) return;
+
+  const gap = Math.max(3500, (OBSERVE_SEC * 1000 - 2000) / broadcasts.length);
+
+  broadcasts.forEach((b, i) => {
+    const { unit: u, kind } = b;
+    const delay = 1500 + i * gap;
+    const t = setTimeout(() => {
+      const nmi = document.getElementById('no-intel-msg');
+      if (nmi) nmi.style.display = 'none';
+
+      const card = document.createElement('div');
+      card.className = `intel-card ${u.status}-card`;
+
+      let dataRows = '';
+      if (kind === 'direction' && u.direction)
+        dataRows += `<div class="ic-row"><span class="ic-lbl">Heading</span><strong>${u.direction} ${DIR_ARR[u.direction]}</strong></div>`;
+      if (kind === 'frequency' && u.frequency)
+        dataRows += `<div class="ic-row"><span class="ic-lbl">Comms</span><strong>${u.frequency}</strong></div>`;
+
+      card.innerHTML = `
+        <div class="ic-header">
+          <span class="ic-sym">${u.sym}</span>
+          <div>
+            <div class="ic-id">${u.id}</div>
+            <div class="ic-meta">${u.type} · ${u.colL}${u.rowL} · ${S_LABEL[u.status]}</div>
+          </div>
+        </div>
+        ${dataRows ? `<div class="ic-data">${dataRows}</div>` : ''}
+        <div class="ic-countdown"><div class="ic-countdown-fill" id="icf-${u.id}-${kind}" style="width:100%"></div></div>`;
+
+      feed.appendChild(card);
+      requestAnimationFrame(() => { card.classList.add('show'); });
+
+      // Animate countdown bar
+      const bar = document.getElementById(`icf-${u.id}-${kind}`);
+      if (bar) {
+        setTimeout(() => {
+          bar.style.transition = `width ${INTEL_DUR}ms linear`;
+          bar.style.width = '0%';
+        }, 50);
+      }
+
+      // Remove card after duration
+      const rem = setTimeout(() => {
+        card.classList.remove('show');
+        setTimeout(() => card.remove(), 350);
+      }, INTEL_DUR);
+      flashTimers.push(rem);
+    }, delay);
+    flashTimers.push(t);
+  });
+}
+
+// ════════════════════════════════════
+//  TIMER
+// ════════════════════════════════════
+function startTimer(secs, onDone) {
+  clearInterval(timerInterval);
+  let rem = secs;
+  const fill = document.getElementById('timer-fill');
+  const lbl  = document.getElementById('timer-label');
+  fill.style.width = '100%';
+  fill.style.background = 'var(--accent)';
+  lbl.textContent = `${secs}s`;
+
+  timerInterval = setInterval(() => {
+    rem--;
+    const pct = (rem / secs) * 100;
+    fill.style.width = pct + '%';
+    lbl.textContent = `${rem}s`;
+    if (pct < 30) fill.style.background = 'var(--enemy)';
+    else if (pct < 60) fill.style.background = 'var(--warn)';
+    if (rem <= 0) { clearInterval(timerInterval); onDone(); }
+  }, 1000);
+}
+
+// ════════════════════════════════════
+//  BUILD EMPTY REFERENCE GRID
+// ════════════════════════════════════
+function buildRefGrid() {
+  const rg = document.getElementById('ref-grid');
+  rg.innerHTML = '';
+
+  // Top-left corner cell
+  const corner = document.createElement('div');
+  corner.className = 'rc ax';
+  rg.appendChild(corner);
+
+  // Column headers: 0-9
+  COLS.forEach(c => {
+    const d = document.createElement('div');
+    d.className = 'rc ax';
+    d.textContent = c;
+    rg.appendChild(d);
+  });
+
+  // Rows: A-J on the left, then 10 empty cells
+  for (let r = 0; r < GRID_SIZE; r++) {
+    const rh = document.createElement('div');
+    rh.className = 'rc ax';
+    rh.textContent = ROWS[r];
+    rg.appendChild(rh);
+
+    for (let c = 0; c < GRID_SIZE; c++) {
+      const d = document.createElement('div');
+      d.className = 'rc';  // no units shown — purely for reference orientation
+      rg.appendChild(d);
+    }
+  }
+}
+
+// ════════════════════════════════════
+//  GAME FLOW
+// ════════════════════════════════════
+function startGame(start) {
+  currentRound = start;
+  totalCorrect = 0; totalQuestions = 0; roundsPlayed = 0;
+  beginRound();
+}
+
+function beginRound() {
+  scene = genScene(currentRound);
+  currentQuestions = genQuestions(scene);
+  answeredCount = 0;
+
+  document.getElementById('hud-round').textContent = `${currentRound} / 10`;
+  document.getElementById('hud-units').textContent = scene.units.length;
+  document.getElementById('hud-intel').textContent = scene.broadcasts.length;
+  document.getElementById('status-bar').textContent = 'OBSERVE ALL UNIT POSITIONS AND INCOMING INTEL FEEDS';
+  document.getElementById('status-bar').className = 'status-bar';
+  document.getElementById('phase-pill').textContent = 'OBSERVE';
+  document.getElementById('phase-pill').className = 'phase-pill observe';
+
+  showScreen('game');
+  renderGrid(scene);
+  scheduleIntel(scene);
+  startTimer(OBSERVE_SEC, endObserve);
+}
+
+function endObserve() {
+  // Cancel any pending intel timers
+  flashTimers.forEach(t => clearTimeout(t));
+  flashTimers = [];
+
+  // Clear intel feed
+  const feed = document.getElementById('intel-feed');
+  feed.innerHTML = '';
+
+  // HIDE all units immediately (visibility:hidden keeps layout, display:none removes)
+  hideAllUnits();
+
+  document.getElementById('status-bar').textContent = 'TIME UP — ASSESSMENT BEGINNING…';
+
+  setTimeout(() => showAssessment(), 900);
+}
+
+function showAssessment() {
+  document.getElementById('q-round').textContent = currentRound;
+  document.getElementById('q-score').textContent = `${totalCorrect} / ${totalQuestions}`;
+  document.getElementById('proceed-btn').style.display = 'none';
+
+  buildRefGrid();   // build empty grid
+
+  const con = document.getElementById('q-container');
+  con.innerHTML = '';
+  currentQuestions.forEach((q, i) => renderQ(q, i, con));
+
+  showScreen('questions');
+}
+
+function renderQ(q, i, con) {
+  const card = document.createElement('div');
+  card.className = 'q-card';
+  card.id = `qc-${i}`;
+
+  const opts = q.options.map(o =>
+    `<button class="opt" data-val="${o.replace(/"/g,'&quot;')}" onclick="pickAnswer(this,${i})">${o}</button>`
+  ).join('');
+
+  card.innerHTML = `
+    <div class="q-num">Question ${i+1} of ${currentQuestions.length}</div>
+    <div class="q-text">${q.text}</div>
+    <div class="opts">${opts}</div>
+    <div class="q-feedback" id="qf-${i}"></div>`;
+  con.appendChild(card);
+}
+
+function pickAnswer(btn, qi) {
+  const card = document.getElementById(`qc-${qi}`);
+  if (card.dataset.done) return;
+  card.dataset.done = '1';
+
+  const chosen  = btn.dataset.val;
+  const correct = currentQuestions[qi].answer;
+  const ok      = chosen === correct;
+
+  card.querySelectorAll('.opt').forEach(b => {
+    b.disabled = true;
+    if (b.dataset.val === correct) b.classList.add('correct-a');
+    else if (b === btn && !ok)     b.classList.add('wrong-a');
+  });
+
+  const fb = document.getElementById(`qf-${qi}`);
+  fb.className = `q-feedback show ${ok ? 'ok' : 'bad'}`;
+  fb.textContent = ok ? '✔ Correct' : `✘ Correct answer: ${correct}`;
+  card.classList.add(ok ? 'correct' : 'wrong');
+
+  if (ok) totalCorrect++;
+  totalQuestions++;
+  answeredCount++;
+  document.getElementById('q-score').textContent = `${totalCorrect} / ${totalQuestions}`;
+
+  if (answeredCount >= currentQuestions.length) {
+    setTimeout(() => {
+      const pb = document.getElementById('proceed-btn');
+      pb.style.display = 'block';
+      pb.textContent = currentRound >= 10 ? 'View Debrief ▶' : `Next Round (${currentRound + 1}) ▶`;
+    }, 500);
+  }
+}
+
+function proceedAfterQuestions() {
+  roundsPlayed++;
+  if (currentRound >= 10) showResults();
+  else { currentRound++; beginRound(); }
+}
+
+// ════════════════════════════════════
+//  RESULTS
+// ════════════════════════════════════
+function showResults() {
+  const pct = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+  const pe = document.getElementById('final-pct');
+  pe.textContent = pct + '%';
+  pe.style.color = pct < 50 ? 'var(--enemy)' : pct < 75 ? 'var(--warn)' : 'var(--friendly)';
+  document.getElementById('res-correct').textContent = totalCorrect;
+  document.getElementById('res-total').textContent   = totalQuestions;
+  document.getElementById('res-rounds').textContent  = roundsPlayed;
+
+  const msgs = [
+    'Situational awareness below threshold. Review unit positions and intel before re-attempting.',
+    'Reasonable performance. Recall was solid but some intel details were missed. Practise systematic memorisation.',
+    'Excellent situational awareness. Strong retention across positions, statuses, and intel feeds — well prepared for CBAT.',
+  ];
+  const rm = document.getElementById('res-msg');
+  rm.textContent  = msgs[pct < 50 ? 0 : pct < 80 ? 1 : 2];
+  rm.style.color  = pct < 50 ? 'var(--enemy)' : pct < 80 ? 'var(--warn)' : 'var(--friendly)';
+
+  showScreen('results');
+}
+
+function showIntro() {
+  clearInterval(timerInterval);
+  flashTimers.forEach(t => clearTimeout(t));
+  flashTimers = [];
+  showScreen('intro');
+}
+
+// ════════════════════════════════════
+//  ROUND SELECT BUTTONS
+// ════════════════════════════════════
+function buildRoundBtns() {
+  const con = document.getElementById('round-btns');
+  con.innerHTML = '';
+  for (let r = 1; r <= 10; r++) {
+    const b = document.createElement('button');
+    b.className = 'rnd-btn' + (r === currentStartRound ? ' sel' : '');
+    b.textContent = r;
+    b.onclick = () => { currentStartRound = r; buildRoundBtns(); };
+    con.appendChild(b);
+  }
+}
+
+// ════════════════════════════════════
+//  INIT
+// ════════════════════════════════════
+buildRoundBtns();
+showScreen('intro');
+</script>
+</body>
+</html>

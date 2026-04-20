@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CBAT Bearings Test</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #f5f4f1;
+    --surface: #ffffff;
+    --border: #d8d6d0;
+    --border-strong: #b0ada6;
+    --text: #1a1916;
+    --text-mid: #5a5750;
+    --text-dim: #9a9790;
+    --btn-bg: #edece8;
+    --btn-hover: #e2e0db;
+    --correct: #2a7a3a;
+    --wrong: #c0392b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .screen { display: none; width: 100%; max-width: 960px; padding: 24px; }
+  .screen.active { display: flex; flex-direction: column; align-items: center; }
+
+  /* ── START ── */
+  #start-screen { gap: 28px; text-align: center; max-width: 440px; }
+
+  .logo-cap {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 5px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+  .logo-main {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: clamp(32px, 6vw, 52px);
+    font-weight: 300;
+    letter-spacing: -1px;
+    color: var(--text);
+    margin-top: 4px;
+  }
+  .divider { width: 28px; height: 1px; background: var(--border-strong); margin: 0 auto; }
+  .instructions {
+    text-align: left;
+    font-size: 13px;
+    line-height: 1.9;
+    color: var(--text-mid);
+    border-left: 2px solid var(--border);
+    padding-left: 16px;
+  }
+  .instructions strong { color: var(--text); font-weight: 500; }
+  .start-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 12px 40px;
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .start-btn:hover { opacity: 0.8; }
+
+  /* ── GAME ── */
+  #game-screen {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 44px;
+  }
+
+  .compass-panel {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .top-bar {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+  }
+
+  canvas#compass {
+    display: block;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    background: #fafaf8;
+  }
+
+  .progress-bar-wrap {
+    width: 100%;
+    height: 2px;
+    background: var(--border);
+  }
+  .progress-bar {
+    height: 100%;
+    background: var(--text);
+    transition: width 0.25s;
+  }
+
+  /* tiny hidden timer — still runs, barely visible */
+  .timer-ghost {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: var(--text-dim);
+    opacity: 0.28;
+    align-self: flex-end;
+    letter-spacing: 0.5px;
+    user-select: none;
+  }
+
+  /* ── RIGHT PANEL ── */
+  .right-panel {
+    flex: 0 0 210px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding-top: 2px;
+  }
+
+  .question-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .target-label {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 48px;
+    font-weight: 300;
+    color: var(--text);
+    letter-spacing: -2px;
+    line-height: 1;
+  }
+
+  .answers-wrap { display: flex; flex-direction: column; gap: 5px; }
+
+  .answer-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 12px;
+    background: var(--btn-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 17px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.1s, border-color 0.1s;
+    width: 100%;
+    text-align: left;
+  }
+  .answer-btn:hover:not(:disabled) {
+    background: var(--btn-hover);
+    border-color: var(--border-strong);
+  }
+  .answer-btn .key-badge {
+    font-size: 9px;
+    font-weight: 400;
+    width: 16px; height: 16px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--border-strong);
+    border-radius: 2px;
+    flex-shrink: 0;
+    color: var(--text-mid);
+  }
+  .answer-btn .deg { color: var(--text); }
+  .answer-btn.correct {
+    background: #edf7ee;
+    border-color: var(--correct);
+  }
+  .answer-btn.correct .deg,
+  .answer-btn.correct .key-badge { color: var(--correct); border-color: var(--correct); }
+  .answer-btn.wrong {
+    background: #fdf0ef;
+    border-color: var(--wrong);
+  }
+  .answer-btn.wrong .deg,
+  .answer-btn.wrong .key-badge { color: var(--wrong); border-color: var(--wrong); }
+  .answer-btn:disabled { cursor: default; }
+
+  .feedback {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    height: 13px;
+    color: transparent;
+  }
+  .feedback.correct { color: var(--correct); }
+  .feedback.wrong   { color: var(--wrong); }
+
+  /* ── RESULTS ── */
+  #results-screen { gap: 24px; text-align: center; max-width: 440px; }
+
+  .result-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  .result-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    width: 100%;
+  }
+  .result-stat {
+    background: var(--surface);
+    padding: 16px 8px;
+    text-align: center;
+  }
+  .result-stat .v {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 26px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: -1px;
+  }
+  .result-stat .l {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    text-transform: uppercase;
+  }
+
+  .result-breakdown {
+    width: 100%;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .brow {
+    display: flex;
+    justify-content: space-between;
+    padding: 9px 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-mid);
+  }
+  .brow:last-child { border-bottom: none; }
+  .brow span:last-child { color: var(--text); font-weight: 500; }
+
+  .btn-row { display: flex; gap: 8px; }
+  .action-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 10px 28px;
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .action-btn:hover { opacity: 0.8; }
+  .action-btn.ghost {
+    background: transparent;
+    color: var(--text-mid);
+    border: 1px solid var(--border);
+  }
+  .action-btn.ghost:hover { opacity: 1; background: var(--btn-hover); }
+</style>
+</head>
+<body>
+
+<div id="start-screen" class="screen active">
+  <div>
+    <div class="logo-cap">CBAT Module</div>
+    <div class="logo-main">Bearings</div>
+  </div>
+  <div class="divider"></div>
+  <div class="instructions">
+    A compass shows multiple labelled points. Estimate the <strong>bearing of the named point</strong> from the centre crosshair.<br><br>
+    · Bearings run <strong>clockwise from North (000°)</strong><br>
+    · Press <strong>1–5</strong> on keyboard or tap an answer<br>
+    · 30 questions — difficulty increases progressively<br>
+    · All points appear identical — identify by <strong>label only</strong>
+  </div>
+  <button class="start-btn" onclick="startGame()">Start Test</button>
+</div>
+
+<div id="game-screen" class="screen">
+  <div class="compass-panel">
+    <div class="top-bar">
+      <span id="q-counter">1 / 30</span>
+      <span id="q-diff">Level 1</span>
+    </div>
+    <canvas id="compass" width="490" height="490"></canvas>
+    <div class="progress-bar-wrap" style="width:490px">
+      <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+    </div>
+    <div class="timer-ghost" id="timer-display">0.0</div>
+  </div>
+
+  <div class="right-panel">
+    <div>
+      <div class="question-label">Bearing of</div>
+      <div class="target-label" id="target-label">—</div>
+    </div>
+    <div class="answers-wrap" id="answers-wrap"></div>
+    <div class="feedback" id="feedback"> </div>
+  </div>
+</div>
+
+<div id="results-screen" class="screen">
+  <div class="result-title">Test Complete</div>
+
+  <div class="result-stats">
+    <div class="result-stat"><div class="v" id="r-correct">—</div><div class="l">Correct</div></div>
+    <div class="result-stat"><div class="v" id="r-wrong">—</div><div class="l">Wrong</div></div>
+    <div class="result-stat"><div class="v" id="r-pct">—</div><div class="l">Accuracy</div></div>
+  </div>
+
+  <div class="result-breakdown">
+    <div class="brow"><span>Total time</span><span id="r-time">—</span></div>
+    <div class="brow"><span>Avg. per question</span><span id="r-avg">—</span></div>
+    <div class="brow"><span>Level 1  (Q1–10)</span><span id="r-l1">—</span></div>
+    <div class="brow"><span>Level 2  (Q11–20)</span><span id="r-l2">—</span></div>
+    <div class="brow"><span>Level 3  (Q21–30)</span><span id="r-l3">—</span></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="action-btn" onclick="startGame()">Retry</button>
+    <button class="action-btn ghost" onclick="showScreen('start-screen')">Menu</button>
+  </div>
+</div>
+
+<script>
+const TOTAL_Q = 30;
+const SZ = 490, CX = SZ/2, CY = SZ/2;
+const RADIUS = SZ/2 - 14;
+const LABELS = 'ABCDEFGHJKLMNPQRSTUVWXYZ'.split('');
+
+let questions=[], currentQ=0, score=0, wrongs=0;
+let startTime=0, timerInterval=null, answered=false;
+let levelCorrect=[0,0,0];
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function bToXY(b,d){ const r=(b-90)*Math.PI/180; return{x:CX+Math.cos(r)*d, y:CY+Math.sin(r)*d}; }
+function r5(v){ return Math.round(v/5)*5; }
+function fmt(d){ return String(((d%360)+360)%360).padStart(3,'0')+'°'; }
+function getDiff(i){ return i<10?1:i<20?2:3; }
+
+function genQ(qi){
+  const diff=getDiff(qi);
+  const extra=diff===1?Math.floor(Math.random()*2)+1:diff===2?Math.floor(Math.random()*3)+3:Math.floor(Math.random()*4)+5;
+  const tb=r5(Math.random()*360);
+  const minSep=diff===1?20:diff===2?10:5;
+
+  let opts=[tb], att=0;
+  while(opts.length<5&&att<500){
+    att++;
+    const off=(Math.random()>.5?1:-1)*(minSep+Math.floor(Math.random()*(diff===3?18:38)));
+    const c=r5(((tb+off)%360+360)%360);
+    if(opts.every(o=>{const d=Math.abs(o-c);return Math.min(d,360-d)>=minSep;})) opts.push(c);
+  }
+  opts=opts.sort(()=>Math.random()-.5);
+  const ci=opts.indexOf(tb);
+
+  const td=0.28*RADIUS+Math.random()*0.52*RADIUS;
+  const tp=bToXY(tb,td);
+  const pool=[...LABELS].sort(()=>Math.random()-.5);
+  const tl=pool[0];
+
+  const pts=[{label:tl,x:tp.x,y:tp.y}];
+  for(let i=1;i<=extra;i++){
+    let pos,tr=0;
+    do{
+      const b=Math.random()*360, d=0.22*RADIUS+Math.random()*0.58*RADIUS;
+      pos=bToXY(b,d); tr++;
+    }while(tr<60&&pts.some(p=>Math.hypot(p.x-pos.x,p.y-pos.y)<42));
+    pts.push({label:pool[i],x:pos.x,y:pos.y});
+  }
+  return{tb,opts,ci,tl,pts,diff};
+}
+
+function buildQs(){ questions=[]; for(let i=0;i<TOTAL_Q;i++) questions.push(genQ(i)); }
+
+const canvas=document.getElementById('compass');
+const ctx=canvas.getContext('2d');
+
+function drawCompass(q){
+  ctx.clearRect(0,0,SZ,SZ);
+
+  ctx.beginPath(); ctx.arc(CX,CY,RADIUS,0,Math.PI*2);
+  ctx.fillStyle='#fafaf8'; ctx.fill();
+
+  [0.33,0.66].forEach(f=>{
+    ctx.beginPath(); ctx.arc(CX,CY,RADIUS*f,0,Math.PI*2);
+    ctx.strokeStyle='rgba(0,0,0,0.05)'; ctx.lineWidth=1; ctx.stroke();
+  });
+
+  const card={0:'360',90:'090',180:'180',270:'270'};
+  for(let deg=0;deg<360;deg+=5){
+    const rad=(deg-90)*Math.PI/180;
+    const maj=deg%10===0, car=deg%90===0;
+    const inner=car?RADIUS-22:maj?RADIUS-13:RADIUS-7;
+    ctx.beginPath();
+    ctx.moveTo(CX+Math.cos(rad)*inner, CY+Math.sin(rad)*inner);
+    ctx.lineTo(CX+Math.cos(rad)*RADIUS, CY+Math.sin(rad)*RADIUS);
+    ctx.strokeStyle=car?'#555':maj?'#bbb':'#ddd';
+    ctx.lineWidth=car?1.5:1; ctx.stroke();
+    if(car){
+      const lx=CX+Math.cos(rad)*(RADIUS+15), ly=CY+Math.sin(rad)*(RADIUS+15);
+      ctx.fillStyle='#444'; ctx.font='11px IBM Plex Mono,monospace';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(card[deg],lx,ly);
+    }
+  }
+
+  ctx.beginPath(); ctx.arc(CX,CY,RADIUS,0,Math.PI*2);
+  ctx.strokeStyle='#ccc'; ctx.lineWidth=1; ctx.stroke();
+
+  const ch=12;
+  ctx.strokeStyle='#444'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(CX-ch,CY); ctx.lineTo(CX+ch,CY);
+  ctx.moveTo(CX,CY-ch); ctx.lineTo(CX,CY+ch); ctx.stroke();
+  ctx.beginPath(); ctx.arc(CX,CY,2.5,0,Math.PI*2);
+  ctx.fillStyle='#444'; ctx.fill();
+
+  // all points identical
+  q.pts.forEach(p=>{
+    ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2);
+    ctx.fillStyle='#1a1916'; ctx.fill();
+    ctx.fillStyle='#1a1916';
+    ctx.font='13px IBM Plex Mono,monospace';
+    ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.fillText(p.label, p.x+8, p.y-1);
+  });
+}
+
+function buildAnswers(q){
+  const wrap=document.getElementById('answers-wrap');
+  wrap.innerHTML='';
+  q.opts.forEach((deg,i)=>{
+    const btn=document.createElement('button');
+    btn.className='answer-btn';
+    btn.innerHTML=`<span class="key-badge">${i+1}</span><span class="deg">${fmt(deg)}</span>`;
+    btn.addEventListener('click',()=>handleAnswer(i,q));
+    wrap.appendChild(btn);
+  });
+}
+
+function handleAnswer(idx,q){
+  if(answered) return;
+  answered=true;
+  const btns=document.querySelectorAll('.answer-btn');
+  btns.forEach(b=>b.disabled=true);
+  const ok=idx===q.ci;
+  if(ok){score++;levelCorrect[q.diff-1]++;}else wrongs++;
+  btns[q.ci].classList.add('correct');
+  if(!ok) btns[idx].classList.add('wrong');
+  const fb=document.getElementById('feedback');
+  fb.textContent=ok?'✓ correct':'✗ wrong';
+  fb.className='feedback '+(ok?'correct':'wrong');
+  setTimeout(nextQ,580);
+}
+
+function keyHandler(e){
+  const i=parseInt(e.key)-1;
+  if(i>=0&&i<=4&&!answered) handleAnswer(i,questions[currentQ]);
+}
+
+function updateTimer(){
+  document.getElementById('timer-display').textContent=((Date.now()-startTime)/1000).toFixed(1);
+}
+
+function startGame(){
+  buildQs(); currentQ=0; score=0; wrongs=0; levelCorrect=[0,0,0];
+  startTime=Date.now();
+  clearInterval(timerInterval);
+  timerInterval=setInterval(updateTimer,250);
+  document.removeEventListener('keydown',keyHandler);
+  document.addEventListener('keydown',keyHandler);
+  showScreen('game-screen');
+  loadQ();
+}
+
+function loadQ(){
+  if(currentQ>=TOTAL_Q){endGame();return;}
+  answered=false;
+  const q=questions[currentQ];
+  document.getElementById('q-counter').textContent=`${currentQ+1} / ${TOTAL_Q}`;
+  document.getElementById('q-diff').textContent=`Level ${q.diff}`;
+  document.getElementById('target-label').textContent=q.tl;
+  document.getElementById('feedback').textContent=' ';
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('progress-bar').style.width=`${(currentQ/TOTAL_Q)*100}%`;
+  drawCompass(q); buildAnswers(q);
+}
+
+function nextQ(){ currentQ++; loadQ(); }
+
+function endGame(){
+  clearInterval(timerInterval);
+  document.removeEventListener('keydown',keyHandler);
+  const t=(Date.now()-startTime)/1000;
+  const pct=Math.round((score/TOTAL_Q)*100);
+  document.getElementById('r-correct').textContent=score;
+  document.getElementById('r-wrong').textContent=wrongs;
+  document.getElementById('r-pct').textContent=pct+'%';
+  document.getElementById('r-time').textContent=t.toFixed(1)+'s';
+  document.getElementById('r-avg').textContent=(t/TOTAL_Q).toFixed(1)+'s';
+  document.getElementById('r-l1').textContent=`${levelCorrect[0]} / 10`;
+  document.getElementById('r-l2').textContent=`${levelCorrect[1]} / 10`;
+  document.getElementById('r-l3').textContent=`${levelCorrect[2]} / 10`;
+  document.getElementById('progress-bar').style.width='100%';
+  showScreen('results-screen');
+}
+</script>
+</body>
+</html>

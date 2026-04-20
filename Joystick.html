@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dual Task Trainer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;700;900&display=swap');
+
+  :root {
+    --bg:     #eef2f6;
+    --panel:  #ffffff;
+    --border: #c8d4de;
+    --accent: #1a6fa8;
+    --green:  #1a9e5c;
+    --red:    #d63048;
+    --warn:   #b05c00;
+    --text:   #2a3a4a;
+    --dim:    #7a95aa;
+    --track-bg: #f4f7fa;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  #app {
+    width: 100%;
+    max-width: 900px;
+    height: 100vh;
+    max-height: 660px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.18em;
+    color: var(--dim);
+    text-transform: uppercase;
+  }
+
+  #timer-display {
+    font-size: 1.3rem;
+    color: var(--warn);
+    letter-spacing: 0.1em;
+  }
+
+  #input-hint {
+    font-size: 0.62rem;
+    color: var(--dim);
+    letter-spacing: 0.06em;
+  }
+
+  /* ── BODY: tracking left, question+stats right ── */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    grid-template-rows: 1fr;
+    gap: 10px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* ── TRACKING ── */
+  #tracking-wrap {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #tracking-canvas {
+    display: block;
+    flex: 1;
+    width: 100%;
+  }
+
+  /* ── RIGHT COLUMN ── */
+  .right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* ── QUESTION ── */
+  #question-wrap {
+    flex: 1;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #question-text {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: var(--text);
+    text-align: center;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    padding: 16px;
+  }
+
+  /* countdown bar runs along top of question wrap */
+  #countdown-bar {
+    position: absolute;
+    top: 0; left: 0;
+    height: 3px;
+    background: var(--accent);
+    transition: width 0.1s linear, background 0.3s;
+  }
+
+  /* ── STATS ── */
+  #stats-row {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    flex-shrink: 0;
+  }
+
+  .stat {
+    padding: 7px 8px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .stat:last-child { border-right: none; }
+
+  .stat-label {
+    font-size: 0.52rem;
+    letter-spacing: 0.16em;
+    color: var(--dim);
+    text-transform: uppercase;
+    font-family: 'Barlow Condensed', sans-serif;
+  }
+
+  .stat-value { font-size: 1rem; color: var(--accent); }
+
+  /* ── ANSWER ROW — full width, 4 across the bottom ── */
+  #answer-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .answer-btn {
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.25rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: border-color 0.12s, color 0.12s, background 0.12s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 10px 4px;
+  }
+
+  .answer-btn .key-hint {
+    font-size: 0.55rem;
+    color: var(--dim);
+    letter-spacing: 0.12em;
+  }
+
+  .answer-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: #eaf3fb;
+  }
+
+  .answer-btn.correct {
+    border-color: var(--green);
+    color: var(--green);
+    background: #eafaf2;
+  }
+
+  .answer-btn.wrong {
+    border-color: var(--red);
+    color: var(--red);
+    background: #fdeef0;
+  }
+
+  .answer-btn:disabled { cursor: default; }
+
+  /* ── OVERLAYS ── */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(238,242,246,0.97);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    gap: 18px;
+  }
+
+  .overlay h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 2.8rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    line-height: 1.1;
+    text-align: center;
+  }
+
+  .overlay p {
+    font-size: 0.78rem;
+    color: var(--dim);
+    text-align: center;
+    max-width: 420px;
+    line-height: 1.8;
+  }
+  .overlay p strong { color: var(--text); }
+
+  .big-btn {
+    background: transparent;
+    border: 1.5px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    padding: 12px 44px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background 0.18s, color 0.18s;
+  }
+  .big-btn:hover { background: var(--accent); color: #fff; }
+
+  .settings-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .settings-row label {
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    color: var(--dim);
+    text-transform: uppercase;
+  }
+
+  .diff-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--dim);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    padding: 5px 14px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+  .diff-btn.selected { border-color: var(--accent); color: var(--accent); background: #eaf3fb; }
+
+  select {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.78rem;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+
+  /* results */
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    width: 370px;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .result-cell { background: var(--panel); padding: 14px 12px; text-align: center; }
+  .r-label {
+    font-size: 0.58rem; letter-spacing: 0.18em; color: var(--dim);
+    font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; margin-bottom: 4px;
+  }
+  .r-val { font-size: 1.7rem; color: var(--accent); }
+  .r-val.good { color: var(--green); }
+  .r-val.bad  { color: var(--red); }
+</style>
+</head>
+<body>
+
+<!-- START -->
+<div class="overlay" id="start-overlay">
+  <h1>Dual Task<br>Trainer</h1>
+  <p>
+    <strong>Tracking:</strong> Keep the dot centred — arrow keys or joystick.<br>
+    <strong>Math:</strong> Answer with keys 1–4 or click the buttons below.<br>
+    Both tasks run simultaneously.
+  </p>
+  <div class="settings-row">
+    <label>Difficulty</label>
+    <button class="diff-btn" data-diff="easy">Easy</button>
+    <button class="diff-btn selected" data-diff="normal">Normal</button>
+    <button class="diff-btn" data-diff="hard">Hard</button>
+  </div>
+  <div class="settings-row">
+    <label>Duration</label>
+    <select id="duration-select">
+      <option value="60">1 min</option>
+      <option value="120" selected>2 min</option>
+      <option value="180">3 min</option>
+      <option value="300">5 min</option>
+    </select>
+  </div>
+  <button class="big-btn" id="start-btn">Begin</button>
+</div>
+
+<!-- RESULTS -->
+<div class="overlay" id="results-overlay" style="display:none">
+  <h1>Complete</h1>
+  <div class="results-grid" id="results-grid"></div>
+  <button class="big-btn" id="restart-btn">Run Again</button>
+</div>
+
+<div id="app">
+  <header>
+    <div class="logo">Dual Task Trainer</div>
+    <div id="timer-display">—</div>
+    <div id="input-hint">arrows / joystick &nbsp;·&nbsp; keys 1 – 4 to answer</div>
+  </header>
+
+  <!-- tracking + question side by side -->
+  <div class="main-grid">
+    <div id="tracking-wrap">
+      <canvas id="tracking-canvas"></canvas>
+    </div>
+
+    <div class="right-col">
+      <div id="question-wrap">
+        <div id="countdown-bar" style="width:100%"></div>
+        <div id="question-text">—</div>
+      </div>
+
+      <div id="stats-row">
+        <div class="stat"><div class="stat-label">Tracking</div><div class="stat-value" id="m-track">—</div></div>
+        <div class="stat"><div class="stat-label">Math</div><div class="stat-value" id="m-math">—</div></div>
+        <div class="stat"><div class="stat-label">Qs</div><div class="stat-value" id="m-questions">0</div></div>
+        <div class="stat"><div class="stat-label">Score</div><div class="stat-value" id="m-combined">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4 answer buttons full-width across the bottom -->
+  <div id="answer-row">
+    <button class="answer-btn" data-idx="0"><span class="key-hint">[1]</span><span class="btn-val">—</span></button>
+    <button class="answer-btn" data-idx="1"><span class="key-hint">[2]</span><span class="btn-val">—</span></button>
+    <button class="answer-btn" data-idx="2"><span class="key-hint">[3]</span><span class="btn-val">—</span></button>
+    <button class="answer-btn" data-idx="3"><span class="key-hint">[4]</span><span class="btn-val">—</span></button>
+  </div>
+</div>
+
+<script>
+const DIFFICULTY = {
+  easy:   { driftSpeed: 0.5,  driftChange: 0.006, mathTime: 10, ops: ['+','-'] },
+  normal: { driftSpeed: 0.9,  driftChange: 0.012, mathTime: 10, ops: ['+','-','×'] },
+  hard:   { driftSpeed: 1.5,  driftChange: 0.020, mathTime: 10, ops: ['+','-','×','÷'] },
+};
+
+// Your sensitivity settings preserved exactly
+const KEY_ACCEL = 15;
+const KEY_MAX   = 0.05;
+
+let cfg = DIFFICULTY.normal;
+let totalDuration = 120;
+let running = false, startTime = 0, animId = null;
+let dotX = 0, dotY = 0, velX = 0, velY = 0;
+let driftAngle = 0;
+let keyAxisX = 0, keyAxisY = 0;
+let trackSamples = [];
+let currentQ = null, mathCorrect = 0, mathTotal = 0;
+let questionDeadline = 0, answerLocked = false;
+let keyState = { ArrowUp:false, ArrowDown:false, ArrowLeft:false, ArrowRight:false };
+
+const canvas = document.getElementById('tracking-canvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  const wrap = document.getElementById('tracking-wrap');
+  canvas.width  = wrap.clientWidth;
+  canvas.height = wrap.clientHeight;
+}
+window.addEventListener('resize', () => { resizeCanvas(); if (!running) drawTracking(); });
+
+// ── MATH ─────────────────────────────────────────────────────────────────────
+function rnd(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+
+function genQuestion() {
+  const op = cfg.ops[Math.floor(Math.random() * cfg.ops.length)];
+  let a, b, answer;
+  if      (op === '+') { a = rnd(10,60); b = rnd(5,40);  answer = a+b; }
+  else if (op === '-') { a = rnd(20,80); b = rnd(5,a-1); answer = a-b; }
+  else if (op === '×') { a = rnd(2,12);  b = rnd(2,12);  answer = a*b; }
+  else                 { b = rnd(2,9); answer = rnd(2,12); a = b*answer; }
+
+  const wrongs = new Set();
+  while (wrongs.size < 3) {
+    const w = answer + Math.sign(Math.random()-0.5) * rnd(1, Math.max(3, Math.round(Math.abs(answer)*0.25)));
+    if (w !== answer && w > 0) wrongs.add(w);
+  }
+  const options = [answer, ...wrongs].sort(() => Math.random()-0.5);
+  return { text: `${a} ${op} ${b} = ?`, answer, options };
+}
+
+function loadQuestion() {
+  currentQ = genQuestion();
+  answerLocked = false;
+  questionDeadline = performance.now() + cfg.mathTime * 1000;
+  document.getElementById('question-text').textContent = currentQ.text;
+  document.querySelectorAll('.answer-btn').forEach((btn, i) => {
+    btn.querySelector('.btn-val').textContent = currentQ.options[i];
+    btn.className = 'answer-btn';
+    btn.disabled = false;
+  });
+}
+
+function answerQuestion(idx) {
+  if (!running || answerLocked || !currentQ) return;
+  answerLocked = true; mathTotal++;
+  const btns = document.querySelectorAll('.answer-btn');
+  const correct = currentQ.options[idx] === currentQ.answer;
+  if (correct) { mathCorrect++; btns[idx].classList.add('correct'); }
+  else {
+    btns[idx].classList.add('wrong');
+    currentQ.options.forEach((o,i) => { if (o === currentQ.answer) btns[i].classList.add('correct'); });
+  }
+  btns.forEach(b => b.disabled = true);
+  updateMathStats();
+  setTimeout(loadQuestion, 550);
+}
+
+function updateMathStats() {
+  document.getElementById('m-math').textContent      = mathTotal > 0 ? Math.round(mathCorrect/mathTotal*100)+'%' : '—';
+  document.getElementById('m-questions').textContent = mathTotal;
+}
+
+// ── DRAW ─────────────────────────────────────────────────────────────────────
+function drawTracking() {
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2;
+  const R  = Math.min(W,H) * 0.43;
+
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#f4f7fa';
+  ctx.fillRect(0,0,W,H);
+
+  // Rings
+  [0.33, 0.66, 1].forEach(f => {
+    ctx.beginPath(); ctx.arc(cx,cy,R*f,0,Math.PI*2);
+    ctx.strokeStyle = f===1 ? 'rgba(160,185,205,0.85)' : 'rgba(160,185,205,0.35)';
+    ctx.lineWidth   = f===1 ? 1.2 : 0.6;
+    ctx.stroke();
+  });
+
+  // Crosshair
+  ctx.strokeStyle = 'rgba(160,185,205,0.4)'; ctx.lineWidth = 0.6;
+  ctx.beginPath(); ctx.moveTo(cx-R,cy); ctx.lineTo(cx+R,cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx,cy-R); ctx.lineTo(cx,cy+R); ctx.stroke();
+
+  // Centre target ring
+  ctx.beginPath(); ctx.arc(cx,cy,6,0,Math.PI*2);
+  ctx.strokeStyle = 'rgba(26,111,168,0.4)'; ctx.lineWidth = 1.2; ctx.stroke();
+
+  const dist = Math.sqrt(dotX*dotX+dotY*dotY);
+  const dn   = Math.min(dist/R, 1);
+  const px = cx+dotX, py = cy+dotY;
+
+  // Colour: green near centre → blue mid → red far
+  const col = dn < 0.2 ? '26,158,92' : dn < 0.55 ? '26,111,168' : '214,48,72';
+
+  // Glow
+  const g = ctx.createRadialGradient(px,py,0,px,py,20);
+  g.addColorStop(0, `rgba(${col},0.22)`); g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.beginPath(); ctx.arc(px,py,20,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
+
+  // Dot
+  ctx.beginPath(); ctx.arc(px,py,7,0,Math.PI*2);
+  ctx.fillStyle = `rgb(${col})`; ctx.fill();
+}
+
+// ── LOOP ─────────────────────────────────────────────────────────────────────
+let lastT = 0;
+function gameLoop(t) {
+  if (!running) return;
+  const dt = Math.min((t-lastT)/1000, 0.05); lastT = t;
+
+  const remaining = totalDuration - (t-startTime)/1000;
+  if (remaining <= 0) { endTest(); return; }
+
+  const mm = String(Math.floor(remaining/60)).padStart(2,'0');
+  const ss = String(Math.floor(remaining%60)).padStart(2,'0');
+  document.getElementById('timer-display').textContent = `${mm}:${ss}`;
+
+  if (currentQ && !answerLocked) {
+    const frac = Math.max(0, (questionDeadline-t)/(cfg.mathTime*1000));
+    document.getElementById('countdown-bar').style.width = (frac*100)+'%';
+    document.getElementById('countdown-bar').style.background = frac<0.25 ? 'var(--red)' : 'var(--accent)';
+    if (frac <= 0) { mathTotal++; updateMathStats(); loadQuestion(); }
+  }
+
+  // Input — your inverted arrow directions preserved
+  const gp = getGamepad();
+  let axisX, axisY;
+  if (gp) {
+    axisX = deadzone(gp.axes[0]);
+    axisY = deadzone(gp.axes[1]);
+  } else {
+    const tx = (keyState.ArrowLeft?1:0)-(keyState.ArrowRight?1:0);
+    const ty = (keyState.ArrowUp  ?1:0)-(keyState.ArrowDown ?1:0);
+    keyAxisX = tx !== 0 ? Math.max(-KEY_MAX, Math.min(KEY_MAX, keyAxisX + tx*KEY_ACCEL*dt))
+                        : keyAxisX * Math.pow(0.04, dt);
+    keyAxisY = ty !== 0 ? Math.max(-KEY_MAX, Math.min(KEY_MAX, keyAxisY + ty*KEY_ACCEL*dt))
+                        : keyAxisY * Math.pow(0.04, dt);
+    axisX = keyAxisX; axisY = keyAxisY;
+  }
+
+  // Physics
+  driftAngle += (Math.random()-0.5)*cfg.driftChange*60*dt;
+  const driftX = Math.cos(driftAngle)*cfg.driftSpeed;
+  const driftY = Math.sin(driftAngle)*cfg.driftSpeed;
+  const str = cfg.driftSpeed * 55;
+  velX += (driftX - axisX*str)*dt;
+  velY += (driftY - axisY*str)*dt;
+  velX *= Math.pow(0.88, dt*60);
+  velY *= Math.pow(0.88, dt*60);
+  dotX += velX*dt*60;
+  dotY += velY*dt*60;
+
+  const R = Math.min(canvas.width,canvas.height)*0.43;
+  const dist = Math.sqrt(dotX*dotX+dotY*dotY);
+  if (dist > R) { dotX=dotX/dist*R; dotY=dotY/dist*R; velX*=-0.25; velY*=-0.25; }
+
+  trackSamples.push(Math.min(dist/R,1));
+  const slice  = trackSamples.slice(-90);
+  const avgDev = slice.reduce((a,b)=>a+b,0)/slice.length;
+  const trackAcc  = Math.max(0,Math.round((1-avgDev)*100));
+  const mathPct   = mathTotal>0 ? mathCorrect/mathTotal : 1;
+  const combined  = Math.round(trackAcc*0.6+mathPct*100*0.4);
+  document.getElementById('m-track').textContent    = trackAcc+'%';
+  document.getElementById('m-combined').textContent = combined+'%';
+
+  drawTracking();
+  animId = requestAnimationFrame(gameLoop);
+}
+
+function deadzone(v, dz=0.08) {
+  if (Math.abs(v)<dz) return 0;
+  return (v-Math.sign(v)*dz)/(1-dz);
+}
+function getGamepad() {
+  for (const g of (navigator.getGamepads?.()??[])) if (g?.connected) return g;
+  return null;
+}
+
+function startTest() {
+  dotX=dotY=velX=velY=keyAxisX=keyAxisY=0;
+  driftAngle=Math.random()*Math.PI*2;
+  trackSamples=[]; mathCorrect=mathTotal=0;
+  running=true; startTime=performance.now(); lastT=startTime;
+  document.getElementById('start-overlay').style.display='none';
+  document.getElementById('results-overlay').style.display='none';
+  resizeCanvas(); loadQuestion();
+  animId=requestAnimationFrame(gameLoop);
+}
+
+function endTest() {
+  running=false; cancelAnimationFrame(animId);
+  const avgDev   = trackSamples.reduce((a,b)=>a+b,0)/trackSamples.length;
+  const trackAcc = Math.max(0,Math.round((1-avgDev)*100));
+  const mathPct  = mathTotal>0?Math.round(mathCorrect/mathTotal*100):0;
+  const combined = Math.round(trackAcc*0.6+mathPct*0.4);
+  const grade    = combined>=80?'PASS':combined>=60?'MARGINAL':'FAIL';
+  const gc       = combined>=80?'good':combined>=60?'':'bad';
+  document.getElementById('results-grid').innerHTML=`
+    <div class="result-cell"><div class="r-label">Tracking</div><div class="r-val">${trackAcc}%</div></div>
+    <div class="result-cell"><div class="r-label">Math</div><div class="r-val">${mathPct}%</div></div>
+    <div class="result-cell"><div class="r-label">Questions</div><div class="r-val">${mathTotal}</div></div>
+    <div class="result-cell" style="grid-column:span 2"><div class="r-label">Combined</div><div class="r-val ${gc}">${combined}%</div></div>
+    <div class="result-cell"><div class="r-label">Grade</div><div class="r-val ${gc}">${grade}</div></div>`;
+  document.getElementById('results-overlay').style.display='flex';
+}
+
+document.addEventListener('keydown', e => {
+  if (keyState.hasOwnProperty(e.key)) { e.preventDefault(); keyState[e.key]=true; }
+  const n=parseInt(e.key); if (n>=1&&n<=4) answerQuestion(n-1);
+});
+document.addEventListener('keyup', e => { if (keyState.hasOwnProperty(e.key)) keyState[e.key]=false; });
+document.querySelectorAll('.answer-btn').forEach(btn=>btn.addEventListener('click',()=>answerQuestion(parseInt(btn.dataset.idx))));
+document.getElementById('start-btn').addEventListener('click', startTest);
+document.getElementById('restart-btn').addEventListener('click', startTest);
+document.querySelectorAll('.diff-btn').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected'); cfg=DIFFICULTY[btn.dataset.diff];
+}));
+document.getElementById('duration-select').addEventListener('change',e=>{ totalDuration=parseInt(e.target.value); });
+
+resizeCanvas();
+drawTracking();
+</script>
+</body>
+</html>
