@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MATF Trainer</title>
+<title>Table Reading Trainer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -155,7 +155,7 @@ header h1 { font-family:'DM Mono',monospace; font-size:14px; font-weight:500; le
 <body>
 
 <header>
-  <h1>matf trainer</h1>
+  <h1>table reading trainer</h1>
   <span id="hdr-sub">select a mode</span>
   <button id="hdr-back" style="display:none" onclick="goMenu()">← menu</button>
   <div id="hdr-hint">keys 1–5 &nbsp;·&nbsp; enter / space for next</div>
@@ -167,7 +167,7 @@ header h1 { font-family:'DM Mono',monospace; font-size:14px; font-weight:500; le
   <div class="menu-card" onclick="startGrid()">
     <div class="mc-title">Part 1 — Grid Reading</div>
     <div class="mc-desc">Cross-reference two axis values on a −17 to +17 grid. Axes shift slightly each round to prevent familiarity.</div>
-    <div class="mc-tag">10 questions &nbsp;·&nbsp; 1–5 keys</div>
+    <div class="mc-tag">20 questions &nbsp;·&nbsp; 1–5 keys</div>
   </div>
   <div class="menu-card" onclick="startTable()">
     <div class="mc-title">Part 2 — Table Reading</div>
@@ -328,7 +328,7 @@ function showResults(pfx, score, total, times, results, bdId){
    PART 1 — GRID
 ══════════════════════════════ */
 let gMin,gMax,gScore,gQN,gT0,gQT0,gTimes,gRes,gAns,gCurR,gCurC,gCorrect,gTimer;
-const G_QPR=10, G_OFF=4;
+const G_QPR=20, G_OFF=4;
 
 function gridVal(r,c){ let v=r+c; while(v>10)v-=20; while(v<-10)v+=20; return v; }
 
@@ -425,9 +425,7 @@ document.getElementById('g-nxt').addEventListener('click',()=>{
    PART 2 — TABLE
 ══════════════════════════════ */
 const T_QPR=20;
-const SPEEDS=[100,200,300];
-
-// Per-round axis values (set by genTables each round)
+let SPEEDS_R=[100,200,300];
 let VELS=[], ANGLES=[];
 
 // Base drift correction values (for angle offsets 0,10,20 from base angle)
@@ -444,32 +442,45 @@ const BASE_GS_DROP={
 };
 
 let tData={};
+let COL_ORDER=['dri','gs'];
 let tScore,tQN,tT0,tQT0,tTimes,tRes,tAns,tCorrect,tTimer;
 let tCurAS,tCurWV,tCurWA,tCurType;
 
 function genTables(){
-  // Pick a starting velocity (10–30) and angle (50–70), both in steps of 10
-  const velStart = rnd(1,3)*10;           // 10, 20, or 30
-  const angStart = (rnd(5,7))*10;         // 50, 60, or 70
+  // Randomise which side (dri or gs) appears first
+  COL_ORDER = Math.random()<0.5 ? ['dri','gs'] : ['gs','dri'];
 
+  // Pick a starting velocity (10–30) and angle (50–70), both in steps of 10
+  const velStart = rnd(1,3)*10;
+  const angStart = rnd(5,7)*10;
   VELS   = Array.from({length:10}, (_,i)=>(velStart + i*10));
   ANGLES = [angStart, angStart+10, angStart+20];
 
+  // Pick air speeds: 3 values between 50–500 with either 50 or 100 spacing
+  const spacing = Math.random()<0.5 ? 50 : 100;
+  // start must allow 3 values with chosen spacing within 50–500
+  const maxStart = 500 - 2*spacing;
+  // round start to nearest spacing multiple, min 50
+  let asStart = Math.round(rnd(50, maxStart) / spacing) * spacing;
+  if(asStart < 50) asStart = 50;
+  if(asStart > maxStart) asStart = maxStart;
+  SPEEDS_R = [asStart, asStart+spacing, asStart+2*spacing];
+
   tData={};
-  for(const as of SPEEDS){
+  for(const as of SPEEDS_R){
     tData[as]={};
-    const af = as===100?1.0:as===200?0.95:0.88;
+    // scale factor: higher airspeed → slightly lower relative drift
+    const af = Math.max(0.5, 1.0 - (as-100)/1000);
     for(let ai=0;ai<3;ai++){
       const wa=ANGLES[ai];
       tData[as][wa]={};
       for(let vi=0;vi<VELS.length;vi++){
         const wv=VELS[vi];
-        // Look up base using canonical vel index (10,20,...100) → vi+1 → key = (vi+1)*10
         const baseKey=(vi+1)*10;
-        const baseDri=BASE_DRI[ai*10]?.[baseKey] ?? BASE_DRI[ai*10]?.[100] ?? 50;
-        const baseGsDrop=BASE_GS_DROP[ai*10]?.[baseKey] ?? BASE_GS_DROP[ai*10]?.[100] ?? 31;
-        const dri=Math.max(1, Math.round(baseDri*af + rnd(-2,2)));
-        const gs=Math.max(as-65, as - Math.round(baseGsDrop*af + rnd(-1,1)));
+        const baseDri   = BASE_DRI[ai*10]?.[baseKey]    ?? 50;
+        const baseGsDrop= BASE_GS_DROP[ai*10]?.[baseKey] ?? 31;
+        const dri = Math.max(1, Math.round(baseDri*af + rnd(-2,2)));
+        const gs  = Math.max(as-Math.round(as*0.15), as - Math.round(baseGsDrop*af + rnd(-1,1)));
         tData[as][wa][wv]={dri, gs};
       }
     }
@@ -478,30 +489,33 @@ function genTables(){
 
 function buildTableHTML(as){
   const nA=ANGLES.length;
+  const first = COL_ORDER[0], second = COL_ORDER[1];
+  const firstLabel = first==='dri' ? 'Dri. Cor.' : 'Ground Speed';
+  const secondLabel= second==='dri'? 'Dri. Cor.' : 'Ground Speed';
   let h='<thead>';
-  // Row 0: Wind Angle group headers
+  // Row 0: "Wind Angle" spanning both halves
   h+=`<tr>`;
   h+=`<th rowspan="3" style="min-width:38px;vertical-align:middle;">Wind<br>Vel.</th>`;
   h+=`<th colspan="${nA}" style="border-bottom:.5px solid var(--border);">Wind Angle</th>`;
   h+=`<th colspan="${nA}" style="border-bottom:.5px solid var(--border);">Wind Angle</th>`;
   h+=`</tr>`;
-  // Row 1: Dri. Cor. / Ground Speed
+  // Row 1: column group labels (order randomised)
   h+=`<tr>`;
-  h+=`<th colspan="${nA}">Dri. Cor.</th>`;
-  h+=`<th colspan="${nA}">Ground Speed</th>`;
+  h+=`<th colspan="${nA}">${firstLabel}</th>`;
+  h+=`<th colspan="${nA}">${secondLabel}</th>`;
   h+=`</tr>`;
   // Row 2: angle values
   h+=`<tr>`;
-  for(const a of ANGLES) h+=`<th data-col-wa="${a}" data-col-type="dri">${a}</th>`;
-  for(const a of ANGLES) h+=`<th data-col-wa="${a}" data-col-type="gs">${a}</th>`;
+  for(const a of ANGLES) h+=`<th data-col-wa="${a}" data-col-type="${first}">${a}</th>`;
+  for(const a of ANGLES) h+=`<th data-col-wa="${a}" data-col-type="${second}">${a}</th>`;
   h+=`</tr></thead><tbody>`;
   for(const wv of VELS){
     h+=`<tr><td class="vel-col" data-as="${as}" data-wv="${wv}">${wv}</td>`;
     for(const wa of ANGLES){
-      h+=`<td data-as="${as}" data-wv="${wv}" data-wa="${wa}" data-type="dri">${tData[as][wa][wv].dri}</td>`;
+      h+=`<td data-as="${as}" data-wv="${wv}" data-wa="${wa}" data-type="${first}">${tData[as][wa][wv][first]}</td>`;
     }
     for(const wa of ANGLES){
-      h+=`<td data-as="${as}" data-wv="${wv}" data-wa="${wa}" data-type="gs">${tData[as][wa][wv].gs}</td>`;
+      h+=`<td data-as="${as}" data-wv="${wv}" data-wa="${wa}" data-type="${second}">${tData[as][wa][wv][second]}</td>`;
     }
     h+=`</tr>`;
   }
@@ -509,7 +523,7 @@ function buildTableHTML(as){
 }
 
 function renderTables(){
-  SPEEDS.forEach((as,i)=>{
+  SPEEDS_R.forEach((as,i)=>{
     const block=document.getElementById(`lt${i}`);
     block.querySelector('.lt-title').textContent=`air speed  ${as}`;
     block.querySelector('table').innerHTML=buildTableHTML(as);
@@ -522,7 +536,7 @@ function hlTable(as,wv,wa,type){
     el.classList.remove('hl-row','hl-col','hl-cell','hl-col-hdr');
   });
   // Only highlight inside the matching airspeed table
-  const block=SPEEDS.indexOf(as);
+  const block=SPEEDS_R.indexOf(as);
   if(block<0) return;
   const tbl=document.getElementById(`lt${block}`).querySelector('table');
 
@@ -550,7 +564,7 @@ function startTable(){
   clearInterval(tTimer);
   genTables(); renderTables();
   tScore=0; tQN=0; tTimes=[]; tRes=[];
-  setHdr(`part 2 · table reading  ·  vel ${VELS[0]}–${VELS[VELS.length-1]}  ·  ang ${ANGLES[0]}–${ANGLES[2]}`);
+  setHdr(`part 2 · table reading  ·  AS ${SPEEDS_R.join(', ')}`);
   tT0=Date.now();
   tTimer=setInterval(()=>{ document.getElementById('t-time').textContent=fmt(Date.now()-tT0); },100);
   show('s-table'); clearHL(); tQ();
@@ -562,7 +576,7 @@ function tQ(){
   document.getElementById('t-nxt').style.display='none';
   clearHL(); tQT0=Date.now();
 
-  tCurAS=pick(SPEEDS);
+  tCurAS=pick(SPEEDS_R);
   tCurWV=pick(VELS);
   tCurWA=pick(ANGLES);
   tCurType=Math.random()<0.5?'dri':'gs';
