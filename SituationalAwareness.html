@@ -396,7 +396,7 @@ let currentQuestions = [], answeredCount = 0;
 const rnd    = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
 const pick   = a => a[rnd(0,a.length-1)];
 const shuffle = a => { const r=[...a]; for(let i=r.length-1;i>0;i--){const j=rnd(0,i);[r[i],r[j]]=[r[j],r[i]];} return r; };
-const uid4   = () => Math.random().toString(36).slice(2,6).toUpperCase();
+const uid4   = () => String.fromCharCode(65 + Math.floor(Math.random()*26)) + Math.floor(Math.random()*10);
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -478,9 +478,21 @@ function genQuestions(scene) {
     options: dist(Object.values(S_LABEL), S_LABEL[su.status]),
   });
 
-  // Q3: choose from extras
+  // Q3: choose from extras pool (shuffled so variety each round)
   const extras = [];
   const intelU = units.filter(u => u.hasIntel);
+
+  // Location of a specific unit (by symbol + status description)
+  const lu = pick(units);
+  // Generate plausible wrong grid positions
+  const allCells = [];
+  for (let c = 0; c < GRID_SIZE; c++) for (let r = 0; r < GRID_SIZE; r++) allCells.push(COLS[c] + ROWS[r]);
+  const correctCell = lu.colL + lu.rowL;
+  extras.push({
+    text: `Which grid cell was the <strong>${S_LABEL[lu.status]} ${lu.type}</strong> (ID: ${lu.id}) located in?`,
+    answer: correctCell,
+    options: dist(allCells, correctCell),
+  });
 
   if (cfg.hasDir && intelU.length > 0) {
     const du = pick(intelU);
@@ -498,7 +510,7 @@ function genQuestions(scene) {
       options: dist(FREQS, fu.frequency),
     });
   }
-  // count question always available
+  // Count question
   const sCounts = {}; STATUSES.forEach(s => sCounts[s] = 0); units.forEach(u => sCounts[u.status]++);
   const st = pick(STATUSES.filter(s => sCounts[s] > 0));
   extras.push({
@@ -507,7 +519,7 @@ function genQuestions(scene) {
     options: dist(['0','1','2','3','4','5','6','7','8'], String(sCounts[st])),
   });
 
-  pool.push(pick(extras));
+  pool.push(pick(shuffle(extras)));
   return pool.slice(0, 3);
 }
 

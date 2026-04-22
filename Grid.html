@@ -397,11 +397,68 @@ function gQ(){
   document.getElementById('g-c2').textContent=gCurC;
   document.getElementById('g-qlbl').textContent=`${gQN+1} of ${G_QPR}`;
   document.getElementById('g-prog').style.width=`${gQN/G_QPR*100}%`;
-  const s=new Set([gCorrect]);
-  let t=0;
-  while(s.size<5&&t<300){t++;const d=rnd(-5,5);if(!d)continue;const cv=gCorrect+d;if(cv>=-10&&cv<=10)s.add(cv);}
-  while(s.size<5){for(let v=-10;v<=10;v++){if(!s.has(v)){s.add(v);break;}}}
-  buildOpts('g-opts',[...s].sort(()=>Math.random()-.5),gCorrect,gSel);
+  // Build a prioritised candidate pool of plausible mistakes,
+  // then pick 4 that are sufficiently spread from each other and the correct answer.
+  const gCandidates = [];
+
+  // Mistake type A: sign inversion of the answer
+  const negated = -gCorrect;
+  if(negated !== gCorrect && negated >= -10 && negated <= 10) gCandidates.push(negated);
+
+  // Mistake type B: negated axis readings
+  const negRow = gridVal(-gCurR, gCurC);
+  const negCol = gridVal(gCurR, -gCurC);
+  if(negRow !== gCorrect && negRow >= -10 && negRow <= 10) gCandidates.push(negRow);
+  if(negCol !== gCorrect && negCol !== negRow && negCol >= -10 && negCol <= 10) gCandidates.push(negCol);
+
+  // Mistake type C: off-by-one coordinate (adjacent row or col)
+  const adjCoord = [
+    gridVal(gCurR+1, gCurC), gridVal(gCurR-1, gCurC),
+    gridVal(gCurR, gCurC+1), gridVal(gCurR, gCurC-1),
+    gridVal(gCurR+2, gCurC), gridVal(gCurR, gCurC+2),
+  ];
+  for(const v of adjCoord){
+    if(v !== gCorrect && v >= -10 && v <= 10 && !gCandidates.includes(v)) gCandidates.push(v);
+  }
+
+  // Mistake type D: values from elsewhere on the grid (varied per question — seed with row+col sum quirks)
+  for(const dr of [-3,3,-5,5]){
+    for(const dc of [0,1,-1]){
+      const v = gridVal(gCurR+dr, gCurC+dc);
+      if(v !== gCorrect && v >= -10 && v <= 10 && !gCandidates.includes(v)) gCandidates.push(v);
+    }
+  }
+
+  // Shuffle candidates so the mix varies question-to-question
+  for(let i=gCandidates.length-1;i>0;i--){ const j=rnd(0,i); [gCandidates[i],gCandidates[j]]=[gCandidates[j],gCandidates[i]]; }
+
+  // Pick 4 distractors that are not within ±1 of each other or the correct answer
+  const gChosen = [];
+  const tooClose = (a, b) => Math.abs(a - b) <= 1;
+  for(const c of gCandidates){
+    if(gChosen.length >= 4) break;
+    if(tooClose(c, gCorrect)) continue;
+    if(gChosen.some(x => tooClose(x, c))) continue;
+    gChosen.push(c);
+  }
+
+  // If still short, draw from the full valid range with spread enforcement
+  const fullRange = [];
+  for(let v=-10;v<=10;v++) if(v!==gCorrect && !gChosen.includes(v)) fullRange.push(v);
+  for(let i=fullRange.length-1;i>0;i--){ const j=rnd(0,i); [fullRange[i],fullRange[j]]=[fullRange[j],fullRange[i]]; }
+  for(const v of fullRange){
+    if(gChosen.length >= 4) break;
+    if(tooClose(v, gCorrect)) continue;
+    if(gChosen.some(x => tooClose(x, v))) continue;
+    gChosen.push(v);
+  }
+  // Last resort: add anything valid
+  for(let v=-10;v<=10;v++){
+    if(gChosen.length >= 4) break;
+    if(v !== gCorrect && !gChosen.includes(v)) gChosen.push(v);
+  }
+
+  buildOpts('g-opts',[gCorrect,...gChosen.slice(0,4)].sort(()=>Math.random()-.5),gCorrect,gSel);
 }
 
 function gSel(val,btn){
@@ -589,17 +646,77 @@ function tQ(){
   document.getElementById('t-qlbl').textContent=`${tQN+1} of ${T_QPR}`;
   document.getElementById('t-prog').style.width=`${tQN/T_QPR*100}%`;
 
-  const s=new Set([tCorrect]);
-  let tries=0;
-  while(s.size<5&&tries<500){
-    tries++;
-    const step = tCurType==='dri' ? rnd(3,10) : rnd(1,6);
-    const delta = step*(Math.random()<.5?1:-1);
-    const c=tCorrect+delta;
-    if(c>0) s.add(c);
+  // Build a prioritised candidate pool of plausible table-reading mistakes,
+  // then select 4 that are sufficiently spread from each other.
+  const wrongType = tCurType==='dri'?'gs':'dri';
+  const velIdx    = VELS.indexOf(tCurWV);
+  const angIdx    = ANGLES.indexOf(tCurWA);
+
+  // Helper: minimum spread between any two values relative to the correct answer's scale
+  const scale     = tCurType==='dri' ? Math.max(5, Math.round(tCorrect * 0.08)) : Math.max(3, Math.round(tCorrect * 0.02));
+  const tooCloseT = (a, b) => Math.abs(a - b) < scale;
+
+  const tCands = [];
+  const tSeen  = new Set([tCorrect]);
+  const push   = v => { if(v>0 && !tSeen.has(v)){ tSeen.add(v); tCands.push(v); } };
+
+  // Category 1 — type reversal (dri↔gs at same cell)
+  const rev = tData[tCurAS]?.[tCurWA]?.[tCurWV]?.[wrongType];
+  if(rev != null) push(rev);
+
+  // Category 2 — wrong airspeed table, same cell
+  for(const as of [...SPEEDS_R].sort(()=>Math.random()-.5)){
+    if(as !== tCurAS) push(tData[as][tCurWA][tCurWV][tCurType]);
   }
-  while(s.size<5){ s.add(tCorrect+(s.size*4)); }
-  buildOpts('t-opts',[...s].sort(()=>Math.random()-.5),tCorrect,tSel);
+
+  // Category 3 — adjacent velocity (one row off), same type+angle
+  const adjVels = [velIdx-1, velIdx+1, velIdx-2, velIdx+2]
+    .filter(i=>i>=0&&i<VELS.length)
+    .sort(()=>Math.random()-.5);
+  for(const vi of adjVels) push(tData[tCurAS][tCurWA][VELS[vi]][tCurType]);
+
+  // Category 4 — adjacent angle (one column off), same type+velocity
+  const adjAngs = [angIdx-1, angIdx+1].filter(i=>i>=0&&i<ANGLES.length).sort(()=>Math.random()-.5);
+  for(const ai of adjAngs) push(tData[tCurAS][ANGLES[ai]][tCurWV][tCurType]);
+
+  // Category 5 — type reversal at adjacent velocity
+  for(const vi of adjVels.slice(0,2)){
+    if(vi>=0&&vi<VELS.length) push(tData[tCurAS][tCurWA][VELS[vi]][wrongType]);
+  }
+
+  // Category 6 — wrong airspeed + wrong type (double mistake)
+  for(const as of SPEEDS_R){
+    if(as !== tCurAS) push(tData[as][tCurWA][tCurWV][wrongType]);
+  }
+
+  // Shuffle the full candidate list so category priority varies per question
+  for(let i=tCands.length-1;i>0;i--){ const j=rnd(0,i); [tCands[i],tCands[j]]=[tCands[j],tCands[i]]; }
+
+  // Pick 4 with spread enforcement
+  const tChosen = [];
+  for(const c of tCands){
+    if(tChosen.length >= 4) break;
+    if(tooCloseT(c, tCorrect)) continue;
+    if(tChosen.some(x => tooCloseT(x, c))) continue;
+    tChosen.push(c);
+  }
+
+  // Fallback: generate spread values if not enough candidates
+  let tries = 0;
+  while(tChosen.length < 4 && tries < 500){
+    tries++;
+    // Pick a random multiplier bucket far from existing choices
+    const bucket = rnd(2, 8);
+    const sign   = Math.random() < 0.5 ? 1 : -1;
+    const v      = tCorrect + sign * bucket * scale;
+    if(v <= 0) continue;
+    if(tooCloseT(v, tCorrect)) continue;
+    if(tChosen.some(x => tooCloseT(x, v))) continue;
+    if(tChosen.includes(v)) continue;
+    tChosen.push(v);
+  }
+
+  buildOpts('t-opts',[tCorrect,...tChosen.slice(0,4)].sort(()=>Math.random()-.5),tCorrect,tSel);
 }
 
 function tSel(val,btn){
