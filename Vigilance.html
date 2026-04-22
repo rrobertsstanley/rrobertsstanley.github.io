@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vigilance Test</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #f4f5f7;
+    --surface: #ffffff;
+    --border: #d0d4dc;
+    --border-lit: #b0b8c8;
+    --text: #1a1d24;
+    --text-dim: #5a6070;
+    --text-muted: #9aa0ae;
+    --accent: #1a5cff;
+    --accent-dim: rgba(26,92,255,0.08);
+    --star-yellow-fill: #ffc940;
+    --star-yellow-glow: rgba(255,180,0,0.4);
+    --star-dark-fill: #3a4050;
+    --star-dark-glow: rgba(58,64,80,0.15);
+    --danger: #d32f2f;
+    --success: #1a7a40;
+    --mono: 'Share Tech Mono', monospace;
+    --sans: 'Barlow', sans-serif;
+    --cell: 52px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .screen { display: none; width: 100%; max-width: 920px; padding: 24px; }
+  .screen.active { display: flex; flex-direction: column; align-items: center; }
+
+  /* ── START ── */
+  #start-screen { gap: 28px; }
+
+  .title-block { text-align: center; }
+  .title-block h1 {
+    font-family: var(--mono);
+    font-size: 1.9rem;
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    color: var(--text);
+    text-transform: uppercase;
+  }
+  .title-block p {
+    margin-top: 6px;
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  .instructions {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 24px 28px;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+  .instructions h2 {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    font-weight: 600;
+  }
+  .instr-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    align-items: flex-start;
+  }
+  .instr-icon { font-size: 1rem; margin-top: 1px; flex-shrink: 0; color: var(--text-dim); }
+  .instr-text { font-size: 0.85rem; color: var(--text); line-height: 1.55; }
+  .instr-text .yellow { color: #b07000; font-weight: 600; }
+  .instr-text .mono {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--text);
+  }
+
+  .btn-start {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    padding: 13px 48px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .btn-start:hover { opacity: 0.88; }
+
+  /* ── GAME ── */
+  #game-screen {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 28px;
+    padding: 20px;
+  }
+
+  .side-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-width: 136px;
+    padding-top: 8px;
+  }
+
+  .side-block { font-family: var(--mono); }
+  .side-block .lbl {
+    font-family: var(--sans);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .side-block .val { font-size: 1.05rem; color: var(--text-dim); }
+  .score-big { font-size: 1.55rem !important; color: var(--text) !important; }
+  .score-sub { font-size: 0.68rem; color: var(--text-muted); margin-top: 3px; }
+
+  .phase-bar { display: flex; gap: 3px; margin-top: 6px; }
+  .phase-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); transition: background 0.3s; }
+  .phase-dot.active { background: var(--accent); }
+  .phase-dot.done   { background: var(--border-lit); }
+
+  /* ── GRID ── */
+  .grid-area { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+
+  .col-labels { display: flex; margin-left: var(--cell); margin-bottom: 2px; }
+  .col-label {
+    width: var(--cell); text-align: center;
+    font-family: var(--mono); font-size: 0.65rem; color: var(--star-dark-fill);
+    font-weight: 600;
+  }
+
+  .row-and-grid { display: flex; }
+  .row-labels { display: flex; flex-direction: column; }
+  .row-label {
+    height: var(--cell); width: var(--cell);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 0.65rem; color: var(--star-dark-fill);
+    font-weight: 600;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(9, var(--cell));
+    grid-template-rows: repeat(9, var(--cell));
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--surface);
+    box-shadow: 0 2px 14px rgba(0,0,0,0.07);
+  }
+
+  .cell {
+    width: var(--cell); height: var(--cell);
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .cell:nth-child(9n)   { border-right: none; }
+  .cell:nth-child(n+73) { border-bottom: none; }
+
+  .cell.flash-good { animation: flashGood 0.3s ease forwards; }
+  .cell.flash-bad  { animation: flashBad  0.3s ease forwards; }
+
+  @keyframes flashGood { 0% { background: rgba(26,122,64,0.22); } 100% { background: transparent; } }
+  @keyframes flashBad  { 0% { background: rgba(211,47,47,0.2);  } 100% { background: transparent; } }
+
+  .star { width: 26px; height: 26px; animation: starIn 0.18s ease; }
+  @keyframes starIn {
+    0%   { transform: scale(0) rotate(-20deg); opacity: 0; }
+    70%  { transform: scale(1.15); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .star svg { width: 100%; height: 100%; }
+  .star.priority { filter: drop-shadow(0 0 5px var(--star-yellow-glow)); }
+  .star.routine  { filter: drop-shadow(0 0 3px var(--star-dark-glow)); }
+
+  /* ── INPUT ── */
+  .input-section {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 8px; width: 100%;
+  }
+
+  .coord-boxes {
+    display: flex; align-items: flex-end; gap: 10px;
+  }
+
+  .coord-box {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+  }
+
+  .coord-box-label {
+    font-family: var(--sans); font-weight: 600;
+    font-size: 0.6rem; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--text-muted);
+  }
+
+  .coord-box-field {
+    font-family: var(--mono); font-size: 1.4rem;
+    width: 64px; height: 52px;
+    background: var(--surface);
+    border: 1.5px solid var(--border-lit);
+    border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    transition: border-color 0.15s, box-shadow 0.15s;
+    position: relative; color: var(--text);
+    letter-spacing: 0.04em;
+  }
+
+  .coord-box-field.focused {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(26,92,255,0.12);
+  }
+
+  .coord-box-field .digit { color: var(--accent); }
+  .coord-box-field .empty { color: var(--text-muted); }
+
+  .coord-cursor {
+    display: inline-block; width: 2px; height: 1.1em;
+    background: var(--accent);
+    animation: blink 1s step-end infinite;
+    vertical-align: text-bottom; margin-left: 1px;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .coord-sep-big {
+    font-family: var(--mono); font-size: 1.4rem;
+    color: var(--text-muted); padding-bottom: 10px;
+    line-height: 1;
+  }
+
+  .hint-row {
+    font-size: 0.67rem; color: var(--text-muted);
+    font-family: var(--mono); letter-spacing: 0.06em; height: 16px;
+  }
+  .feedback {
+    font-family: var(--mono); font-size: 0.7rem;
+    letter-spacing: 0.1em; height: 16px; text-transform: uppercase;
+  }
+  .feedback.good { color: var(--success); }
+  .feedback.bad  { color: var(--danger); }
+
+  .waiting-msg {
+    font-family: var(--mono); font-size: 0.67rem;
+    letter-spacing: 0.08em; color: var(--text-muted);
+    text-transform: uppercase; opacity: 0; transition: opacity 0.4s;
+    height: 16px;
+  }
+  .waiting-msg.show { opacity: 1; }
+
+  /* ── END ── */
+  #end-screen { gap: 28px; }
+
+  .end-title {
+    font-family: var(--mono); font-size: 1.3rem;
+    letter-spacing: 0.2em; text-transform: uppercase; color: var(--text);
+  }
+
+  .results-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: 28px 36px; max-width: 420px; width: 100%;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  }
+  .results-card h2 {
+    font-size: 0.65rem; letter-spacing: 0.2em; color: var(--text-muted);
+    text-transform: uppercase; margin-bottom: 18px; font-weight: 600;
+  }
+  .result-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 7px 0; border-bottom: 1px solid var(--border);
+  }
+  .result-row:last-of-type { border-bottom: none; }
+  .result-row .rl { color: var(--text-dim); font-size: 0.8rem; }
+  .result-row .rv { font-family: var(--mono); color: var(--text); font-size: 0.9rem; }
+  .result-row.total .rl { color: var(--text); font-weight: 600; font-size: 0.85rem; }
+  .result-row.total .rv { color: var(--accent); font-size: 1.15rem; }
+
+  .score-note {
+    font-size: 0.72rem; color: var(--text-muted); margin-top: 12px; line-height: 1.5;
+  }
+
+  .btn-again {
+    font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.18em;
+    text-transform: uppercase; background: transparent;
+    border: 1px solid var(--border-lit); color: var(--text-dim);
+    padding: 10px 32px; border-radius: 4px; cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .btn-again:hover { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- ════ START ════ -->
+<div id="start-screen" class="screen active">
+  <div class="title-block">
+    <h1>Vigilance Test</h1>
+    <p>RAF CBAT · Coordinate Elimination</p>
+  </div>
+
+  <div class="instructions">
+    <h2>How to Play</h2>
+    <div class="instr-row">
+      <div class="instr-icon">⊹</div>
+      <div class="instr-text">Stars appear on a 9×9 grid. Eliminate each star by entering its coordinates before more appear.</div>
+    </div>
+    <div class="instr-row">
+      <div class="instr-icon">↵</div>
+      <div class="instr-text">
+        Type <span class="mono">ROW</span> — the cursor jumps to COL automatically. Type <span class="mono">COL</span> then press <span class="mono">Enter</span> to submit. Press <span class="mono">Esc</span> to clear.
+      </div>
+    </div>
+    <div class="instr-row">
+      <div class="instr-icon">★</div>
+      <div class="instr-text"><span class="yellow">Yellow priority stars</span> accumulate score at double the rate — eliminate these first.</div>
+    </div>
+    <div class="instr-row">
+      <div class="instr-icon">↓</div>
+      <div class="instr-text"><strong>Lower score is better.</strong> Each star scores 0.1 pts per 0.1s it remains on screen. Priority stars score at 2×.</div>
+    </div>
+  </div>
+
+  <button class="btn-start" onclick="startGame()">Begin Test</button>
+</div>
+
+<!-- ════ GAME ════ -->
+<div id="game-screen" class="screen">
+
+  <div class="side-panel">
+    <div class="side-block">
+      <div class="lbl">Elapsed</div>
+      <div class="val" id="timer-display">0:00</div>
+    </div>
+    <div class="side-block">
+      <div class="lbl">Phase</div>
+      <div class="val" id="phase-num" style="color:var(--text);font-size:1rem">1 / 6</div>
+      <div class="phase-bar" id="phase-bar"></div>
+    </div>
+    <div class="side-block">
+      <div class="lbl">Score</div>
+      <div class="val score-big" id="score-display">0.0</div>
+      <div class="score-sub" id="score-sub">0 priority · 0 routine</div>
+    </div>
+    <div class="side-block">
+      <div class="lbl">Active Stars</div>
+      <div class="val" id="stars-left">0</div>
+    </div>
+  </div>
+
+  <div class="grid-area">
+    <div>
+      <div class="col-labels" id="col-labels"></div>
+      <div class="row-and-grid">
+        <div class="row-labels" id="row-labels"></div>
+        <div class="grid" id="grid"></div>
+      </div>
+    </div>
+
+    <div class="input-section">
+      <div class="coord-boxes">
+        <div class="coord-box">
+          <div class="coord-box-label">Row</div>
+          <div class="coord-box-field focused" id="box-row">
+            <span class="empty" id="row-digit">—</span>
+            <span class="coord-cursor" id="row-cursor"></span>
+          </div>
+        </div>
+        <div class="coord-sep-big">,</div>
+        <div class="coord-box">
+          <div class="coord-box-label">Col</div>
+          <div class="coord-box-field" id="box-col">
+            <span class="empty" id="col-digit">—</span>
+            <span class="coord-cursor" id="col-cursor" style="display:none"></span>
+          </div>
+        </div>
+      </div>
+      <div class="hint-row" id="hint-row">type row (1–9)</div>
+      <div class="feedback" id="feedback"></div>
+      <div class="waiting-msg" id="waiting-msg">next wave incoming…</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ════ END ════ -->
+<div id="end-screen" class="screen">
+  <div class="end-title">Test Complete</div>
+  <div class="results-card">
+    <h2>Results</h2>
+    <div class="result-row"><span class="rl">Total Time</span><span class="rv" id="r-time">—</span></div>
+    <div class="result-row"><span class="rl">Avg. Response Time</span><span class="rv" id="r-avg">—</span></div>
+    <div class="result-row"><span class="rl">Accuracy</span><span class="rv" id="r-acc">—</span></div>
+    <div class="result-row total"><span class="rl">Final Score</span><span class="rv" id="r-score">—</span></div>
+    <div class="score-note">Lower is better. Score = total time each star spent on screen (0.1 pts per 0.1s). Priority stars count at 2×.</div>
+  </div>
+  <button class="btn-again" onclick="resetGame()">Run Again</button>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────
+const PHASES = [
+  { duration: 30, total: 5,  priority: 1 },
+  { duration: 30, total: 8,  priority: 2 },
+  { duration: 30, total: 11, priority: 3 },
+  { duration: 30, total: 14, priority: 4 },
+  { duration: 30, total: 17, priority: 5 },
+  { duration: 30, total: 20, priority: 6 },
+];
+const TOTAL_STARS = PHASES.reduce((s, p) => s + p.total, 0);
+
+// ── STATE ─────────────────────────────────────────────────────────
+let stars = {};
+let gameStartTime = null;
+let phaseIndex = 0;
+let phaseTimers = [];
+let starTimers = [];
+let totalScore = 0;
+let priorityScore = 0;
+let routineScore = 0;
+let priorityElim = 0;
+let routineElim = 0;
+let starsEliminated = 0;
+let misses = 0;
+let allSpawned = false;
+let gameActive = false;
+let timerRaf, scoreRaf;
+
+// ── DOM BUILD ─────────────────────────────────────────────────────
+function buildGrid() {
+  ['grid','col-labels','row-labels'].forEach(id => document.getElementById(id).innerHTML = '');
+  for (let c = 1; c <= 9; c++) {
+    const d = document.createElement('div');
+    d.className = 'col-label'; d.textContent = c;
+    document.getElementById('col-labels').appendChild(d);
+  }
+  for (let r = 1; r <= 9; r++) {
+    const rl = document.createElement('div');
+    rl.className = 'row-label'; rl.textContent = r;
+    document.getElementById('row-labels').appendChild(rl);
+    for (let c = 1; c <= 9; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell'; cell.id = `c${r}${c}`;
+      document.getElementById('grid').appendChild(cell);
+    }
+  }
+}
+
+function buildDots() {
+  const bar = document.getElementById('phase-bar');
+  bar.innerHTML = '';
+  PHASES.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'phase-dot'; d.id = `pd${i}`;
+    bar.appendChild(d);
+  });
+}
+
+// ── STARS ─────────────────────────────────────────────────────────
+function emptyCell() {
+  const occ = new Set(Object.keys(stars));
+  const avail = [];
+  for (let r = 1; r <= 9; r++)
+    for (let c = 1; c <= 9; c++)
+      if (!occ.has(`${r},${c}`)) avail.push([r,c]);
+  if (!avail.length) return null;
+  return avail[Math.floor(Math.random() * avail.length)];
+}
+
+function spawnStar(isPriority) {
+  const pos = emptyCell();
+  if (!pos) return;
+  const [r, c] = pos;
+  const key = `${r},${c}`;
+  stars[key] = { priority: isPriority, spawnTime: performance.now() };
+
+  const cell = document.getElementById(`c${r}${c}`);
+  const el = document.createElement('div');
+  el.className = 'star ' + (isPriority ? 'priority' : 'routine');
+  el.id = `s${r}${c}`;
+  el.innerHTML = isPriority
+    ? `<svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" fill="#ffc940" stroke="#d49000" stroke-width="0.5"/></svg>`
+    : `<svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" fill="#3a4050" stroke="#252830" stroke-width="0.5"/></svg>`;
+  cell.appendChild(el);
+  setStarsLeft(Object.keys(stars).length);
+  setWaiting(false);
+}
+
+function scheduleAllStars() {
+  let offset = 0;
+  PHASES.forEach((ph, pi) => {
+    const slots = [];
+    for (let i = 0; i < ph.total; i++) {
+      const base = (ph.duration * 1000 / ph.total) * i;
+      const jitter = (Math.random() - 0.5) * (ph.duration * 1000 / ph.total) * 0.28;
+      slots.push(Math.max(120, Math.min(base + jitter, ph.duration * 1000 - 400)));
+    }
+    slots.sort((a, b) => a - b);
+    const types = [...Array(ph.priority).fill(true), ...Array(ph.total - ph.priority).fill(false)];
+    for (let i = types.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [types[i], types[j]] = [types[j], types[i]];
+    }
+    slots.forEach((t, i) => {
+      const tid = setTimeout(() => spawnStar(types[i]), offset + t);
+      starTimers.push(tid);
+    });
+    offset += ph.duration * 1000;
+  });
+
+  // After all phases, mark allSpawned
+  const totalMs = PHASES.reduce((s, p) => s + p.duration * 1000, 0);
+  const tid = setTimeout(() => {
+    allSpawned = true;
+    if (Object.keys(stars).length === 0) endGame();
+    else setWaiting(false); // still stars to clear
+  }, totalMs);
+  starTimers.push(tid);
+}
+
+// ── PHASE UI ─────────────────────────────────────────────────────
+function advancePhaseUI(index) {
+  phaseIndex = index;
+  document.getElementById('phase-num').textContent = `${index + 1} / ${PHASES.length}`;
+  for (let i = 0; i < PHASES.length; i++) {
+    document.getElementById(`pd${i}`).className =
+      'phase-dot' + (i < index ? ' done' : i === index ? ' active' : '');
+  }
+  if (index < PHASES.length - 1) {
+    const tid = setTimeout(() => advancePhaseUI(index + 1), PHASES[index].duration * 1000);
+    phaseTimers.push(tid);
+  }
+}
+
+// ── SCORING (live) ────────────────────────────────────────────────
+function starScore(star) {
+  const ms = performance.now() - star.spawnTime;
+  const units = Math.floor(ms / 100);
+  return star.priority ? units * 0.2 : units * 0.1;
+}
+
+function tickScore() {
+  if (!gameActive) return;
+  let live = 0;
+  for (const k in stars) live += starScore(stars[k]);
+  document.getElementById('score-display').textContent = (totalScore + live).toFixed(1);
+  scoreRaf = requestAnimationFrame(tickScore);
+}
+
+// ── TIMER ─────────────────────────────────────────────────────────
+function tickTimer() {
+  if (!gameActive) return;
+  const s = (performance.now() - gameStartTime) / 1000;
+  const m = Math.floor(s / 60);
+  document.getElementById('timer-display').textContent =
+    `${m}:${Math.floor(s % 60).toString().padStart(2,'0')}`;
+  timerRaf = requestAnimationFrame(tickTimer);
+}
+
+// ── INPUT ─────────────────────────────────────────────────────────
+// Focus: 'row' or 'col'
+let focus = 'row';
+let rowVal = null;
+let colVal = null;
+
+function handleKey(e) {
+  if (!gameActive) return;
+  const k = e.key;
+
+  if (k >= '1' && k <= '9') {
+    if (focus === 'row') {
+      rowVal = parseInt(k);
+      renderBoxes();
+      moveFocusToCol();
+    } else {
+      colVal = parseInt(k);
+      renderBoxes();
+    }
+    return;
+  }
+
+  if (k === 'Enter') {
+    e.preventDefault();
+    if (rowVal !== null && colVal !== null) {
+      tryElim(rowVal, colVal);
+      clearBoxes();
+    } else if (rowVal === null) {
+      showFb('enter row first', 'bad');
+    } else {
+      showFb('enter col first', 'bad');
+    }
+    return;
+  }
+
+  if (k === 'Escape') {
+    clearBoxes();
+    return;
+  }
+
+  if (k === 'Backspace') {
+    if (focus === 'col') {
+      if (colVal !== null) {
+        colVal = null;
+        renderBoxes();
+      } else {
+        // col already empty — backspace back into row
+        moveFocusToRow();
+      }
+    } else {
+      rowVal = null;
+      renderBoxes();
+    }
+    return;
+  }
+}
+
+function moveFocusToCol() {
+  focus = 'col';
+  document.getElementById('box-row').classList.remove('focused');
+  document.getElementById('box-col').classList.add('focused');
+  document.getElementById('row-cursor').style.display = 'none';
+  document.getElementById('col-cursor').style.display = 'inline-block';
+  setHint('type col (1–9) · Enter to submit');
+}
+
+function moveFocusToRow() {
+  focus = 'row';
+  document.getElementById('box-col').classList.remove('focused');
+  document.getElementById('box-row').classList.add('focused');
+  document.getElementById('col-cursor').style.display = 'none';
+  document.getElementById('row-cursor').style.display = 'inline-block';
+  setHint('type row (1–9)');
+}
+
+function renderBoxes() {
+  const rd = document.getElementById('row-digit');
+  const cd = document.getElementById('col-digit');
+  if (rowVal !== null) {
+    rd.className = 'digit'; rd.textContent = rowVal;
+  } else {
+    rd.className = 'empty'; rd.textContent = '—';
+  }
+  if (colVal !== null) {
+    cd.className = 'digit'; cd.textContent = colVal;
+  } else {
+    cd.className = 'empty'; cd.textContent = '—';
+  }
+}
+
+function clearBoxes() {
+  rowVal = null; colVal = null;
+  renderBoxes();
+  moveFocusToRow();
+}
+
+function tryElim(r, c) {
+  const key = `${r},${c}`;
+  if (stars[key]) {
+    const star = stars[key];
+    const pts = starScore(star);
+    totalScore += pts;
+    if (star.priority) { priorityScore += pts; priorityElim++; }
+    else               { routineScore  += pts; routineElim++;  }
+    starsEliminated++;
+
+    delete stars[key];
+    const cell = document.getElementById(`c${r}${c}`);
+    const el = document.getElementById(`s${r}${c}`);
+    if (el) el.remove();
+    cell.classList.add('flash-good');
+    setTimeout(() => cell.classList.remove('flash-good'), 300);
+
+    showFb(`+${pts.toFixed(1)}`, 'good');
+    setStarsLeft(Object.keys(stars).length);
+    document.getElementById('score-sub').textContent =
+      `${priorityElim} priority · ${routineElim} routine`;
+
+    if (allSpawned && Object.keys(stars).length === 0) {
+      endGame();
+    } else if (Object.keys(stars).length === 0) {
+      setWaiting(true);
+    }
+  } else {
+    const cell = document.getElementById(`c${r}${c}`);
+    cell.classList.add('flash-bad');
+    setTimeout(() => cell.classList.remove('flash-bad'), 300);
+    showFb('no star there', 'bad');
+    misses++;
+  }
+}
+
+// ── UI HELPERS ────────────────────────────────────────────────────
+function renderInput() {
+  const el = document.getElementById('coord-text');
+  if (!awaitingCol && !inputBuffer) {
+    el.className = 'placeholder'; el.textContent = '—'; return;
+  }
+  el.className = '';
+  if (!awaitingCol) {
+    el.innerHTML = `<span class="coord-part">${inputBuffer || '_'}</span>`;
+  } else {
+    el.innerHTML = `<span class="coord-part">${rowEntered}</span><span class="coord-sep"> , </span><span class="coord-part">${inputBuffer || '_'}</span>`;
+  }
+}
+
+function setHint(t) { document.getElementById('hint-row').textContent = t; }
+
+function showFb(msg, cls) {
+  const el = document.getElementById('feedback');
+  el.textContent = msg; el.className = 'feedback ' + cls;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.textContent = ''; el.className = 'feedback'; }, 1200);
+}
+
+function setStarsLeft(n) { document.getElementById('stars-left').textContent = n; }
+function setWaiting(show) {
+  document.getElementById('waiting-msg').classList.toggle('show', show);
+}
+
+// ── GAME FLOW ─────────────────────────────────────────────────────
+function startGame() {
+  showScreen('game-screen');
+  buildGrid(); buildDots(); resetState();
+  gameActive = true;
+  gameStartTime = performance.now();
+  requestAnimationFrame(tickTimer);
+  requestAnimationFrame(tickScore);
+  document.addEventListener('keydown', handleKey);
+  advancePhaseUI(0);
+  scheduleAllStars();
+}
+
+function endGame() {
+  if (!gameActive) return;
+  gameActive = false;
+  cancelAnimationFrame(timerRaf);
+  cancelAnimationFrame(scoreRaf);
+  phaseTimers.forEach(clearTimeout);
+  starTimers.forEach(clearTimeout);
+  document.removeEventListener('keydown', handleKey);
+
+  const elapsed = (performance.now() - gameStartTime) / 1000;
+  const m = Math.floor(elapsed / 60);
+  const s = (elapsed % 60).toFixed(1).padStart(4,'0');
+  const elim = priorityElim + routineElim;
+  const totalAttempts = elim + misses;
+  const accuracy = totalAttempts > 0 ? ((elim / totalAttempts) * 100).toFixed(1) + '%' : '—';
+
+  document.getElementById('r-time').textContent  = `${m}:${s}`;
+  document.getElementById('r-avg').textContent   = elim ? (elapsed / elim).toFixed(2) + 's' : '—';
+  document.getElementById('r-acc').textContent   = accuracy;
+  document.getElementById('r-score').textContent = totalScore.toFixed(1);
+
+  showScreen('end-screen');
+}
+
+function resetGame() { showScreen('start-screen'); }
+
+function resetState() {
+  stars = {}; focus = 'row'; rowVal = null; colVal = null;
+  phaseIndex = 0; allSpawned = false;
+  totalScore = priorityScore = routineScore = 0;
+  priorityElim = routineElim = starsEliminated = misses = 0;
+  phaseTimers.forEach(clearTimeout); phaseTimers = [];
+  starTimers.forEach(clearTimeout);  starTimers = [];
+  setStarsLeft(0); setWaiting(false);
+  document.getElementById('score-sub').textContent = '0 priority · 0 routine';
+  document.getElementById('score-display').textContent = '0.0';
+  document.getElementById('feedback').textContent = '';
+  renderBoxes();
+  moveFocusToRow();
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+</script>
+</body>
+</html>
