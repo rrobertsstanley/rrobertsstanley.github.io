@@ -646,74 +646,90 @@ function tQ(){
   document.getElementById('t-qlbl').textContent=`${tQN+1} of ${T_QPR}`;
   document.getElementById('t-prog').style.width=`${tQN/T_QPR*100}%`;
 
-  // Build a prioritised candidate pool of plausible table-reading mistakes,
-  // then select 4 that are sufficiently spread from each other.
   const wrongType = tCurType==='dri'?'gs':'dri';
   const velIdx    = VELS.indexOf(tCurWV);
   const angIdx    = ANGLES.indexOf(tCurWA);
 
-  // Helper: minimum spread between any two values relative to the correct answer's scale
-  const scale     = tCurType==='dri' ? Math.max(5, Math.round(tCorrect * 0.08)) : Math.max(3, Math.round(tCorrect * 0.02));
-  const tooCloseT = (a, b) => Math.abs(a - b) < scale;
+  // --- Step 1: build labelled candidate pool from real table mistakes ---
+  const rawCands = [];
+  const seenVals = new Set([tCorrect]);
+  const addCand  = (v, pri) => { if(v!=null && v>0 && !seenVals.has(v)){ seenVals.add(v); rawCands.push({v, pri}); } };
 
-  const tCands = [];
-  const tSeen  = new Set([tCorrect]);
-  const push   = v => { if(v>0 && !tSeen.has(v)){ tSeen.add(v); tCands.push(v); } };
+  // Pri 1: type reversal — most deceptive
+  addCand(tData[tCurAS]?.[tCurWA]?.[tCurWV]?.[wrongType], 1);
 
-  // Category 1 — type reversal (dri↔gs at same cell)
-  const rev = tData[tCurAS]?.[tCurWA]?.[tCurWV]?.[wrongType];
-  if(rev != null) push(rev);
+  // Pri 2: wrong airspeed, same cell + type
+  for(const as of [...SPEEDS_R].sort(()=>Math.random()-.5))
+    if(as!==tCurAS) addCand(tData[as][tCurWA][tCurWV][tCurType], 2);
 
-  // Category 2 — wrong airspeed table, same cell
-  for(const as of [...SPEEDS_R].sort(()=>Math.random()-.5)){
-    if(as !== tCurAS) push(tData[as][tCurWA][tCurWV][tCurType]);
+  // Pri 3: adjacent velocity rows
+  for(const di of [-1,1,-2,2]){
+    const vi=velIdx+di;
+    if(vi>=0&&vi<VELS.length) addCand(tData[tCurAS][tCurWA][VELS[vi]][tCurType], 3);
   }
 
-  // Category 3 — adjacent velocity (one row off), same type+angle
-  const adjVels = [velIdx-1, velIdx+1, velIdx-2, velIdx+2]
-    .filter(i=>i>=0&&i<VELS.length)
-    .sort(()=>Math.random()-.5);
-  for(const vi of adjVels) push(tData[tCurAS][tCurWA][VELS[vi]][tCurType]);
-
-  // Category 4 — adjacent angle (one column off), same type+velocity
-  const adjAngs = [angIdx-1, angIdx+1].filter(i=>i>=0&&i<ANGLES.length).sort(()=>Math.random()-.5);
-  for(const ai of adjAngs) push(tData[tCurAS][ANGLES[ai]][tCurWV][tCurType]);
-
-  // Category 5 — type reversal at adjacent velocity
-  for(const vi of adjVels.slice(0,2)){
-    if(vi>=0&&vi<VELS.length) push(tData[tCurAS][tCurWA][VELS[vi]][wrongType]);
+  // Pri 4: adjacent angle columns
+  for(const di of [-1,1]){
+    const ai=angIdx+di;
+    if(ai>=0&&ai<ANGLES.length) addCand(tData[tCurAS][ANGLES[ai]][tCurWV][tCurType], 4);
   }
 
-  // Category 6 — wrong airspeed + wrong type (double mistake)
-  for(const as of SPEEDS_R){
-    if(as !== tCurAS) push(tData[as][tCurWA][tCurWV][wrongType]);
+  // Pri 5: type reversal at adjacent velocity
+  for(const di of [-1,1]){
+    const vi=velIdx+di;
+    if(vi>=0&&vi<VELS.length) addCand(tData[tCurAS][tCurWA][VELS[vi]][wrongType], 5);
   }
 
-  // Shuffle the full candidate list so category priority varies per question
-  for(let i=tCands.length-1;i>0;i--){ const j=rnd(0,i); [tCands[i],tCands[j]]=[tCands[j],tCands[i]]; }
+  // Pri 6: wrong airspeed + wrong type
+  for(const as of SPEEDS_R)
+    if(as!==tCurAS) addCand(tData[as][tCurWA][tCurWV][wrongType], 6);
 
-  // Pick 4 with spread enforcement
+  // Also throw every other value in the entire dataset into a fallback pool
+  const allTableVals = [];
+  for(const as of SPEEDS_R)
+    for(const wa of ANGLES)
+      for(const wv of VELS)
+        for(const tp of ['dri','gs']){
+          const v=tData[as][wa][wv][tp];
+          if(v!==tCorrect && !allTableVals.includes(v)) allTableVals.push(v);
+        }
+  // shuffle fallback pool
+  for(let i=allTableVals.length-1;i>0;i--){ const j=rnd(0,i); [allTableVals[i],allTableVals[j]]=[allTableVals[j],allTableVals[i]]; }
+
+  // --- Step 2: pick 4 with adaptive minimum gap ---
+  // Sort candidates by priority then shuffle within same priority
+  rawCands.sort((a,b)=>a.pri-b.pri||(Math.random()-.5));
+
   const tChosen = [];
-  for(const c of tCands){
-    if(tChosen.length >= 4) break;
-    if(tooCloseT(c, tCorrect)) continue;
-    if(tChosen.some(x => tooCloseT(x, c))) continue;
-    tChosen.push(c);
+
+  // Try decreasing min-gap: start strict, relax until we fill 4 slots
+  for(let minGap = 8; minGap >= 1; minGap--){
+    tChosen.length = 0; // reset each pass
+    const notTooClose = (a,b) => Math.abs(a-b) >= minGap;
+
+    // pass through priority candidates
+    for(const {v} of rawCands){
+      if(tChosen.length>=4) break;
+      if(!notTooClose(v, tCorrect)) continue;
+      if(tChosen.some(x=>!notTooClose(x,v))) continue;
+      tChosen.push(v);
+    }
+    // fill from full table value pool
+    for(const v of allTableVals){
+      if(tChosen.length>=4) break;
+      if(tChosen.includes(v)) continue;
+      if(!notTooClose(v, tCorrect)) continue;
+      if(tChosen.some(x=>!notTooClose(x,v))) continue;
+      tChosen.push(v);
+    }
+
+    if(tChosen.length>=4) break;
   }
 
-  // Fallback: generate spread values if not enough candidates
-  let tries = 0;
-  while(tChosen.length < 4 && tries < 500){
-    tries++;
-    // Pick a random multiplier bucket far from existing choices
-    const bucket = rnd(2, 8);
-    const sign   = Math.random() < 0.5 ? 1 : -1;
-    const v      = tCorrect + sign * bucket * scale;
-    if(v <= 0) continue;
-    if(tooCloseT(v, tCorrect)) continue;
-    if(tChosen.some(x => tooCloseT(x, v))) continue;
-    if(tChosen.includes(v)) continue;
-    tChosen.push(v);
+  // Absolute last resort: just pick any unique values
+  for(const v of allTableVals){
+    if(tChosen.length>=4) break;
+    if(!tChosen.includes(v)) tChosen.push(v);
   }
 
   buildOpts('t-opts',[tCorrect,...tChosen.slice(0,4)].sort(()=>Math.random()-.5),tCorrect,tSel);
