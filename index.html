@@ -206,43 +206,7 @@
 <div id="dashboard">
   <div class="site-title">Training Modules</div>
 
-  <nav class="module-list">
-    <a class="module-item" href="Vigilance.html">
-      <div class="module-left">
-        <span class="module-num">01</span>
-        <span class="module-name">Vigilance</span>
-      </div>
-      <span class="module-arrow">→</span>
-    </a>
-    <a class="module-item" href="Bearings.html">
-      <div class="module-left">
-        <span class="module-num">02</span>
-        <span class="module-name">Bearings</span>
-      </div>
-      <span class="module-arrow">→</span>
-    </a>
-    <a class="module-item" href="SituationalAwareness.html">
-      <div class="module-left">
-        <span class="module-num">03</span>
-        <span class="module-name">Situational Awareness</span>
-      </div>
-      <span class="module-arrow">→</span>
-    </a>
-    <a class="module-item" href="Grid.html">
-      <div class="module-left">
-        <span class="module-num">04</span>
-        <span class="module-name">Grid Aptitude</span>
-      </div>
-      <span class="module-arrow">→</span>
-    </a>
-    <a class="module-item" href="NumberRecall.html">
-      <div class="module-left">
-        <span class="module-num">05</span>
-        <span class="module-name">Number Recall</span>
-      </div>
-      <span class="module-arrow">→</span>
-    </a>
-  </nav>
+  <nav class="module-list" id="module-list"></nav>
 
   <div class="footer">Select a module to begin</div>
 </div>
@@ -250,6 +214,46 @@
 <script>
   const PASSWORD = 'admin';
 
+  // ─────────────────────────────────────────────
+  // EDIT YOUR MODULES HERE
+  // Each entry: { file: 'Filename.html', name: 'Display Name' }
+  // Set name: '' to hide a WIP slot entirely.
+  // ─────────────────────────────────────────────
+  const MODULES = [
+    { file: 'Joystick.html',            name: 'Dual Task'            },
+    { file: 'Bearings.html',            name: 'Bearings'             },
+    { file: 'SituationalAwareness.html',name: 'Situational Awareness'},
+    { file: 'Grid.html',                name: 'Grid Aptitude'        },
+    { file: 'NumberRecall.html',        name: 'Number Recall'        },
+    { file: 'DynamicProjection.html',   name: 'Dynamic Projection'   },
+    // Work-in-progress slots — change name or file as needed:
+    { file: 'WIP1.html',                name: 'WIP 1'                },
+    { file: 'WIP2.html',                name: 'WIP 2'                },
+    { file: 'WIP3.html',                name: 'WIP 3'                },
+    { file: 'WIP4.html',                name: 'WIP 4'                },
+    { file: 'WIP5.html',                name: 'WIP 5'                },
+  ];
+  // ─────────────────────────────────────────────
+
+  // Build the module list from config
+  const list = document.getElementById('module-list');
+  let index = 1;
+  MODULES.forEach(m => {
+    if (!m.name) return; // skip hidden entries
+    const a = document.createElement('a');
+    a.className = 'module-item';
+    a.href = m.file;
+    a.innerHTML = `
+      <div class="module-left">
+        <span class="module-num">${String(index).padStart(2, '0')}</span>
+        <span class="module-name">${m.name}</span>
+      </div>
+      <span class="module-arrow">→</span>`;
+    list.appendChild(a);
+    index++;
+  });
+
+  // Password logic
   document.getElementById('pw-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') checkPassword();
   });
