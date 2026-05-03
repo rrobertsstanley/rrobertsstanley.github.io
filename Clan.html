@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CLAN Test</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0000AA;
+    font-family: 'Courier New', monospace;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* ── OUTER WRAPPER ── */
+  #game-wrapper {
+    position: relative;
+    width: 960px;
+    height: 640px;
+  }
+
+  /* ── LETTER CORNERS ── */
+  .letter-corner {
+    position: absolute;
+    width: 200px;
+    height: 140px;
+    background: #b0b0b0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 900;
+    color: #111;
+    letter-spacing: 3px;
+    border: 2px solid #888;
+  }
+  .corner-label {
+    position: absolute;
+    bottom: 4px;
+    right: 6px;
+    font-size: 0.65rem;
+    font-weight: bold;
+    background: #fff;
+    border: 1px solid #333;
+    padding: 1px 4px;
+    color: #111;
+  }
+  .corner-highlight {
+    outline: 4px solid #fff700;
+  }
+  .corner-correct { outline: 4px solid #00ff44; }
+  .corner-wrong   { outline: 4px solid #ff2222; }
+
+  #corner-TL { top: 0;    left: 0; }
+  #corner-TR { top: 0;    right: 0; }
+  #corner-BL { bottom: 0; left: 0; }
+  #corner-BR { bottom: 0; right: 0; }
+
+  /* ── MEMORY BOX (top centre) ── */
+  #memory-box {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 280px;
+    height: 120px;
+    background: #00008b;
+    border: 2px solid #aaa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 6px;
+  }
+
+  /* ── COLOUR GAME (centre) ── */
+  #colour-area {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 480px;
+    height: 240px;
+    background: #000;
+    border: 2px solid #aaa;
+    overflow: hidden;
+  }
+
+  /* coloured target zones */
+  #zones {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    display: flex;
+  }
+  .zone {
+    width: 80px;
+    height: 100%;
+    opacity: 0.85;
+  }
+  #zone-R { background: #cc0000; }
+  #zone-Y { background: #cccc00; }
+  #zone-G { background: #00aa00; }
+
+  .dot {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    transform: rotate(45deg);
+    border-radius: 2px;
+  }
+  .dot-R { background: #ff2222; }
+  .dot-Y { background: #ffff00; }
+  .dot-G { background: #00ff44; }
+
+  /* flash overlay on hit */
+  .zone-flash {
+    animation: zflash 0.18s ease-out;
+  }
+  @keyframes zflash {
+    0%   { filter: brightness(2.5); }
+    100% { filter: brightness(1); }
+  }
+
+  /* ── MATHS BOX (bottom centre) ── */
+  #maths-box {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 280px;
+    height: 120px;
+    background: #808080;
+    border: 2px solid #aaa;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  #maths-question {
+    font-size: 1.9rem;
+    font-weight: 900;
+    color: #111;
+    letter-spacing: 4px;
+  }
+  #maths-input {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #fff;
+    min-width: 60px;
+    text-align: center;
+    letter-spacing: 2px;
+    border-bottom: 2px solid #fff;
+  }
+  #maths-feedback {
+    font-size: 0.8rem;
+    font-weight: bold;
+    height: 16px;
+    color: #111;
+  }
+
+  /* ── HUD bar ── */
+  #hud {
+    position: absolute;
+    top: -36px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: bold;
+  }
+  #timer-display { font-size: 1.3rem; letter-spacing: 2px; }
+  #pause-btn {
+    background: #333;
+    color: #fff;
+    border: 2px solid #aaa;
+    padding: 4px 18px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+  }
+  #pause-btn:hover { background: #555; }
+
+  /* ── KEY HINT strip ── */
+  #key-hints {
+    position: absolute;
+    bottom: -28px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    font-size: 0.75rem;
+    color: #ccc;
+  }
+
+  /* ── OVERLAYS ── */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.82);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    color: #fff;
+    font-family: 'Courier New', monospace;
+  }
+  .overlay h1 { font-size: 2.8rem; letter-spacing: 4px; margin-bottom: 16px; color: #ffff00; }
+  .overlay h2 { font-size: 1.6rem; letter-spacing: 2px; margin-bottom: 28px; }
+  .overlay p  { font-size: 1rem; color: #ccc; margin-bottom: 8px; max-width: 520px; text-align: center; }
+  .overlay-btn {
+    margin-top: 24px;
+    background: #0000AA;
+    color: #fff;
+    border: 3px solid #ffff00;
+    padding: 12px 40px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 2px;
+  }
+  .overlay-btn:hover { background: #0000cc; }
+
+  .score-table { margin: 16px 0; border-collapse: collapse; }
+  .score-table td, .score-table th {
+    padding: 6px 24px;
+    border: 1px solid #555;
+    text-align: center;
+    font-size: 1rem;
+  }
+  .score-table th { background: #222; color: #ffff00; }
+  .score-table .total-row td { background: #003300; color: #00ff88; font-weight: bold; font-size: 1.1rem; }
+
+  #pause-overlay { display: none; }
+  #start-overlay { display: flex; }
+  #end-overlay   { display: none; }
+
+  /* letter recall phase dimming of corners not needed */
+  .recall-active .letter-corner { cursor: pointer; }
+
+  /* score pop */
+  .score-pop {
+    position: absolute;
+    font-size: 1.1rem;
+    font-weight: bold;
+    pointer-events: none;
+    animation: popUp 0.9s ease-out forwards;
+    z-index: 50;
+    text-shadow: 0 0 4px #000;
+  }
+  @keyframes popUp {
+    0%   { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-50px); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ START OVERLAY ══ -->
+<div class="overlay" id="start-overlay">
+  <h1>C L A N</h1>
+  <h2>Colours · Letters · Arithmetic · Numbers</h2>
+  <p><b>COLOURS:</b> Press <b>R</b> (Red) &nbsp; <b>B</b> (Blue/Yellow) &nbsp; <b>Y</b> (Yellow) &nbsp; <b>G</b> (Green) when diamonds reach their coloured zone.</p>
+  <p style="margin-top:6px"><b>LETTERS:</b> Memorise the sequence shown top-centre. When 4 options appear, press <b>A</b> (top-left) &nbsp;<b>B</b> (top-right) &nbsp;<b>C</b> (bottom-left) &nbsp;<b>D</b> (bottom-right).</p>
+  <p style="margin-top:6px"><b>MATHS:</b> Type your answer and press <b>Enter</b>.</p>
+  <p style="margin-top:6px;color:#ffff88">Test duration: 5 minutes. Everything runs simultaneously. It gets harder over time.</p>
+  <button class="overlay-btn" id="start-btn">START TEST</button>
+</div>
+
+<!-- ══ PAUSE OVERLAY ══ -->
+<div class="overlay" id="pause-overlay">
+  <h1>PAUSED</h1>
+  <button class="overlay-btn" id="resume-btn">RESUME</button>
+</div>
+
+<!-- ══ END OVERLAY ══ -->
+<div class="overlay" id="end-overlay">
+  <h1>TEST COMPLETE</h1>
+  <table class="score-table">
+    <thead><tr><th>Section</th><th>Correct</th><th>Attempts</th><th>Score</th></tr></thead>
+    <tbody>
+      <tr><td>🎨 Colours</td><td id="sc-colour-c">0</td><td id="sc-colour-a">0</td><td id="sc-colour-s">0</td></tr>
+      <tr><td>🔤 Letters</td><td id="sc-letter-c">0</td><td id="sc-letter-a">0</td><td id="sc-letter-s">0</td></tr>
+      <tr><td>🔢 Maths</td> <td id="sc-maths-c">0</td> <td id="sc-maths-a">0</td> <td id="sc-maths-s">0</td></tr>
+      <tr class="total-row"><td colspan="3">TOTAL SCORE</td><td id="sc-total">0</td></tr>
+    </tbody>
+  </table>
+  <button class="overlay-btn" id="restart-btn">PLAY AGAIN</button>
+</div>
+
+<!-- ══ GAME WRAPPER ══ -->
+<div id="game-wrapper">
+
+  <div id="hud">
+    <span id="timer-display">5:00</span>
+    <span id="score-live">Score: 0</span>
+    <button id="pause-btn">⏸ PAUSE</button>
+  </div>
+
+  <!-- Letter corners -->
+  <div class="letter-corner" id="corner-TL"><span id="txt-TL">?????</span><span class="corner-label">A</span></div>
+  <div class="letter-corner" id="corner-TR"><span id="txt-TR">?????</span><span class="corner-label">B</span></div>
+  <div class="letter-corner" id="corner-BL"><span id="txt-BL">?????</span><span class="corner-label">C</span></div>
+  <div class="letter-corner" id="corner-BR"><span id="txt-BR">?????</span><span class="corner-label">D</span></div>
+
+  <!-- Memory display -->
+  <div id="memory-box"><span id="memory-text"></span></div>
+
+  <!-- Colour game -->
+  <div id="colour-area">
+    <div id="zones">
+      <div class="zone" id="zone-R"></div>
+      <div class="zone" id="zone-Y"></div>
+      <div class="zone" id="zone-G"></div>
+    </div>
+    <div id="dot-container"></div>
+  </div>
+
+  <!-- Maths box -->
+  <div id="maths-box">
+    <div id="maths-question">– – –</div>
+    <div id="maths-input">_</div>
+    <div id="maths-feedback"></div>
+  </div>
+
+  <div id="key-hints">
+    <span>R=Red &nbsp; Y=Yellow &nbsp; G=Green</span>
+    <span>|</span>
+    <span>A/B/C/D = letter corners</span>
+    <span>|</span>
+    <span>Numbers+Enter = maths</span>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  CLAN – full game logic
+// ══════════════════════════════════════════
+
+const TOTAL_TIME = 5 * 60; // seconds
+
+// ── Scoring
+const score = {
+  colour: { correct: 0, attempts: 0 },
+  letter: { correct: 0, attempts: 0 },
+  maths:  { correct: 0, attempts: 0 },
+  total: 0
+};
+
+// ── State
+let gameRunning   = false;
+let paused        = false;
+let timeLeft      = TOTAL_TIME;
+let timerInterval = null;
+let elapsed       = 0; // seconds elapsed (for difficulty)
+
+// ── Difficulty ramp (0..1 over 5 min)
+function difficulty() { return Math.min(elapsed / TOTAL_TIME, 1); }
+
+// ══ COLOUR GAME ══════════════════════════
+const colourArea   = document.getElementById('colour-area');
+const dotContainer = document.getElementById('dot-container');
+const AREA_W = 480, AREA_H = 240;
+const ZONE_START = AREA_W - 240; // zones start at px 240
+const ZONE_WIDTHS = { R: [240, 320], Y: [320, 400], G: [400, 480] };
+
+let dots = [];
+let dotLoop = null;
+let dotSpawnLoop = null;
+
+function spawnDot() {
+  const colours = ['R','Y','G'];
+  const c = colours[Math.floor(Math.random() * 3)];
+  const y = 20 + Math.random() * (AREA_H - 40);
+  const speed = 40 + difficulty() * 80; // px/s 40→120
+  const el = document.createElement('div');
+  el.className = `dot dot-${c}`;
+  el.style.left = '0px';
+  el.style.top  = (y - 10) + 'px';
+  dotContainer.appendChild(el);
+  dots.push({ el, c, x: 0, y, speed, active: true, hit: false, missed: false });
+}
+
+function updateDots(dt) {
+  dots.forEach(d => {
+    if (!d.active) return;
+    d.x += d.speed * dt;
+    d.el.style.left = (d.x - 10) + 'px';
+
+    // past end → miss
+    if (d.x > AREA_W + 20) {
+      d.active = false;
+      d.el.remove();
+      score.colour.attempts++;
+    }
+  });
+  dots = dots.filter(d => d.active || false);
+  // clean up inactive
+  dots = dots.filter(d => d.active);
+}
+
+// Player presses colour key
+function handleColourKey(key) {
+  const map = { r:'R', y:'Y', g:'G', b:'Y' }; // b mapped to Y as spec
+  const c = map[key];
+  if (!c) return;
+
+  // find the frontmost dot of that colour in the zone (±50px of zone centre)
+  const [zStart, zEnd] = ZONE_WIDTHS[c];
+  const zCentre = (zStart + zEnd) / 2;
+
+  let best = null, bestDist = 9999;
+  dots.forEach(d => {
+    if (d.c !== c || !d.active) return;
+    const dist = Math.abs(d.x - zCentre);
+    if (dist < 90 && dist < bestDist) { best = d; bestDist = dist; }
+  });
+
+  score.colour.attempts++;
+  if (best) {
+    score.colour.correct++;
+    awardPoints(10, '#00ff88', colourArea);
+    best.active = false;
+    best.el.remove();
+    flashZone(c);
+  } else {
+    awardPoints(-3, '#ff4444', colourArea);
+  }
+}
+
+function flashZone(c) {
+  const el = document.getElementById('zone-'+c);
+  el.classList.remove('zone-flash');
+  void el.offsetWidth;
+  el.classList.add('zone-flash');
+}
+
+// ── spawn interval varies with difficulty
+function scheduleNextDot() {
+  if (!gameRunning || paused) return;
+  const interval = Math.max(0.5, 2.2 - difficulty() * 1.7); // 2.2s → 0.5s
+  dotSpawnTimer = setTimeout(() => {
+    if (gameRunning && !paused) spawnDot();
+    scheduleNextDot();
+  }, interval * 1000);
+}
+let dotSpawnTimer = null;
+
+// ══ LETTER GAME ══════════════════════════
+const CONSONANTS = 'BCDFGHJKLMNPQRSTVWXYZ'.split('');
+let letterPhase     = 'idle'; // idle | show | recall | feedback
+let targetSequence  = '';
+let letterTimer     = null;
+let recallOptions   = {};
+let letterSpawnTimer = null;
+
+function randomLetters(n) {
+  let s = '';
+  for (let i = 0; i < n; i++) s += CONSONANTS[Math.floor(Math.random() * CONSONANTS.length)];
+  return s;
+}
+
+function startLetterRound() {
+  if (!gameRunning || paused) return;
+  const len = 4 + (difficulty() > 0.6 ? 2 : difficulty() > 0.3 ? 1 : 0);
+  targetSequence = randomLetters(len);
+  letterPhase = 'show';
+  document.getElementById('memory-text').textContent = targetSequence;
+
+  // show for 4-5s then hide and start recall after short delay
+  letterTimer = setTimeout(() => {
+    document.getElementById('memory-text').textContent = '';
+    letterPhase = 'idle';
+    letterTimer = setTimeout(showRecall, 1500 + Math.random() * 1000);
+  }, 4500 - difficulty() * 1500);
+}
+
+function showRecall() {
+  if (!gameRunning || paused) return;
+  letterPhase = 'recall';
+
+  // build 4 options – one correct, three distractors
+  const positions = ['TL','TR','BL','BR'];
+  const correctPos = positions[Math.floor(Math.random() * 4)];
+  recallOptions = {};
+  positions.forEach(pos => {
+    recallOptions[pos] = pos === correctPos ? targetSequence : randomLetters(targetSequence.length);
+  });
+  document.getElementById('txt-TL').textContent = recallOptions['TL'];
+  document.getElementById('txt-TR').textContent = recallOptions['TR'];
+  document.getElementById('txt-BL').textContent = recallOptions['BL'];
+  document.getElementById('txt-BR').textContent = recallOptions['BR'];
+
+  // auto-expire after 5 seconds
+  letterTimer = setTimeout(() => {
+    if (letterPhase === 'recall') {
+      score.letter.attempts++;
+      clearRecall();
+      scheduleNextLetterRound();
+    }
+  }, 5000);
+}
+
+function handleLetterKey(key) {
+  if (letterPhase !== 'recall') return;
+  const map = { a:'TL', b:'TR', c:'BL', d:'BR' };
+  const pos = map[key];
+  if (!pos) return;
+
+  clearTimeout(letterTimer);
+  score.letter.attempts++;
+  const cornerId = 'corner-' + pos;
+
+  if (recallOptions[pos] === targetSequence) {
+    score.letter.correct++;
+    awardPoints(20, '#00ff88', document.getElementById(cornerId));
+    document.getElementById(cornerId).classList.add('corner-correct');
+  } else {
+    awardPoints(-5, '#ff4444', document.getElementById(cornerId));
+    document.getElementById(cornerId).classList.add('corner-wrong');
+  }
+
+  letterPhase = 'feedback';
+  setTimeout(() => {
+    clearRecall();
+    scheduleNextLetterRound();
+  }, 700);
+}
+
+function clearRecall() {
+  letterPhase = 'idle';
+  ['TL','TR','BL','BR'].forEach(p => {
+    document.getElementById('txt-'+p).textContent = '';
+    const el = document.getElementById('corner-'+p);
+    el.classList.remove('corner-correct','corner-wrong','corner-highlight');
+  });
+}
+
+function scheduleNextLetterRound() {
+  if (!gameRunning || paused) return;
+  const delay = Math.max(3000, 9000 - difficulty() * 6000);
+  letterSpawnTimer = setTimeout(() => {
+    if (gameRunning && !paused) startLetterRound();
+  }, delay);
+}
+
+// ══ MATHS GAME ══════════════════════════
+let mathAnswer    = null;
+let mathInput     = '';
+let mathTimer     = null;
+
+function newMathQuestion() {
+  if (!gameRunning || paused) return;
+  const d = difficulty();
+  const ops = d > 0.5 ? ['+','-','×','÷'] : d > 0.2 ? ['+','-','×'] : ['+','-'];
+  const op  = ops[Math.floor(Math.random() * ops.length)];
+  let a, b, ans;
+
+  if (op === '+') { a = ri(1, 20+Math.floor(d*30)); b = ri(1, 20+Math.floor(d*30)); ans = a+b; }
+  else if (op === '-') { a = ri(5, 30+Math.floor(d*20)); b = ri(1,a); ans = a-b; }
+  else if (op === '×') { a = ri(2, 5+Math.floor(d*7)); b = ri(2, 5+Math.floor(d*7)); ans = a*b; }
+  else { b = ri(2,9); ans = ri(1,10); a = b*ans; }
+
+  mathAnswer = ans;
+  mathInput  = '';
+  document.getElementById('maths-question').textContent = `${a} ${op} ${b} =`;
+  document.getElementById('maths-input').textContent    = '_';
+  document.getElementById('maths-feedback').textContent = '';
+
+  // auto expire
+  const timeLimit = Math.max(5000, 12000 - d * 7000);
+  clearTimeout(mathTimer);
+  mathTimer = setTimeout(() => {
+    if (mathAnswer !== null) {
+      score.maths.attempts++;
+      document.getElementById('maths-feedback').textContent = `✗ was ${mathAnswer}`;
+      mathAnswer = null;
+      setTimeout(newMathQuestion, 1200);
+    }
+  }, timeLimit);
+}
+
+function handleMathDigit(key) {
+  if (mathAnswer === null) return;
+  if (key === 'backspace') { mathInput = mathInput.slice(0,-1); }
+  else if (key === '-' && mathInput === '') { mathInput = '-'; }
+  else if ('0123456789'.includes(key)) { mathInput += key; }
+  document.getElementById('maths-input').textContent = mathInput || '_';
+}
+
+function submitMath() {
+  if (mathAnswer === null || mathInput === '' || mathInput === '-') return;
+  clearTimeout(mathTimer);
+  const guess = parseInt(mathInput, 10);
+  score.maths.attempts++;
+  if (guess === mathAnswer) {
+    score.maths.correct++;
+    document.getElementById('maths-feedback').textContent = '✓ Correct!';
+    awardPoints(15, '#00ff88', document.getElementById('maths-box'));
+  } else {
+    document.getElementById('maths-feedback').textContent = `✗ was ${mathAnswer}`;
+    awardPoints(-5, '#ff4444', document.getElementById('maths-box'));
+  }
+  mathAnswer = null;
+  setTimeout(newMathQuestion, 900);
+}
+
+// ══ SCORING / POINTS ══════════════════════
+function awardPoints(pts, color, anchor) {
+  score.total += pts;
+  if (score.total < 0) score.total = 0;
+  document.getElementById('score-live').textContent = 'Score: ' + score.total;
+
+  // floating pop
+  const pop = document.createElement('div');
+  pop.className = 'score-pop';
+  pop.textContent = (pts > 0 ? '+' : '') + pts;
+  pop.style.color = color;
+  const rect = (anchor || document.getElementById('game-wrapper')).getBoundingClientRect();
+  const wr   = document.getElementById('game-wrapper').getBoundingClientRect();
+  pop.style.left = (rect.left - wr.left + rect.width/2 - 20) + 'px';
+  pop.style.top  = (rect.top  - wr.top  + rect.height/2)     + 'px';
+  document.getElementById('game-wrapper').appendChild(pop);
+  setTimeout(() => pop.remove(), 950);
+}
+
+// ══ TIMER ══════════════════════════════
+function startTimer() {
+  timerInterval = setInterval(() => {
+    if (paused) return;
+    timeLeft--;
+    elapsed++;
+    const m = Math.floor(timeLeft/60);
+    const s = timeLeft % 60;
+    document.getElementById('timer-display').textContent =
+      m + ':' + String(s).padStart(2,'0');
+    if (timeLeft <= 0) endGame();
+  }, 1000);
+}
+
+// ══ GAME FLOW ══════════════════════════
+function startGame() {
+  document.getElementById('start-overlay').style.display = 'none';
+  gameRunning = true;
+  paused      = false;
+  timeLeft    = TOTAL_TIME;
+  elapsed     = 0;
+  Object.assign(score, {
+    colour:{correct:0,attempts:0},
+    letter:{correct:0,attempts:0},
+    maths: {correct:0,attempts:0},
+    total: 0
+  });
+  document.getElementById('score-live').textContent = 'Score: 0';
+
+  startTimer();
+  scheduleNextDot();
+  spawnDot();
+  startLetterRound();
+  newMathQuestion();
+
+  // dot animation loop
+  let last = null;
+  function loop(ts) {
+    if (!gameRunning) return;
+    if (!paused) {
+      const dt = last ? (ts - last)/1000 : 0;
+      last = ts;
+      updateDots(dt);
+    } else { last = null; }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+}
+
+function pauseGame() {
+  paused = true;
+  document.getElementById('pause-overlay').style.display = 'flex';
+}
+function resumeGame() {
+  paused = false;
+  document.getElementById('pause-overlay').style.display = 'none';
+  // re-trigger letter if needed
+  if (letterPhase === 'idle') scheduleNextLetterRound();
+}
+
+function endGame() {
+  gameRunning = false;
+  clearInterval(timerInterval);
+  clearTimeout(dotSpawnTimer);
+  clearTimeout(letterSpawnTimer);
+  clearTimeout(mathTimer);
+  clearTimeout(letterTimer);
+
+  // compute section scores
+  const cs = Math.round(score.colour.correct * 10 - (score.colour.attempts - score.colour.correct)*3);
+  const ls = Math.round(score.letter.correct * 20 - (score.letter.attempts - score.letter.correct)*5);
+  const ms = Math.round(score.maths.correct  * 15 - (score.maths.attempts  - score.maths.correct) *5);
+
+  document.getElementById('sc-colour-c').textContent = score.colour.correct;
+  document.getElementById('sc-colour-a').textContent = score.colour.attempts;
+  document.getElementById('sc-colour-s').textContent = cs;
+  document.getElementById('sc-letter-c').textContent = score.letter.correct;
+  document.getElementById('sc-letter-a').textContent = score.letter.attempts;
+  document.getElementById('sc-letter-s').textContent = ls;
+  document.getElementById('sc-maths-c').textContent  = score.maths.correct;
+  document.getElementById('sc-maths-a').textContent  = score.maths.attempts;
+  document.getElementById('sc-maths-s').textContent  = ms;
+  document.getElementById('sc-total').textContent    = Math.max(0, cs+ls+ms);
+
+  document.getElementById('end-overlay').style.display = 'flex';
+}
+
+function restartGame() {
+  document.getElementById('end-overlay').style.display = 'none';
+  dots.forEach(d => d.el.remove());
+  dots = [];
+  clearRecall();
+  document.getElementById('memory-text').textContent = '';
+  document.getElementById('maths-question').textContent = '– – –';
+  document.getElementById('maths-input').textContent    = '_';
+  document.getElementById('maths-feedback').textContent = '';
+  startGame();
+}
+
+// ── helper
+function ri(a,b) { return a + Math.floor(Math.random()*(b-a+1)); }
+
+// ══ KEYBOARD ══════════════════════════
+document.addEventListener('keydown', e => {
+  if (!gameRunning || paused) return;
+  const key = e.key.toLowerCase();
+
+  // Colour keys
+  if (['r','y','g','b'].includes(key)) { e.preventDefault(); handleColourKey(key); return; }
+
+  // Letter selection
+  if (['a','b','c','d'].includes(key)) { e.preventDefault(); handleLetterKey(key); return; }
+
+  // Maths input
+  if (key === 'enter') { e.preventDefault(); submitMath(); return; }
+  if (key === 'backspace') { e.preventDefault(); handleMathDigit('backspace'); return; }
+  if (key === '-') { e.preventDefault(); handleMathDigit('-'); return; }
+  if (key >= '0' && key <= '9') { e.preventDefault(); handleMathDigit(key); return; }
+});
+
+// ══ BUTTONS ══════════════════════════
+document.getElementById('start-btn').addEventListener('click', startGame);
+document.getElementById('pause-btn').addEventListener('click', () => { if (!paused) pauseGame(); });
+document.getElementById('resume-btn').addEventListener('click', resumeGame);
+document.getElementById('restart-btn').addEventListener('click', restartGame);
+</script>
+</body>
+</html>

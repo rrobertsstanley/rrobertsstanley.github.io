@@ -3,402 +3,839 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CBAT Bearings Test</title>
+<title>CBAT Aptitude Trainer</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500;600&display=swap');
 
-  :root {
-    --bg: #f5f4f1;
-    --surface: #ffffff;
-    --border: #d8d6d0;
-    --border-strong: #b0ada6;
-    --text: #1a1916;
-    --text-mid: #5a5750;
-    --text-dim: #9a9790;
-    --btn-bg: #edece8;
-    --btn-hover: #e2e0db;
-    --correct: #2a7a3a;
-    --wrong: #c0392b;
-  }
+:root {
+  --bg: #f2f0ec;
+  --surface: #ffffff;
+  --surface2: #eceae5;
+  --border: #d4d1ca;
+  --border-strong: #a8a49c;
+  --text: #1c1a17;
+  --text-mid: #5c5850;
+  --text-dim: #9c9890;
+  --accent: #1c1a17;
+  --correct: #1e6b35;
+  --wrong: #b8281e;
+  --correct-bg: #eef6f0;
+  --wrong-bg: #fdf0ef;
+  --btn: #e8e5df;
+  --btn-hover: #dedad3;
+  --mono: 'DM Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'IBM Plex Sans', sans-serif;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
 
-  .screen { display: none; width: 100%; max-width: 960px; padding: 24px; }
-  .screen.active { display: flex; flex-direction: column; align-items: center; }
+/* ══════════════════════════════════════
+   SCREENS
+══════════════════════════════════════ */
+.screen { display: none; width: 100%; max-width: 1020px; padding: 20px; }
+.screen.active { display: flex; flex-direction: column; align-items: center; }
 
-  /* ── START ── */
-  #start-screen { gap: 28px; text-align: center; max-width: 440px; }
+/* ══════════════════════════════════════
+   HOME SCREEN
+══════════════════════════════════════ */
+#home-screen { gap: 0; }
 
-  .logo-cap {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    font-weight: 400;
-    letter-spacing: 5px;
-    color: var(--text-dim);
-    text-transform: uppercase;
-  }
-  .logo-main {
-    font-family: 'IBM Plex Sans', sans-serif;
-    font-size: clamp(32px, 6vw, 52px);
-    font-weight: 300;
-    letter-spacing: -1px;
-    color: var(--text);
-    margin-top: 4px;
-  }
-  .divider { width: 28px; height: 1px; background: var(--border-strong); margin: 0 auto; }
-  .instructions {
-    text-align: left;
-    font-size: 13px;
-    line-height: 1.9;
-    color: var(--text-mid);
-    border-left: 2px solid var(--border);
-    padding-left: 16px;
-  }
-  .instructions strong { color: var(--text); font-weight: 500; }
-  .start-btn {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    padding: 12px 40px;
-    background: var(--text);
-    color: var(--bg);
-    border: none;
-    cursor: pointer;
-    transition: opacity 0.15s;
-  }
-  .start-btn:hover { opacity: 0.8; }
+.home-header {
+  text-align: center;
+  padding: 40px 0 36px;
+}
+.home-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 5px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.home-title {
+  font-family: var(--sans);
+  font-size: clamp(36px, 6vw, 60px);
+  font-weight: 300;
+  letter-spacing: -2px;
+  color: var(--text);
+  line-height: 1;
+}
 
-  /* ── GAME ── */
-  #game-screen {
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 44px;
-  }
+.mode-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  width: 100%;
+  background: var(--border);
+  border: 1px solid var(--border);
+  margin-bottom: 2px;
+}
 
-  .compass-panel {
-    flex: 0 0 auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-  }
+.mode-card {
+  background: var(--surface);
+  padding: 28px 28px 24px;
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+}
+.mode-card:hover { background: var(--surface2); }
 
-  .top-bar {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 1px;
-    color: var(--text-dim);
-  }
+.mode-tag {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+.mode-name {
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.5px;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.mode-desc {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-mid);
+  max-width: 340px;
+}
+.mode-arrow {
+  position: absolute;
+  top: 28px; right: 24px;
+  font-size: 18px;
+  color: var(--border-strong);
+}
 
-  canvas#compass {
-    display: block;
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    background: #fafaf8;
-  }
+.card-toggle {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-mid);
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.12s;
+}
+.card-toggle:hover { border-color: var(--border-strong); color: var(--text); }
+.card-toggle.active {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--surface);
+}
+  background: var(--surface);
+  padding: 20px 28px;
+  cursor: pointer;
+  transition: background 0.15s;
+  width: 100%;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.training-card:hover { background: var(--surface2); }
+.training-card .tc-icon {
+  font-size: 24px;
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface2);
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.training-card .tc-text .mode-tag { margin-bottom: 2px; }
+.training-card .tc-text .mode-name { font-size: 16px; margin-bottom: 0; }
+.training-card-arrow { margin-left: auto; color: var(--border-strong); }
 
-  .progress-bar-wrap {
-    width: 100%;
-    height: 2px;
-    background: var(--border);
-  }
-  .progress-bar {
-    height: 100%;
-    background: var(--text);
-    transition: width 0.25s;
-  }
+/* ══════════════════════════════════════
+   CONFIG SCREEN (TRAINING)
+══════════════════════════════════════ */
+#config-screen { gap: 0; max-width: 640px; }
 
-  /* tiny hidden timer — still runs, barely visible */
-  .timer-ghost {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 9px;
-    color: var(--text-dim);
-    opacity: 0.28;
-    align-self: flex-end;
-    letter-spacing: 0.5px;
-    user-select: none;
-  }
+.config-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+}
+.back-btn {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  background: none;
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.12s;
+}
+.back-btn:hover { border-color: var(--border-strong); color: var(--text-mid); }
+.config-title {
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.5px;
+}
 
-  /* ── RIGHT PANEL ── */
-  .right-panel {
-    flex: 0 0 210px;
-    display: flex;
-    flex-direction: column;
-    gap: 22px;
-    padding-top: 2px;
-  }
+.config-section {
+  width: 100%;
+  margin-bottom: 20px;
+}
+.config-section-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
 
-  .question-label {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 3px;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-  .target-label {
-    font-family: 'IBM Plex Sans', sans-serif;
-    font-size: 48px;
-    font-weight: 300;
-    color: var(--text);
-    letter-spacing: -2px;
-    line-height: 1;
-  }
+.toggle-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.toggle-pill {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-mid);
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.12s;
+  user-select: none;
+}
+.toggle-pill:hover { border-color: var(--border-strong); color: var(--text); }
+.toggle-pill.active {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--surface);
+}
 
-  .answers-wrap { display: flex; flex-direction: column; gap: 5px; }
+.slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.slider-wrap input[type=range] {
+  flex: 1;
+  accent-color: var(--text);
+  height: 2px;
+}
+.slider-val {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text);
+  min-width: 36px;
+  text-align: right;
+}
 
-  .answer-btn {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 9px 12px;
-    background: var(--btn-bg);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 17px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 0.1s, border-color 0.1s;
-    width: 100%;
-    text-align: left;
-  }
-  .answer-btn:hover:not(:disabled) {
-    background: var(--btn-hover);
-    border-color: var(--border-strong);
-  }
-  .answer-btn .key-badge {
-    font-size: 9px;
-    font-weight: 400;
-    width: 16px; height: 16px;
-    display: flex; align-items: center; justify-content: center;
-    border: 1px solid var(--border-strong);
-    border-radius: 2px;
-    flex-shrink: 0;
-    color: var(--text-mid);
-  }
-  .answer-btn .deg { color: var(--text); }
-  .answer-btn.correct {
-    background: #edf7ee;
-    border-color: var(--correct);
-  }
-  .answer-btn.correct .deg,
-  .answer-btn.correct .key-badge { color: var(--correct); border-color: var(--correct); }
-  .answer-btn.wrong {
-    background: #fdf0ef;
-    border-color: var(--wrong);
-  }
-  .answer-btn.wrong .deg,
-  .answer-btn.wrong .key-badge { color: var(--wrong); border-color: var(--wrong); }
-  .answer-btn:disabled { cursor: default; }
+.config-start-btn {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 12px 36px;
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  margin-top: 8px;
+  align-self: flex-start;
+}
+.config-start-btn:hover { opacity: 0.8; }
 
-  .feedback {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 2px;
-    height: 13px;
-    color: transparent;
-  }
-  .feedback.correct { color: var(--correct); }
-  .feedback.wrong   { color: var(--wrong); }
+/* ══════════════════════════════════════
+   GAME SCREEN
+══════════════════════════════════════ */
+#game-screen {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 40px;
+  flex-wrap: nowrap;
+}
 
-  /* ── RESULTS ── */
-  #results-screen { gap: 24px; text-align: center; max-width: 440px; }
+.compass-panel {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
 
-  .result-title {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 4px;
-    color: var(--text-dim);
-    text-transform: uppercase;
-  }
+.game-top-bar {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+}
+.game-top-bar .mode-chip {
+  background: var(--text);
+  color: var(--bg);
+  padding: 3px 8px;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
 
-  .result-stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1px;
-    background: var(--border);
-    border: 1px solid var(--border);
-    width: 100%;
-  }
-  .result-stat {
-    background: var(--surface);
-    padding: 16px 8px;
-    text-align: center;
-  }
-  .result-stat .v {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 26px;
-    font-weight: 500;
-    color: var(--text);
-    letter-spacing: -1px;
-  }
-  .result-stat .l {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 8px;
-    letter-spacing: 2px;
-    color: var(--text-dim);
-    margin-top: 4px;
-    text-transform: uppercase;
-  }
+canvas#compass {
+  display: block;
+  background: transparent;
+}
 
-  .result-breakdown {
-    width: 100%;
-    border: 1px solid var(--border);
-    background: var(--surface);
-  }
-  .brow {
-    display: flex;
-    justify-content: space-between;
-    padding: 9px 14px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    border-bottom: 1px solid var(--border);
-    color: var(--text-mid);
-  }
-  .brow:last-child { border-bottom: none; }
-  .brow span:last-child { color: var(--text); font-weight: 500; }
+.progress-wrap {
+  width: 100%;
+  height: 2px;
+  background: var(--border);
+}
+.progress-fill {
+  height: 100%;
+  background: var(--text);
+  transition: width 0.22s;
+}
 
-  .btn-row { display: flex; gap: 8px; }
-  .action-btn {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    padding: 10px 28px;
-    background: var(--text);
-    color: var(--bg);
-    border: none;
-    cursor: pointer;
-    transition: opacity 0.15s;
-  }
-  .action-btn:hover { opacity: 0.8; }
-  .action-btn.ghost {
-    background: transparent;
-    color: var(--text-mid);
-    border: 1px solid var(--border);
-  }
-  .action-btn.ghost:hover { opacity: 1; background: var(--btn-hover); }
+.timer-ghost {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-dim);
+  opacity: 0.25;
+  align-self: flex-end;
+}
+
+/* ══════════════════════════════════════
+   RIGHT PANEL
+══════════════════════════════════════ */
+.right-panel {
+  flex: 0 0 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-top: 2px;
+}
+
+.q-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.q-target {
+  font-family: var(--sans);
+  font-size: 52px;
+  font-weight: 300;
+  color: var(--text);
+  letter-spacing: -3px;
+  line-height: 1;
+}
+.q-sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  letter-spacing: 1px;
+}
+
+.answers-wrap { display: flex; flex-direction: column; gap: 5px; }
+
+.answer-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  background: var(--btn);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 17px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s;
+  width: 100%;
+  text-align: left;
+  letter-spacing: -0.5px;
+}
+.answer-btn:hover:not(:disabled) {
+  background: var(--btn-hover);
+  border-color: var(--border-strong);
+}
+.answer-btn .kbd {
+  font-size: 9px;
+  width: 16px; height: 16px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border-strong);
+  border-radius: 2px;
+  flex-shrink: 0;
+  color: var(--text-mid);
+}
+.answer-btn .val { color: var(--text); }
+.answer-btn.correct { background: var(--correct-bg); border-color: var(--correct); }
+.answer-btn.correct .val,
+.answer-btn.correct .kbd { color: var(--correct); border-color: var(--correct); }
+.answer-btn.wrong { background: var(--wrong-bg); border-color: var(--wrong); }
+.answer-btn.wrong .val,
+.answer-btn.wrong .kbd { color: var(--wrong); border-color: var(--wrong); }
+.answer-btn:disabled { cursor: default; }
+
+.feedback {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  height: 13px;
+  color: transparent;
+}
+.feedback.correct { color: var(--correct); }
+.feedback.wrong   { color: var(--wrong); }
+
+/* ══════════════════════════════════════
+   RESULTS SCREEN
+══════════════════════════════════════ */
+#results-screen { gap: 24px; text-align: center; max-width: 500px; }
+
+.results-title {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.r-stats {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  width: 100%;
+}
+.r-stat {
+  background: var(--surface);
+  padding: 16px 8px;
+  text-align: center;
+}
+.r-stat .v {
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--text);
+  letter-spacing: -1px;
+}
+.r-stat .l {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+
+.r-table {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.r-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 9px 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-mid);
+}
+.r-row:last-child { border-bottom: none; }
+.r-row span:last-child { color: var(--text); font-weight: 500; }
+
+.btn-row { display: flex; gap: 8px; }
+.action-btn {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 10px 28px;
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.action-btn:hover { opacity: 0.8; }
+.action-btn.ghost {
+  background: transparent;
+  color: var(--text-mid);
+  border: 1px solid var(--border);
+}
+.action-btn.ghost:hover { background: var(--btn-hover); }
 </style>
 </head>
 <body>
 
-<div id="start-screen" class="screen active">
-  <div>
-    <div class="logo-cap">CBAT Module</div>
-    <div class="logo-main">Bearings</div>
+<!-- ══════════════════ HOME ══════════════════ -->
+<div id="home-screen" class="screen active">
+  <div class="home-header">
+    <div class="home-eyebrow">CBAT Aptitude Trainer</div>
+    <div class="home-title">Select a module</div>
   </div>
-  <div class="divider"></div>
-  <div class="instructions">
-    A compass shows multiple labelled points. Estimate the <strong>bearing of the named point</strong> from the centre crosshair.<br><br>
-    · Bearings run <strong>clockwise from North (000°)</strong><br>
-    · Press <strong>1–5</strong> on keyboard or tap an answer<br>
-    · 30 questions — difficulty increases progressively<br>
-    · All points appear identical — identify by <strong>label only</strong>
+
+  <div class="mode-grid" style="width:100%">
+    <div class="mode-card" onclick="startBearings(true)">
+      <div class="mode-arrow">→</div>
+      <div class="mode-tag">Bearings · Rotating</div>
+      <div class="mode-name">Compass Bearings</div>
+      <div class="mode-desc">Estimate the bearing of the named point from the centre crosshair. Compass orientation rotates each question. 30 questions, progressive difficulty.</div>
+      <div style="margin-top:14px;display:flex;gap:8px;align-items:center">
+        <button class="card-toggle active" onclick="event.stopPropagation();setCardToggle(this,'rotated');startBearings(true)">Rotating</button>
+        <button class="card-toggle" onclick="event.stopPropagation();setCardToggle(this,'fixed');startBearings(false)">360° Fixed</button>
+      </div>
+    </div>
+    <div class="mode-card" onclick="startAngles()">
+      <div class="mode-arrow">→</div>
+      <div class="mode-tag">Angles</div>
+      <div class="mode-name">Angle Between Lines</div>
+      <div class="mode-desc">Two lines are shown at random orientations. A small marker indicates whether the inner or outer angle is required. Select the correct value.</div>
+    </div>
   </div>
-  <button class="start-btn" onclick="startGame()">Start Test</button>
+
+  <div style="width:100%;display:flex;flex-direction:column;gap:2px;margin-top:2px">
+    <div class="training-card" onclick="openTraining('bearings')">
+      <div class="tc-icon">◎</div>
+      <div class="tc-text">
+        <div class="mode-tag">Custom Training</div>
+        <div class="mode-name">Bearings Training Mode</div>
+      </div>
+      <div class="training-card-arrow">→</div>
+    </div>
+    <div class="training-card" onclick="openTraining('angles')">
+      <div class="tc-icon">∠</div>
+      <div class="tc-text">
+        <div class="mode-tag">Custom Training</div>
+        <div class="mode-name">Angles Training Mode</div>
+      </div>
+      <div class="training-card-arrow">→</div>
+    </div>
+  </div>
 </div>
 
+<!-- ══════════════════ CONFIG ══════════════════ -->
+<div id="config-screen" class="screen">
+  <div class="config-header">
+    <button class="back-btn" onclick="showScreen('home-screen')">← Back</button>
+    <div class="config-title" id="config-title">Training Configuration</div>
+  </div>
+
+  <div class="config-section">
+    <div class="config-section-label">Number of Questions</div>
+    <div class="slider-wrap">
+      <input type="range" id="cfg-count" min="10" max="60" step="5" value="20" oninput="document.getElementById('cfg-count-val').textContent=this.value">
+      <div class="slider-val" id="cfg-count-val">20</div>
+    </div>
+  </div>
+
+  <div class="config-section">
+    <div class="config-section-label">Answer Spread</div>
+    <div class="toggle-group" id="cfg-spread">
+      <div class="toggle-pill active" data-val="any" onclick="togglePill(this,'cfg-spread')">Any</div>
+      <div class="toggle-pill" data-val="tight" onclick="togglePill(this,'cfg-spread')">Tight (≤15°)</div>
+      <div class="toggle-pill" data-val="wide" onclick="togglePill(this,'cfg-spread')">Wide (≥30°)</div>
+    </div>
+  </div>
+
+  <div class="config-section">
+    <div class="config-section-label">Quadrant Focus</div>
+    <div class="toggle-group" id="cfg-quadrant">
+      <div class="toggle-pill active" data-val="all" onclick="togglePill(this,'cfg-quadrant')">All</div>
+      <div class="toggle-pill" data-val="1" onclick="togglePill(this,'cfg-quadrant')">Q1 (0–90°)</div>
+      <div class="toggle-pill" data-val="2" onclick="togglePill(this,'cfg-quadrant')">Q2 (90–180°)</div>
+      <div class="toggle-pill" data-val="3" onclick="togglePill(this,'cfg-quadrant')">Q3 (180–270°)</div>
+      <div class="toggle-pill" data-val="4" onclick="togglePill(this,'cfg-quadrant')">Q4 (270–360°)</div>
+    </div>
+  </div>
+
+  <div class="config-section" id="cfg-cardinal-section">
+    <div class="config-section-label">Cardinal Proximity</div>
+    <div class="toggle-group" id="cfg-cardinal">
+      <div class="toggle-pill active" data-val="any" onclick="togglePill(this,'cfg-cardinal')">Any</div>
+      <div class="toggle-pill" data-val="near" onclick="togglePill(this,'cfg-cardinal')">Near cardinal (≤20°)</div>
+      <div class="toggle-pill" data-val="far" onclick="togglePill(this,'cfg-cardinal')">Far from cardinal (>20°)</div>
+    </div>
+  </div>
+
+  <div class="config-section">
+    <div class="config-section-label">Difficulty</div>
+    <div class="toggle-group" id="cfg-diff">
+      <div class="toggle-pill active" data-val="mixed" onclick="togglePill(this,'cfg-diff')">Mixed</div>
+      <div class="toggle-pill" data-val="1" onclick="togglePill(this,'cfg-diff')">Easy (few distractors)</div>
+      <div class="toggle-pill" data-val="2" onclick="togglePill(this,'cfg-diff')">Medium</div>
+      <div class="toggle-pill" data-val="3" onclick="togglePill(this,'cfg-diff')">Hard (many distractors)</div>
+    </div>
+  </div>
+
+  <div class="config-section" id="cfg-rotate-section">
+    <div class="config-section-label">Compass Orientation</div>
+    <div class="toggle-group" id="cfg-rotate">
+      <div class="toggle-pill active" data-val="rotated" onclick="togglePill(this,'cfg-rotate')">Rotating</div>
+      <div class="toggle-pill" data-val="fixed" onclick="togglePill(this,'cfg-rotate')">360° Fixed (North up)</div>
+    </div>
+  </div>
+
+  <button class="config-start-btn" onclick="startTraining()">Begin Training →</button>
+</div>
+
+<!-- ══════════════════ GAME ══════════════════ -->
 <div id="game-screen" class="screen">
   <div class="compass-panel">
-    <div class="top-bar">
-      <span id="q-counter">1 / 30</span>
-      <span id="q-diff">Level 1</span>
+    <div class="game-top-bar">
+      <span id="g-counter">1 / 30</span>
+      <span class="mode-chip" id="g-mode-chip">Bearings</span>
+      <span id="g-diff-label">Level 1</span>
     </div>
     <canvas id="compass" width="490" height="490"></canvas>
-    <div class="progress-bar-wrap" style="width:490px">
-      <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+    <div class="progress-wrap" style="width:490px">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
     </div>
     <div class="timer-ghost" id="timer-display">0.0</div>
   </div>
 
   <div class="right-panel">
     <div>
-      <div class="question-label">Bearing of</div>
-      <div class="target-label" id="target-label">—</div>
+      <div class="q-label" id="q-label">Bearing of</div>
+      <div class="q-target" id="q-target">—</div>
+      <div class="q-sub" id="q-sub"></div>
     </div>
     <div class="answers-wrap" id="answers-wrap"></div>
     <div class="feedback" id="feedback"> </div>
+    <button class="back-btn" style="align-self:flex-start;margin-top:auto" onclick="endGame()">End Test</button>
   </div>
 </div>
 
+<!-- ══════════════════ RESULTS ══════════════════ -->
 <div id="results-screen" class="screen">
-  <div class="result-title">Test Complete</div>
-
-  <div class="result-stats">
-    <div class="result-stat"><div class="v" id="r-correct">—</div><div class="l">Correct</div></div>
-    <div class="result-stat"><div class="v" id="r-wrong">—</div><div class="l">Wrong</div></div>
-    <div class="result-stat"><div class="v" id="r-pct">—</div><div class="l">Accuracy</div></div>
+  <div class="results-title">Test Complete</div>
+  <div class="r-stats">
+    <div class="r-stat"><div class="v" id="r-correct">—</div><div class="l">Correct</div></div>
+    <div class="r-stat"><div class="v" id="r-wrong">—</div><div class="l">Wrong</div></div>
+    <div class="r-stat"><div class="v" id="r-pct">—</div><div class="l">Accuracy</div></div>
   </div>
-
-  <div class="result-breakdown">
-    <div class="brow"><span>Total time</span><span id="r-time">—</span></div>
-    <div class="brow"><span>Avg. per question</span><span id="r-avg">—</span></div>
-    <div class="brow"><span>Level 1  (Q1–10)</span><span id="r-l1">—</span></div>
-    <div class="brow"><span>Level 2  (Q11–20)</span><span id="r-l2">—</span></div>
-    <div class="brow"><span>Level 3  (Q21–30)</span><span id="r-l3">—</span></div>
+  <div class="r-table">
+    <div class="r-row"><span>Total time</span><span id="r-time">—</span></div>
+    <div class="r-row"><span>Avg. per question</span><span id="r-avg">—</span></div>
+    <div class="r-row" id="r-l1-row"><span>Level 1  (Q1–10)</span><span id="r-l1">—</span></div>
+    <div class="r-row" id="r-l2-row"><span>Level 2  (Q11–20)</span><span id="r-l2">—</span></div>
+    <div class="r-row" id="r-l3-row"><span>Level 3  (Q21–30)</span><span id="r-l3">—</span></div>
+    <div class="r-row"><span>Mode</span><span id="r-mode">—</span></div>
   </div>
-
   <div class="btn-row">
-    <button class="action-btn" onclick="startGame()">Retry</button>
-    <button class="action-btn ghost" onclick="showScreen('start-screen')">Menu</button>
+    <button class="action-btn" id="r-retry-btn">Retry</button>
+    <button class="action-btn ghost" onclick="showScreen('home-screen')">Home</button>
   </div>
 </div>
 
 <script>
-const TOTAL_Q = 30;
-const SZ = 490, CX = SZ/2, CY = SZ/2;
-const RADIUS = SZ/2 - 14;
+/* ════════════════════════════════════════════════════════
+   GLOBALS
+════════════════════════════════════════════════════════ */
 const LABELS = 'ABCDEFGHJKLMNPQRSTUVWXYZ'.split('');
+const SZ = 490, CX = SZ/2, CY = SZ/2, RADIUS = SZ/2 - 36;
+const canvas = document.getElementById('compass');
+const ctx = canvas.getContext('2d');
 
 let questions=[], currentQ=0, score=0, wrongs=0;
 let startTime=0, timerInterval=null, answered=false;
 let levelCorrect=[0,0,0];
+let gameConfig = {};   // holds mode, rotated, training cfg
 
-function showScreen(id) {
+/* ════════════════════════════════════════════════════════
+   NAVIGATION
+════════════════════════════════════════════════════════ */
+function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
-function bToXY(b,d){ const r=(b-90)*Math.PI/180; return{x:CX+Math.cos(r)*d, y:CY+Math.sin(r)*d}; }
+
+/* ════════════════════════════════════════════════════════
+   CONFIG UI HELPERS
+════════════════════════════════════════════════════════ */
+function togglePill(el, groupId){
+  document.querySelectorAll(`#${groupId} .toggle-pill`).forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+}
+function getPill(groupId){
+  const el = document.querySelector(`#${groupId} .toggle-pill.active`);
+  return el ? el.dataset.val : null;
+}
+
+function openTraining(type){
+  const title = type === 'bearings' ? 'Bearings Training' : 'Angles Training';
+  document.getElementById('config-title').textContent = title;
+  document.getElementById('cfg-cardinal-section').style.display = type === 'bearings' ? '' : 'none';
+  document.getElementById('cfg-rotate-section').style.display = type === 'bearings' ? '' : 'none';
+  gameConfig._trainingType = type;
+  showScreen('config-screen');
+}
+
+function startTraining(){
+  const type = gameConfig._trainingType;
+  const rotPill = getPill('cfg-rotate');
+  const cfg = {
+    mode: type,
+    training: true,
+    count: parseInt(document.getElementById('cfg-count').value),
+    spread: getPill('cfg-spread'),
+    quadrant: getPill('cfg-quadrant'),
+    cardinal: getPill('cfg-cardinal') || 'any',
+    diff: getPill('cfg-diff'),
+    rotated: type === 'angles' ? false : (rotPill !== 'fixed')
+  };
+  launchGame(cfg);
+}
+
+function setCardToggle(el, val){
+  // toggle active state among siblings
+  el.parentElement.querySelectorAll('.card-toggle').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+/* ════════════════════════════════════════════════════════
+   ENTRY POINTS
+════════════════════════════════════════════════════════ */
+function startBearings(rotated){
+  launchGame({ mode:'bearings', training:false, count:30, rotated: rotated !== false,
+    spread:'any', quadrant:'all', cardinal:'any', diff:'mixed' });
+}
+function startAngles(){
+  launchGame({ mode:'angles', training:false, count:30, rotated:false,
+    spread:'any', quadrant:'all', cardinal:'any', diff:'mixed' });
+}
+
+/* ════════════════════════════════════════════════════════
+   GAME LAUNCH
+════════════════════════════════════════════════════════ */
+function launchGame(cfg){
+  gameConfig = cfg;
+  buildQuestions(cfg);
+  currentQ=0; score=0; wrongs=0; levelCorrect=[0,0,0];
+  startTime=Date.now();
+  clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{
+    document.getElementById('timer-display').textContent=((Date.now()-startTime)/1000).toFixed(1);
+  },250);
+  document.removeEventListener('keydown', keyHandler);
+  document.addEventListener('keydown', keyHandler);
+
+  // chip label
+  const chipLabel = cfg.mode === 'bearings'
+    ? (cfg.rotated ? 'Bearings · Rotating' : 'Bearings · Fixed')
+    : 'Angles';
+  document.getElementById('g-mode-chip').textContent = cfg.training ? chipLabel + ' · Training' : chipLabel;
+
+  document.getElementById('r-retry-btn').onclick = ()=>launchGame(cfg);
+
+  showScreen('game-screen');
+  loadQuestion();
+}
+
+/* ════════════════════════════════════════════════════════
+   QUESTION GENERATION
+════════════════════════════════════════════════════════ */
 function r5(v){ return Math.round(v/5)*5; }
-function fmt(d){ return String(((d%360)+360)%360).padStart(3,'0')+'°'; }
-function getDiff(i){ return i<10?1:i<20?2:3; }
+function r1(v){ return Math.round(v); }
+function fmt(d, pad3=true){
+  const n=((Math.round(d)%360)+360)%360;
+  return pad3 ? String(n).padStart(3,'0')+'°' : n+'°';
+}
+function distFromCardinal(b){
+  const c=[0,90,180,270,360];
+  return Math.min(...c.map(x=>Math.abs(((b-x+180)%360)-180)));
+}
+function inQuadrant(b,q){
+  b=((b%360)+360)%360;
+  if(q==='all') return true;
+  const ranges={1:[0,90],2:[90,180],3:[180,270],4:[270,360]};
+  const [lo,hi]=ranges[q]; return b>=lo && b<hi;
+}
 
-function genQ(qi){
-  const diff=getDiff(qi);
-  const extra=diff===1?Math.floor(Math.random()*2)+1:diff===2?Math.floor(Math.random()*3)+3:Math.floor(Math.random()*4)+5;
-  const tb=r5(Math.random()*360);
-  const minSep=diff===1?20:diff===2?10:5;
+function sampleBearing(cfg){
+  let b, iters=0;
+  do {
+    b = r5(Math.random()*360);
+    iters++;
+    if(iters>500) break;
+    const cd=distFromCardinal(b);
+    if(cfg.cardinal==='near' && cd>20) continue;
+    if(cfg.cardinal==='far' && cd<=20) continue;
+    if(cfg.quadrant!=='all' && !inQuadrant(b,cfg.quadrant)) continue;
+    return b;
+  } while(true);
+  return b;
+}
 
-  let opts=[tb], att=0;
-  while(opts.length<5&&att<500){
+function getDiff(qi, cfg){
+  if(cfg.diff==='1') return 1;
+  if(cfg.diff==='2') return 2;
+  if(cfg.diff==='3') return 3;
+  // mixed: progressive
+  const frac = qi / (cfg.count-1);
+  return frac < 0.33 ? 1 : frac < 0.66 ? 2 : 3;
+}
+
+function genOptions(trueBearing, cfg, diff){
+  const spread = cfg.spread;
+  let minSep = spread==='tight' ? 5 : spread==='wide' ? 30 : (diff===1?20:diff===2?10:5);
+  let maxOff  = spread==='tight' ? 20 : spread==='wide' ? 60 : (diff===3?20:40);
+
+  let opts=[trueBearing], att=0;
+  while(opts.length<5 && att<600){
     att++;
-    const off=(Math.random()>.5?1:-1)*(minSep+Math.floor(Math.random()*(diff===3?18:38)));
-    const c=r5(((tb+off)%360+360)%360);
+    const off=(Math.random()>.5?1:-1)*(minSep+Math.floor(Math.random()*maxOff));
+    const c=r5(((trueBearing+off)%360+360)%360);
     if(opts.every(o=>{const d=Math.abs(o-c);return Math.min(d,360-d)>=minSep;})) opts.push(c);
   }
-  opts=opts.sort(()=>Math.random()-.5);
-  const ci=opts.indexOf(tb);
+  return opts.sort(()=>Math.random()-.5);
+}
 
-  const td=0.28*RADIUS+Math.random()*0.52*RADIUS;
-  const tp=bToXY(tb,td);
+/* ─── Bearings question ─── */
+function bToXY(b,d,offsetAngle=0){
+  const rad=(b-90+offsetAngle)*Math.PI/180;
+  return{x:CX+Math.cos(rad)*d, y:CY+Math.sin(rad)*d};
+}
+
+function genBearingQ(qi, cfg){
+  const diff=getDiff(qi,cfg);
+  const extra=diff===1?Math.floor(Math.random()*2)+1:diff===2?Math.floor(Math.random()*3)+3:Math.floor(Math.random()*4)+5;
+  const tb=sampleBearing(cfg);
+  const opts=genOptions(tb,cfg,diff);
+  const ci=opts.indexOf(tb);
+  const compassRotation = cfg.rotated ? r5(Math.random()*360) : 0;
+
+  const targetDist=0.28*RADIUS+Math.random()*0.52*RADIUS;
+  const tp=bToXY(tb,targetDist,compassRotation);
   const pool=[...LABELS].sort(()=>Math.random()-.5);
   const tl=pool[0];
 
@@ -406,94 +843,203 @@ function genQ(qi){
   for(let i=1;i<=extra;i++){
     let pos,tr=0;
     do{
-      const b=Math.random()*360, d=0.22*RADIUS+Math.random()*0.58*RADIUS;
-      pos=bToXY(b,d); tr++;
+      const b=Math.random()*360,d=0.22*RADIUS+Math.random()*0.58*RADIUS;
+      pos=bToXY(b,d,compassRotation); tr++;
     }while(tr<60&&pts.some(p=>Math.hypot(p.x-pos.x,p.y-pos.y)<42));
     pts.push({label:pool[i],x:pos.x,y:pos.y});
   }
-  return{tb,opts,ci,tl,pts,diff};
+  return{type:'bearing', tb, opts, ci, tl, pts, diff, compassRotation};
 }
 
-function buildQs(){ questions=[]; for(let i=0;i<TOTAL_Q;i++) questions.push(genQ(i)); }
+/* ─── Angles question ─── */
+function genAngleQ(qi, cfg){
+  const diff=getDiff(qi,cfg);
+  // angle to measure
+  const angle=sampleBearing(cfg); // 5–355
+  // starting arm rotates so it's never at 0
+  const armOffset = cfg.rotated ? r5(Math.random()*360) : r5(Math.random()*360);
+  // inner or outer angle
+  const useInner = Math.random() > 0.5;
+  const displayAngle = useInner ? angle : (360 - angle);
 
-const canvas=document.getElementById('compass');
-const ctx=canvas.getContext('2d');
+  // Generate options around the displayAngle
+  const opts=genOptions(displayAngle, cfg, diff);
+  const ci=opts.indexOf(displayAngle);
 
-function drawCompass(q){
+  return{type:'angle', angle, displayAngle, armOffset, useInner, opts, ci, diff};
+}
+
+function buildQuestions(cfg){
+  questions=[];
+  for(let i=0;i<cfg.count;i++){
+    questions.push(cfg.mode==='bearings' ? genBearingQ(i,cfg) : genAngleQ(i,cfg));
+  }
+}
+
+/* ════════════════════════════════════════════════════════
+   DRAWING
+════════════════════════════════════════════════════════ */
+function drawBearingCompass(q){
   ctx.clearRect(0,0,SZ,SZ);
+  const rot = q.compassRotation || 0;
 
+  // Circle fill
   ctx.beginPath(); ctx.arc(CX,CY,RADIUS,0,Math.PI*2);
   ctx.fillStyle='#fafaf8'; ctx.fill();
 
+  // Subtle inner rings
   [0.33,0.66].forEach(f=>{
     ctx.beginPath(); ctx.arc(CX,CY,RADIUS*f,0,Math.PI*2);
     ctx.strokeStyle='rgba(0,0,0,0.05)'; ctx.lineWidth=1; ctx.stroke();
   });
 
-  const card={0:'360',90:'090',180:'180',270:'270'};
+  // Ticks + cardinal labels (drawn OUTSIDE circle, canvas is borderless)
+  const cardinals={0:'360',90:'090',180:'180',270:'270'};
   for(let deg=0;deg<360;deg+=5){
-    const rad=(deg-90)*Math.PI/180;
+    const rad=(deg-90+rot)*Math.PI/180;
     const maj=deg%10===0, car=deg%90===0;
-    const inner=car?RADIUS-22:maj?RADIUS-13:RADIUS-7;
+    const inner=car?RADIUS-20:maj?RADIUS-12:RADIUS-6;
     ctx.beginPath();
-    ctx.moveTo(CX+Math.cos(rad)*inner, CY+Math.sin(rad)*inner);
-    ctx.lineTo(CX+Math.cos(rad)*RADIUS, CY+Math.sin(rad)*RADIUS);
-    ctx.strokeStyle=car?'#555':maj?'#bbb':'#ddd';
+    ctx.moveTo(CX+Math.cos(rad)*inner,CY+Math.sin(rad)*inner);
+    ctx.lineTo(CX+Math.cos(rad)*RADIUS,CY+Math.sin(rad)*RADIUS);
+    ctx.strokeStyle=car?'#444':maj?'#bbb':'#ddd';
     ctx.lineWidth=car?1.5:1; ctx.stroke();
     if(car){
-      const lx=CX+Math.cos(rad)*(RADIUS+15), ly=CY+Math.sin(rad)*(RADIUS+15);
-      ctx.fillStyle='#444'; ctx.font='11px IBM Plex Mono,monospace';
+      // label sits outside the circle — no clipping since canvas has no border-radius
+      const lx=CX+Math.cos(rad)*(RADIUS+18), ly=CY+Math.sin(rad)*(RADIUS+18);
+      ctx.fillStyle='#333';
+      ctx.font='500 12px DM Mono,monospace';
       ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.fillText(card[deg],lx,ly);
+      ctx.fillText(cardinals[deg],lx,ly);
     }
   }
 
+  // Circle border drawn AFTER labels so it sits on top of the disc edge
   ctx.beginPath(); ctx.arc(CX,CY,RADIUS,0,Math.PI*2);
-  ctx.strokeStyle='#ccc'; ctx.lineWidth=1; ctx.stroke();
+  ctx.strokeStyle='#c8c5be'; ctx.lineWidth=1; ctx.stroke();
 
-  const ch=12;
-  ctx.strokeStyle='#444'; ctx.lineWidth=1;
+  // Crosshair
+  const ch=13;
+  ctx.strokeStyle='#555'; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(CX-ch,CY); ctx.lineTo(CX+ch,CY);
   ctx.moveTo(CX,CY-ch); ctx.lineTo(CX,CY+ch); ctx.stroke();
   ctx.beginPath(); ctx.arc(CX,CY,2.5,0,Math.PI*2);
-  ctx.fillStyle='#444'; ctx.fill();
+  ctx.fillStyle='#555'; ctx.fill();
 
-  // all points identical
+  // Points — all identical
   q.pts.forEach(p=>{
     ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2);
-    ctx.fillStyle='#1a1916'; ctx.fill();
-    ctx.fillStyle='#1a1916';
-    ctx.font='13px IBM Plex Mono,monospace';
+    ctx.fillStyle='#1c1a17'; ctx.fill();
+    ctx.fillStyle='#1c1a17';
+    ctx.font='13px DM Mono,monospace';
     ctx.textAlign='left'; ctx.textBaseline='middle';
-    ctx.fillText(p.label, p.x+8, p.y-1);
+    ctx.fillText(p.label,p.x+8,p.y-1);
   });
 }
 
+function drawAngleDiagram(q){
+  ctx.clearRect(0,0,SZ,SZ);
+  // Plain background - no compass disc, no rings, no border
+  // Just two lines on a clean canvas
+
+  const offset = q.armOffset;
+  const arm1Rad = (offset - 90)*Math.PI/180;
+  const arm2Rad = (offset + q.angle - 90)*Math.PI/180;
+  const armLen = RADIUS * 0.88;
+  const useInner = q.useInner;
+
+  // Subtle swept fill so user can see which region is indicated
+  ctx.beginPath();
+  ctx.moveTo(CX,CY);
+  if(useInner){
+    ctx.arc(CX,CY, armLen*0.5, arm1Rad, arm2Rad, false);
+  } else {
+    ctx.arc(CX,CY, armLen*0.5, arm1Rad, arm2Rad, true);
+  }
+  ctx.closePath();
+  ctx.fillStyle='rgba(0,0,0,0.04)';
+  ctx.fill();
+
+  // Draw the two arms
+  [arm1Rad, arm2Rad].forEach(r=>{
+    ctx.beginPath();
+    ctx.moveTo(CX,CY);
+    ctx.lineTo(CX+Math.cos(r)*armLen, CY+Math.sin(r)*armLen);
+    ctx.strokeStyle='#1c1a17';
+    ctx.lineWidth=2.5;
+    ctx.lineCap='round';
+    ctx.stroke();
+    ctx.lineCap='butt';
+  });
+
+  // Centre dot
+  ctx.beginPath(); ctx.arc(CX,CY,5,0,Math.PI*2);
+  ctx.fillStyle='#1c1a17'; ctx.fill();
+
+  // Small dashed arc indicator close to centre
+  const arcR = 48; // fixed small radius
+  ctx.beginPath();
+  if(useInner){
+    ctx.arc(CX,CY,arcR, arm1Rad, arm2Rad, false);
+  } else {
+    ctx.arc(CX,CY,arcR, arm1Rad, arm2Rad, true);
+  }
+  ctx.strokeStyle='#1c1a17';
+  ctx.lineWidth=1.5;
+  ctx.setLineDash([4,3]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Tiny filled circle marker at midpoint of the arc
+  let midAngle;
+  if(useInner){
+    midAngle = offset + q.angle/2 - 90;
+  } else {
+    midAngle = offset + q.angle + (360 - q.angle)/2 - 90;
+  }
+  const midRad = midAngle*Math.PI/180;
+  const mx = CX + Math.cos(midRad)*arcR;
+  const my = CY + Math.sin(midRad)*arcR;
+
+  // Small solid filled dot — just a clear marker, no text needed
+  ctx.beginPath(); ctx.arc(mx,my,5,0,Math.PI*2);
+  ctx.fillStyle='#1c1a17';
+  ctx.fill();
+}
+
+/* ════════════════════════════════════════════════════════
+   ANSWER BUTTONS
+════════════════════════════════════════════════════════ */
 function buildAnswers(q){
   const wrap=document.getElementById('answers-wrap');
   wrap.innerHTML='';
-  q.opts.forEach((deg,i)=>{
+  q.opts.forEach((v,i)=>{
     const btn=document.createElement('button');
     btn.className='answer-btn';
-    btn.innerHTML=`<span class="key-badge">${i+1}</span><span class="deg">${fmt(deg)}</span>`;
+    btn.innerHTML=`<span class="kbd">${i+1}</span><span class="val">${fmt(v)}</span>`;
     btn.addEventListener('click',()=>handleAnswer(i,q));
     wrap.appendChild(btn);
   });
 }
 
+/* ════════════════════════════════════════════════════════
+   ANSWER HANDLING
+════════════════════════════════════════════════════════ */
 function handleAnswer(idx,q){
   if(answered) return;
   answered=true;
   const btns=document.querySelectorAll('.answer-btn');
   btns.forEach(b=>b.disabled=true);
   const ok=idx===q.ci;
-  if(ok){score++;levelCorrect[q.diff-1]++;}else wrongs++;
+  const level=q.diff-1;
+  if(ok){score++;if(level>=0&&level<3)levelCorrect[level]++;}
+  else wrongs++;
   btns[q.ci].classList.add('correct');
   if(!ok) btns[idx].classList.add('wrong');
   const fb=document.getElementById('feedback');
   fb.textContent=ok?'✓ correct':'✗ wrong';
   fb.className='feedback '+(ok?'correct':'wrong');
-  setTimeout(nextQ,580);
+  setTimeout(nextQ, 580);
 }
 
 function keyHandler(e){
@@ -501,50 +1047,66 @@ function keyHandler(e){
   if(i>=0&&i<=4&&!answered) handleAnswer(i,questions[currentQ]);
 }
 
-function updateTimer(){
-  document.getElementById('timer-display').textContent=((Date.now()-startTime)/1000).toFixed(1);
-}
-
-function startGame(){
-  buildQs(); currentQ=0; score=0; wrongs=0; levelCorrect=[0,0,0];
-  startTime=Date.now();
-  clearInterval(timerInterval);
-  timerInterval=setInterval(updateTimer,250);
-  document.removeEventListener('keydown',keyHandler);
-  document.addEventListener('keydown',keyHandler);
-  showScreen('game-screen');
-  loadQ();
-}
-
-function loadQ(){
-  if(currentQ>=TOTAL_Q){endGame();return;}
+/* ════════════════════════════════════════════════════════
+   QUESTION LOADING
+════════════════════════════════════════════════════════ */
+function loadQuestion(){
+  if(currentQ>=questions.length){endGame();return;}
   answered=false;
   const q=questions[currentQ];
-  document.getElementById('q-counter').textContent=`${currentQ+1} / ${TOTAL_Q}`;
-  document.getElementById('q-diff').textContent=`Level ${q.diff}`;
-  document.getElementById('target-label').textContent=q.tl;
+  const total=questions.length;
+
+  document.getElementById('g-counter').textContent=`${currentQ+1} / ${total}`;
+  document.getElementById('g-diff-label').textContent=
+    gameConfig.training ? `Training` : `Level ${q.diff}`;
+  document.getElementById('progress-fill').style.width=`${(currentQ/total)*100}%`;
   document.getElementById('feedback').textContent=' ';
   document.getElementById('feedback').className='feedback';
-  document.getElementById('progress-bar').style.width=`${(currentQ/TOTAL_Q)*100}%`;
-  drawCompass(q); buildAnswers(q);
+
+  if(q.type==='bearing'){
+    document.getElementById('q-label').textContent='Bearing of';
+    document.getElementById('q-target').textContent=q.tl;
+    document.getElementById('q-sub').textContent='';
+    drawBearingCompass(q);
+  } else {
+    document.getElementById('q-label').textContent='This angle is';
+    document.getElementById('q-target').textContent='∠';
+    document.getElementById('q-sub').textContent=q.useInner?'inner':'outer';
+    drawAngleDiagram(q);
+  }
+
+  buildAnswers(q);
 }
+function nextQ(){currentQ++;loadQuestion();}
 
-function nextQ(){ currentQ++; loadQ(); }
-
+/* ════════════════════════════════════════════════════════
+   END GAME
+════════════════════════════════════════════════════════ */
 function endGame(){
   clearInterval(timerInterval);
   document.removeEventListener('keydown',keyHandler);
   const t=(Date.now()-startTime)/1000;
-  const pct=Math.round((score/TOTAL_Q)*100);
+  const total=questions.length;
+  const pct=Math.round((score/total)*100);
+
   document.getElementById('r-correct').textContent=score;
   document.getElementById('r-wrong').textContent=wrongs;
   document.getElementById('r-pct').textContent=pct+'%';
   document.getElementById('r-time').textContent=t.toFixed(1)+'s';
-  document.getElementById('r-avg').textContent=(t/TOTAL_Q).toFixed(1)+'s';
-  document.getElementById('r-l1').textContent=`${levelCorrect[0]} / 10`;
-  document.getElementById('r-l2').textContent=`${levelCorrect[1]} / 10`;
-  document.getElementById('r-l3').textContent=`${levelCorrect[2]} / 10`;
-  document.getElementById('progress-bar').style.width='100%';
+  document.getElementById('r-avg').textContent=(t/total).toFixed(1)+'s';
+  document.getElementById('r-mode').textContent=document.getElementById('g-mode-chip').textContent;
+  document.getElementById('progress-fill').style.width='100%';
+
+  const isStandard = !gameConfig.training && total===30;
+  document.getElementById('r-l1-row').style.display = isStandard ? '' : 'none';
+  document.getElementById('r-l2-row').style.display = isStandard ? '' : 'none';
+  document.getElementById('r-l3-row').style.display = isStandard ? '' : 'none';
+  if(isStandard){
+    document.getElementById('r-l1').textContent=`${levelCorrect[0]} / 10`;
+    document.getElementById('r-l2').textContent=`${levelCorrect[1]} / 10`;
+    document.getElementById('r-l3').textContent=`${levelCorrect[2]} / 10`;
+  }
+
   showScreen('results-screen');
 }
 </script>

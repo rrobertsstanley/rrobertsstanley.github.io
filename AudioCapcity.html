@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Auditory Capacity Test</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;background:#050810;overflow:hidden;font-family:'Courier New',monospace;color:#e0e8ff;}
+#app{width:100vw;height:100vh;position:relative;}
+canvas{display:block;position:absolute;top:0;left:0;width:100%;height:100%;}
+#hud{position:absolute;top:0;left:0;right:0;height:44px;display:flex;justify-content:space-between;align-items:center;padding:0 20px;background:rgba(5,8,16,0.88);border-bottom:1px solid #0a1a30;z-index:20;}
+.hb{display:flex;flex-direction:column;align-items:center;gap:1px;}
+.hl{color:#1a3050;font-size:9px;text-transform:uppercase;letter-spacing:1.5px;}
+.hv{font-size:15px;font-weight:bold;color:#5aaace;}
+#sf{position:absolute;top:52px;right:18px;font-size:13px;z-index:20;pointer-events:none;opacity:0;transition:opacity 0.3s;}
+#banner{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(5,8,16,0.93);border:1px solid #0a1a30;padding:7px 22px;font-size:12px;color:#d8b830;z-index:20;pointer-events:none;opacity:0;transition:opacity 0.5s;letter-spacing:1px;white-space:nowrap;}
+#numentry{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);background:rgba(4,10,24,0.98);border:1px solid #1e4060;padding:14px 24px;z-index:30;display:none;text-align:center;min-width:260px;}
+#ne-lbl{font-size:11px;color:#4a7090;margin-bottom:8px;letter-spacing:1px;text-transform:uppercase;}
+#ne-inp{background:transparent;border:none;border-bottom:1px solid #5aaace;color:#e0f0ff;font-family:'Courier New',monospace;font-size:24px;width:160px;text-align:center;outline:none;letter-spacing:6px;}
+#overlay{position:absolute;inset:0;background:rgba(3,5,12,0.97);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;gap:12px;padding:32px;text-align:center;}
+#overlay h1{font-size:22px;color:#5aaace;letter-spacing:4px;text-transform:uppercase;border-bottom:1px solid #0a1a30;padding-bottom:12px;}
+.sub{font-size:10px;color:#152840;letter-spacing:3px;text-transform:uppercase;}
+#overlay p{font-size:12px;color:#4a6070;max-width:500px;line-height:1.8;}
+#overlay ul{font-size:11px;color:#2a4050;text-align:left;max-width:460px;line-height:2.3;list-style:none;}
+#overlay ul li::before{content:'▸ ';color:#152840;}
+.seed-row{display:flex;align-items:center;gap:10px;justify-content:center;margin-top:4px;}
+.seed-row label{font-size:11px;color:#2a4060;letter-spacing:1px;text-transform:uppercase;}
+#seed-inp{background:rgba(5,15,35,0.8);border:1px solid #152840;color:#5aaace;font-family:'Courier New',monospace;font-size:16px;padding:6px 12px;width:100px;text-align:center;outline:none;letter-spacing:3px;}
+#seed-inp:focus{border-color:#5aaace;}
+.btn{background:transparent;color:#5aaace;border:1px solid #152840;padding:10px 30px;font-family:'Courier New',monospace;font-size:13px;cursor:pointer;text-transform:uppercase;letter-spacing:2px;transition:all 0.2s;}
+.btn:hover{background:#081828;border-color:#5aaace;}
+.btn.highlight{border-color:#5aaace;color:#8ad0ee;}
+.btn-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="canvas"></canvas>
+  <div id="hud">
+    <div class="hb"><span class="hl">Time</span><span class="hv" id="h-time">10:00</span></div>
+    <div class="hb"><span class="hl">Score</span><span class="hv" id="h-score">0</span></div>
+    <div class="hb"><span class="hl">Ball No.</span><span class="hv" id="h-ball">1</span></div>
+    <div class="hb"><span class="hl">Seed</span><span class="hv" id="h-seed" style="font-size:11px;">—</span></div>
+    <div class="hb"><span class="hl">Strikes</span><span class="hv" id="h-strikes" style="color:#903030">0</span></div>
+  </div>
+  <div id="sf"></div>
+  <div id="banner"></div>
+  <div id="numentry"><div id="ne-lbl">Enter the number</div><input id="ne-inp" type="text" maxlength="10" autocomplete="off" inputmode="numeric"/></div>
+
+  <div id="overlay">
+    <div class="sub">Cognitive Assessment System</div>
+    <h1>Auditory Capacity Test</h1>
+    <p>Keep the white ball inside the moving tunnel. Tasks are introduced progressively every minute. Listen carefully — all instructions are spoken.</p>
+    <ul>
+      <li>Joystick / WASD / Arrow Keys — move ball</li>
+      <li>Gamepad Trigger / Space — respond to beeps</li>
+      <li>Number keys 1–5 — set ball number when instructed</li>
+      <li>Number keys + Enter — recall spoken number</li>
+    </ul>
+    <div class="seed-row">
+      <label>Test Seed:</label>
+      <input id="seed-inp" type="number" value="1" min="1" max="99999"/>
+    </div>
+    <p style="font-size:10px;color:#0a1a30;margin-top:2px;">Same seed = identical test. Different seed = new layout, same difficulty. Audio required.</p>
+    <div class="btn-row" style="margin-top:10px;">
+      <button class="btn highlight" id="btn-full">▶ Full Test (10 min)</button>
+      <button class="btn" id="btn-short">▶ Short Test (4 min)</button>
+    </div>
+  </div>
+</div>
+<script>
+// ═══════════════════════════════════════════════════════
+// MULBERRY32 SEEDED PRNG
+// Same seed → identical sequence of values, any device, any browser.
+// ═══════════════════════════════════════════════════════
+function makePRNG(seed){
+  let s=seed>>>0;
+  return function(){
+    s+=0x6D2B79F5;
+    let t=Math.imul(s^s>>>15,1|s);
+    t^=t+Math.imul(t^t>>>7,61|t);
+    return ((t^t>>>14)>>>0)/4294967296;
+  };
+}
+
+// ═══════════════════════════════════════════════════════
+// SCRIPT GENERATOR
+// Builds the full deterministic event list from a seed.
+// All timing, content and order comes from the PRNG.
+// ═══════════════════════════════════════════════════════
+function generateScript(seed, shortMode){
+  const rng = makePRNG(seed);
+  const R = ()=>rng(); // 0..1
+
+  const TOTAL  = shortMode ? 240 : 600;
+  const SHAPES_ARR = ['circle','square','triangle'];
+  const COLORS_ARR = ['red','green','yellow'];
+  const CALLSIGNS  = ['Alpha','Bravo','Charlie','Delta','Echo'];
+
+  // ── NARRATIVE PASSAGES ───────────────────────────────
+  // These are read continuously as background distraction in the junk phase.
+  // Stored here in the script so the seed can select passage order.
+  // Actual playback is handled by the narrative engine at runtime.
+  const PASSAGES = [
+    {
+      title: 'Shepherd\'s Pie',
+      sentences: [
+        'To make a classic shepherd\'s pie, start by frying one large diced onion in a tablespoon of oil over medium heat.',
+        'Add five hundred grams of minced lamb and cook until browned, breaking it up with a wooden spoon as you go.',
+        'Stir in two tablespoons of tomato puree, a tablespoon of Worcestershire sauce, and two teaspoons of fresh thyme.',
+        'Pour in three hundred millilitres of lamb stock and bring everything to a gentle simmer.',
+        'Cook uncovered for twenty minutes until the mixture has thickened and most of the liquid has reduced.',
+        'Meanwhile, boil one kilogram of peeled potatoes until tender, then drain and mash with butter and warm milk.',
+        'Season the mash generously with salt and white pepper.',
+        'Transfer the lamb filling into a deep baking dish and spread the mashed potato evenly over the top.',
+        'Use a fork to create ridges in the mash — these will crisp up beautifully in the oven.',
+        'Bake at one hundred and ninety degrees celsius for thirty minutes until the top is golden brown.',
+        'Allow to rest for five minutes before serving with steamed green vegetables.',
+      ]
+    },
+    {
+      title: 'The Fox and the Crow',
+      sentences: [
+        'A crow sat high in the branches of an oak tree, holding a large piece of cheese she had found near a farmhouse.',
+        'A fox trotting below caught the scent of the cheese and immediately began to devise a plan.',
+        'He sat beneath the tree and looked up admiringly at the crow.',
+        'What a magnificent bird you are, he said in his most flattering voice.',
+        'Your feathers are so lustrous, your eyes so bright, your bearing so noble.',
+        'Surely a creature of such elegance must also possess a voice to match.',
+        'The crow, flattered beyond reason, opened her beak wide to sing her finest note.',
+        'The cheese tumbled from her beak and fell directly to the ground at the fox\'s feet.',
+        'The fox snatched it up and trotted away with a grin.',
+        'As he disappeared into the trees, he called back: a flatterer always lives at the expense of the one who listens.',
+        'The crow sat in the oak tree, wiser but considerably hungrier than she had been a moment before.',
+      ]
+    },
+    {
+      title: 'The 1966 World Cup Final',
+      sentences: [
+        'The nineteenth of July, nineteen sixty six, was a warm sunny day at Wembley Stadium in London.',
+        'England faced West Germany in the final of the FIFA World Cup before a crowd of nearly one hundred thousand.',
+        'West Germany took the lead early in the second half through a goal by Helmut Haller.',
+        'Geoff Hurst equalised within minutes, heading home from a Bobby Moore free kick.',
+        'Martin Peters put England ahead with twelve minutes remaining, sending the stadium into an uproar.',
+        'Then, with just seconds left, a controversial West German free kick appeared to have deflected in off the hand of an England defender.',
+        'The match went to extra time, and with England leading two goals to one, Geoff Hurst drove a powerful shot against the underside of the crossbar.',
+        'The ball bounced down and the linesman, Tofiq Bahramov, awarded the goal — despite fierce German protests.',
+        'In the dying moments, Hurst broke clear and drilled a shot into the top of the net to complete his hat trick.',
+        'England won four goals to two, and captain Bobby Moore lifted the Jules Rimet trophy.',
+        'It remains the only occasion the England national team has won a major international tournament.',
+      ]
+    },
+    {
+      title: 'Bread Baking',
+      sentences: [
+        'Making bread by hand is one of the most satisfying things you can do in a kitchen.',
+        'Begin by combining five hundred grams of strong white bread flour with seven grams of instant yeast and ten grams of fine salt in a large bowl.',
+        'Make a well in the centre and add three hundred and twenty millilitres of lukewarm water.',
+        'Mix with your hands until a rough dough forms, then turn it out onto an unfloured surface.',
+        'Knead the dough for ten full minutes, pushing it away from you with the heel of your hand and folding it back.',
+        'After ten minutes the dough should be smooth, elastic, and slightly tacky but not sticky.',
+        'Place it in a lightly oiled bowl, cover with a damp cloth, and leave to rise in a warm place for one hour.',
+        'When the dough has doubled in size, knock it back by folding it firmly several times.',
+        'Shape it into a tight oval or round and place it in a floured proving basket or on a lined baking tray.',
+        'Cover again and leave to prove for a further forty five minutes.',
+        'Bake in a preheated oven at two hundred and twenty degrees for twenty five minutes until the crust is deep golden and the loaf sounds hollow when tapped underneath.',
+      ]
+    },
+    {
+      title: 'Scott\'s Antarctic Expedition',
+      sentences: [
+        'Robert Falcon Scott led his second expedition to Antarctica in nineteen ten, aboard the research vessel Terra Nova.',
+        'The aim was to be the first men to reach the South Pole and to conduct extensive scientific research.',
+        'Scott and four companions — Wilson, Oates, Bowers, and Evans — set out for the pole in November nineteen eleven.',
+        'The journey across the Ross Ice Shelf and up the Beardmore Glacier was punishing.',
+        'They reached the South Pole on the seventeenth of January, nineteen twelve, only to discover a Norwegian flag already planted there.',
+        'Roald Amundsen and his party had arrived five weeks earlier.',
+        'Devastated and exhausted, Scott\'s team began the long march home.',
+        'Edgar Evans died first, collapsing from injuries and exhaustion on the Beardmore Glacier.',
+        'Lawrence Oates, suffering from severe frostbite, walked out of the tent into a blizzard saying he was just going outside and may be some time.',
+        'He was never seen again.',
+        'Scott, Wilson, and Bowers died in their tent just eleven miles from a supply depot, trapped by a blizzard in late March.',
+        'Their bodies and Scott\'s diaries were discovered eight months later by a search party.',
+      ]
+    },
+    {
+      title: 'Chicken Tikka Masala',
+      sentences: [
+        'Chicken tikka masala is one of the most popular dishes in the United Kingdom, beloved for its rich, fragrant sauce.',
+        'Begin by marinating five hundred grams of diced chicken breast in yoghurt, lemon juice, garlic, ginger, cumin, and garam masala for at least two hours.',
+        'Cook the marinated chicken under a hot grill until slightly charred at the edges.',
+        'For the masala sauce, fry a large diced onion in oil until deeply golden, which takes around fifteen minutes over medium heat.',
+        'Add garlic paste, ginger paste, and cook for another two minutes.',
+        'Stir in two teaspoons of cumin, two of coriander, one of turmeric, and one of chilli powder.',
+        'Add a tin of chopped tomatoes and cook down for ten minutes until the oil separates from the paste.',
+        'Pour in two hundred millilitres of double cream and stir well.',
+        'Add the grilled chicken pieces and simmer for ten minutes.',
+        'Finish with a teaspoon of garam masala and a handful of fresh coriander leaves.',
+        'Serve with steamed basmati rice and warm naan bread.',
+      ]
+    },
+    {
+      title: 'The Moon Landing',
+      sentences: [
+        'On the twentieth of July, nineteen sixty nine, Neil Armstrong became the first human being to set foot on the surface of the moon.',
+        'The Apollo eleven mission had launched from Kennedy Space Centre four days earlier, carrying Armstrong, Buzz Aldrin, and Michael Collins.',
+        'Collins remained in orbit aboard the command module while Armstrong and Aldrin descended in the lunar module, Eagle.',
+        'As the Eagle touched down in the Sea of Tranquility, Armstrong reported: the Eagle has landed.',
+        'Six hours later, Armstrong descended the ladder of the lunar module and stepped onto the lunar surface.',
+        'He described the surface as fine and powdery, saying it had a soft beauty all its own.',
+        'Aldrin joined him twenty minutes later, and together they planted an American flag and collected lunar samples.',
+        'The two men spent two hours and thirty one minutes on the surface before returning to the Eagle.',
+        'The mission returned safely to Earth on the twenty fourth of July, splashing down in the Pacific Ocean.',
+        'An estimated six hundred million people — then the largest television audience in history — watched the landing live.',
+        'The mission fulfilled President Kennedy\'s nineteen sixty one pledge to land a man on the moon before the end of the decade.',
+      ]
+    },
+  ];
+
+  // Seed selects the order passages will be played
+  const passageOrder = [...Array(PASSAGES.length).keys()].sort(()=>R()-0.5);
+
+  // Phase unlock times (seconds from start)
+  const phases = shortMode ? [
+    {phase:'tunnel',   at:0},
+    {phase:'shapes',   at:5,   intro:null},
+    {phase:'beep',     at:10,  intro:null},
+    {phase:'shapeRule',at:15,  intro:null},
+    {phase:'ballnum',  at:20,  intro:null},
+    {phase:'memory',   at:25,  intro:null},
+    {phase:'callsign', at:30,  intro:null},
+    {phase:'junk',     at:40,  intro:null},
+  ] : [
+    {phase:'tunnel',   at:0,   intro:'Keep the white ball inside the moving tunnel.'},
+    {phase:'shapes',   at:60,  intro:'Fly through coloured shapes. Be over a shape when it disappears to collect it.'},
+    {phase:'beep',     at:120, intro:'Press the trigger when you hear a beep.'},
+    {phase:'shapeRule',at:180, intro:'Follow shape instructions when given.'},
+    {phase:'ballnum',  at:240, intro:'Press the number key to set your ball number when instructed.'},
+    {phase:'memory',   at:300, intro:'Remember the number spoken. Enter it when asked.'},
+    {phase:'callsign', at:360, intro:'Listen for your callsign. Only follow commands addressed to you.'},
+    {phase:'junk',     at:420, intro:null},
+  ];
+
+  const events = [];
+  function evt(at, type, data){ events.push({at, type, data}); }
+
+  // ── SHAPES ──────────────────────────────────────────
+  // Spawn window: phases[1].at to TOTAL
+  // Gap between shapes: 4–10s (seed-determined)
+  // 5s grace after any shape rule issued (enforced at runtime)
+  {
+    const shapeStart = phases[1].at + 3; // 3s after phase unlocks
+    let t = shapeStart;
+    while(t < TOTAL - 4){
+      const gap = 4 + R()*6; // 4–10s
+      evt(t, 'shape', {
+        color: COLORS_ARR[Math.floor(R()*3)],
+        type:  SHAPES_ARR[Math.floor(R()*3)],
+        angle: R()*Math.PI*2,
+        distFrac: 0.08 + R()*0.42,
+        life: 3500 + R()*2500,
+        maxSize: (20 + R()*12)*1.5,
+      });
+      t += gap;
+    }
+  }
+
+  // ── BEEPS ────────────────────────────────────────────
+  // 4–6 per minute within beep phase. Gap seed-determined.
+  // Minimum 4s between beeps.
+  {
+    const beepStart = phases[2].at + 5;
+    // Decide beeps per minute windows: each 60s window gets 4–6 beeps
+    let t = beepStart;
+    while(t < TOTAL - 5){
+      // For this 60s window, pick count 4–6
+      const windowEnd = Math.min(t + 60, TOTAL - 5);
+      const count = 4 + Math.floor(R()*3); // 4, 5, or 6
+      const windowSize = windowEnd - t;
+      // Space them roughly evenly with jitter
+      const baseGap = windowSize / count;
+      let wt = t + 2 + R()*2;
+      for(let i=0;i<count && wt<windowEnd-3;i++){
+        evt(wt, 'beep', {});
+        wt += Math.max(4, baseGap*0.7 + R()*baseGap*0.6);
+      }
+      t = windowEnd;
+    }
+  }
+
+  // ── SHAPE RULES ──────────────────────────────────────
+  // 20–60s duration. 5s grace before shapes after rule.
+  // Gap between rules: 5–15s.
+  {
+    const ruleStart = phases[3].at + 6;
+    const MODES = ['only_color','only_shape','avoid_color','avoid_shape'];
+    let t = ruleStart;
+    while(t < TOTAL - 20){
+      const dur = 20 + R()*40; // 20–60s
+      const mode = MODES[Math.floor(R()*4)];
+      let value;
+      if(mode==='only_color'||mode==='avoid_color') value = COLORS_ARR[Math.floor(R()*3)];
+      else value = SHAPES_ARR[Math.floor(R()*3)];
+      evt(t, 'shapeRule', {mode, value, dur});
+      // Next rule after this one expires + gap
+      t += dur + 5 + R()*10;
+    }
+  }
+
+  // ── BALL NUMBER COMMANDS ─────────────────────────────
+  // ~1 per 20–40s. Expire 5s. Never during memory recall.
+  {
+    const ballStart = phases[4].at + 5;
+    let t = ballStart;
+    while(t < TOTAL - 5){
+      const n = 1 + Math.floor(R()*5); // 1–5
+      evt(t, 'ballCmd', {n});
+      t += 20 + R()*20; // 20–40s gap
+    }
+  }
+
+  // ── MEMORY NUMBERS ───────────────────────────────────
+  // Spoken (not displayed). Recall 20–50s later (seed-determined).
+  {
+    const memStart = phases[5].at + 10;
+    let t = memStart;
+    while(t < TOTAL - 55){
+      const len = 5 + Math.floor(R()*3); // 5–7 digits max
+      let num = '';
+      for(let i=0;i<len;i++) num += Math.floor(R()*10);
+      const recallDelay = 20 + R()*30; // 20–50s
+      evt(t, 'memSpeak', {num, recallAt: t + recallDelay});
+      evt(t + recallDelay, 'memRecall', {num});
+      // Next memory: well after recall completes
+      t += recallDelay + 25 + R()*25;
+    }
+  }
+
+  // ── CALLSIGN ASSIGNMENTS ─────────────────────────────
+  // First at phase start, then change every 30–60s
+  {
+    const csStart = phases[6].at;
+    let t = csStart;
+    while(t < TOTAL){
+      evt(t, 'callsign', {cs: CALLSIGNS[Math.floor(R()*5)]});
+      t += 30 + R()*30;
+    }
+  }
+
+  // ── NARRATIVE DISTRACTION ────────────────────────────
+  // A single event triggers the continuous narrative engine at junk phase start.
+  // The engine reads passages sentence by sentence, looping through all passages.
+  // Game instructions interrupt and then narrative resumes automatically.
+  {
+    const junkStart = phases[7] ? phases[7].at : TOTAL;
+    if(junkStart < TOTAL){
+      evt(junkStart, 'narrativeStart', {passageOrder});
+    }
+  }
+
+  // ── CALLSIGN RATIO for instructions ──────────────────
+  // Pre-generate "whose callsign" for each shape rule and ball cmd
+  // 60% user, 40% decoy — stored in event data, applied at runtime
+  {
+    for(const e of events){
+      if(e.type==='shapeRule'||e.type==='ballCmd'){
+        // addressed = true means user's callsign, false means a random other
+        e.data.addressed = R() < 0.60;
+        e.data.decoySuffix = CALLSIGNS[Math.floor(R()*5)]; // which callsign to say if decoy
+      }
+    }
+  }
+
+  // Sort by time
+  events.sort((a,b)=>a.at-b.at);
+
+  return {events, phases, totalDur: TOTAL, passages: PASSAGES};
+}
+
+// ═══════════════════════════════════════════════════════
+// CANVAS
+// ═══════════════════════════════════════════════════════
+const canvas = document.getElementById('canvas');
+const ctx    = canvas.getContext('2d');
+function resize(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+resize(); window.addEventListener('resize', resize);
+
+// ═══════════════════════════════════════════════════════
+// AUDIO
+// ═══════════════════════════════════════════════════════
+let actx=null;
+function AC(){ if(!actx) actx=new(window.AudioContext||window.webkitAudioContext)(); return actx; }
+function tone(freq,dur,type='sine',vol=0.4,delay=0){
+  const a=AC(),osc=a.createOscillator(),g=a.createGain();
+  osc.connect(g);g.connect(a.destination);
+  osc.type=type;osc.frequency.value=freq;
+  const t=a.currentTime+delay;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+0.015);
+  g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+  osc.start(t);osc.stop(t+dur+0.05);
+}
+function sndBeep(){tone(210,0.8,'sine',0.55);tone(170,0.8,'triangle',0.22);}
+function sndOk(){tone(720,0.1,'sine',0.25);}
+function sndError(){tone(100,0.5,'sawtooth',0.45);}
+function sndPenalty(){tone(80,0.55,'sawtooth',0.45);tone(130,0.3,'sine',0.18,0.1);}
+
+let bgNode=null;
+function startBG(){
+  if(bgNode) return;
+  const a=AC(),len=a.sampleRate*3;
+  const buf=a.createBuffer(1,len,a.sampleRate);
+  const d=buf.getChannelData(0); for(let i=0;i<len;i++) d[i]=(Math.random()*2-1);
+  bgNode=a.createBufferSource(); bgNode.buffer=buf; bgNode.loop=true;
+  const f=a.createBiquadFilter(); f.type='bandpass'; f.frequency.value=900; f.Q.value=0.5;
+  const g=a.createGain(); g.gain.value=0.032;
+  bgNode.connect(f);f.connect(g);g.connect(a.destination);bgNode.start();
+}
+function stopBG(){if(bgNode){try{bgNode.stop();}catch(e){}bgNode=null;}}
+
+// ═══════════════════════════════════════════════════════
+// TRUE DUAL-CHANNEL SPEECH ENGINE
+//
+// The Web Speech API is single-threaded per window — utterances
+// always queue sequentially within one window.
+//
+// Solution: spin up a hidden <iframe> which gets its own
+// independent SpeechSynthesis instance. Narrative plays in the
+// main window's synth. Instructions play in the iframe's synth.
+// Both run in parallel at the OS audio mixer level.
+//
+// CHANNEL A (main window synth)  — Narrative passages, continuous
+// CHANNEL B (iframe synth)       — Game instructions, queued
+// ═══════════════════════════════════════════════════════
+
+// ── CHANNEL B: iframe synth for instructions ──────────
+let iframeSynth   = null;   // SpeechSynthesis from iframe
+let iframeVoices  = [];
+let instrQueue    = [];
+let instrBusy     = false;
+
+// Build the hidden iframe once the DOM is ready
+function buildIframeSynth(){
+  const fr = document.createElement('iframe');
+  fr.style.cssText = 'position:absolute;width:0;height:0;border:none;left:-9999px;';
+  // srcdoc gives it its own origin context with its own synth instance
+  fr.srcdoc = '<!DOCTYPE html><html><body></body></html>';
+  document.body.appendChild(fr);
+  fr.addEventListener('load', () => {
+    iframeSynth = fr.contentWindow.speechSynthesis;
+    // Load voices from iframe — may be same list but independent queue
+    const load = () => {
+      iframeVoices = iframeSynth.getVoices();
+      if(!iframeVoices.length) setTimeout(load, 200);
+    };
+    iframeSynth.onvoiceschanged = load;
+    load();
+  });
+}
+
+function pickVoice(synth_obj, preferMale){
+  const voices = synth_obj ? synth_obj.getVoices() : [];
+  const en = voices.filter(v=>v.lang.startsWith('en'));
+  const pool = en.length ? en : voices;
+  if(!pool.length) return null;
+  const male   = ['Daniel','David','Alex','Fred','Tom','George','James','Bruce'];
+  const female = ['Samantha','Victoria','Karen','Moira','Fiona','Tessa','Allison','Ava'];
+  const names  = preferMale ? male : female;
+  return pool.find(v=>names.some(n=>v.name.includes(n)))
+      || pool.find(v=>v.name.toLowerCase().includes(preferMale?'male':'female'))
+      || pool[preferMale ? 0 : Math.min(1,pool.length-1)];
+}
+
+function speak(text, rate=0.88, pitch=1, urgent=false){
+  if(urgent) instrQueue = [];
+  instrQueue.push({text, rate, pitch});
+  if(!instrBusy) pumpInstr();
+}
+
+function pumpInstr(){
+  if(!instrQueue.length){ instrBusy=false; return; }
+  instrBusy = true;
+  const {text, rate, pitch} = instrQueue.shift();
+
+  // Use iframe's isolated synth if available — runs truly in parallel with main synth
+  const useIframe = iframeSynth && iframeVoices.length > 0;
+  const s = useIframe ? iframeSynth : window.speechSynthesis;
+  const iframe = useIframe ? document.querySelector('iframe') : null;
+  const UttClass = iframe ? iframe.contentWindow.SpeechSynthesisUtterance : SpeechSynthesisUtterance;
+
+  const u = new UttClass(text);
+  u.rate = rate; u.pitch = pitch; u.volume = 1.0;
+  const v = pickVoice(s, true);
+  if(v) u.voice = v;
+  u.onend  = () => { instrBusy=false; setTimeout(pumpInstr, 80); };
+  u.onerror= () => { instrBusy=false; setTimeout(pumpInstr, 80); };
+  s.speak(u);
+}
+
+// ── CHANNEL A: main window synth for narrative ─────────
+const synth = window.speechSynthesis;
+let narrActive   = false;
+let narrPassages = [], narrPassIdx = 0, narrSentIdx = 0;
+let narrTO       = null;
+
+function startNarrative(passages){
+  narrActive = true;
+  narrPassages = passages;
+  narrPassIdx = 0; narrSentIdx = 0;
+  if(narrTO) clearTimeout(narrTO);
+  narrTO = setTimeout(speakNextNarrSentence, 600);
+}
+
+function speakNextNarrSentence(){
+  if(!narrActive || !narrPassages.length) return;
+  const pass = narrPassages[narrPassIdx % narrPassages.length];
+  const sentence = pass.sentences[narrSentIdx];
+  const u = new SpeechSynthesisUtterance(sentence);
+  u.rate = 0.90; u.pitch = 1.1; u.volume = 0.88;
+  const v = pickVoice(synth, false);
+  if(v) u.voice = v;
+  u.onend = () => {
+    if(!narrActive) return;
+    narrSentIdx++;
+    if(narrSentIdx >= pass.sentences.length){ narrSentIdx=0; narrPassIdx++; }
+    narrTO = setTimeout(speakNextNarrSentence, narrSentIdx===0 ? 1000 : 180+Math.random()*150);
+  };
+  u.onerror = () => {
+    if(!narrActive) return;
+    narrSentIdx++;
+    if(narrSentIdx >= pass.sentences.length){ narrSentIdx=0; narrPassIdx++; }
+    narrTO = setTimeout(speakNextNarrSentence, 300);
+  };
+  synth.speak(u);
+}
+
+function stopNarrative(){
+  narrActive = false;
+  if(narrTO){ clearTimeout(narrTO); narrTO=null; }
+}
+
+function clearSpeech(){
+  instrQueue=[]; instrBusy=false;
+  if(iframeSynth) try{ iframeSynth.cancel(); }catch(e){}
+  stopNarrative();
+  synth.cancel();
+}
+
+// Initialise iframe on load
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', buildIframeSynth);
+else buildIframeSynth();
+
+// ═══════════════════════════════════════════════════════
+// GAMEPAD
+// ═══════════════════════════════════════════════════════
+const GP={ax:0,ay:0,btns:[],prev:[]};
+function pollGP(){
+  const pads=navigator.getGamepads?navigator.getGamepads():[];
+  GP.prev=[...GP.btns];
+  for(const p of pads){
+    if(!p) continue;
+    GP.ax=Math.abs(p.axes[0])>0.12?p.axes[0]:0;
+    GP.ay=Math.abs(p.axes[1])>0.12?p.axes[1]:0;
+    GP.btns=p.buttons.map(b=>b.pressed);
+    return;
+  }
+  GP.ax=0;GP.ay=0;GP.btns=[];
+}
+function triggerJustPressed(){
+  return(GP.btns[0]&&!GP.prev[0])||(GP.btns[6]&&!GP.prev[6])||(GP.btns[7]&&!GP.prev[7]);
+}
+
+// ═══════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════
+const CMAP={red:'#e03838',green:'#38c858',yellow:'#f0d030'};
+
+// ═══════════════════════════════════════════════════════
+// GAME STATE
+// ═══════════════════════════════════════════════════════
+const G={
+  active:false, shortMode:false, seed:1,
+  elapsed:0, totalDur:600,
+  score:0, strikes:0, ballNum:1,
+  bx:0,by:0,bvx:0,bvy:0,
+  tx:0,ty:0,tr:0,tdx:0,tdy:0,tphase:0,
+  phases:{tunnel:false,shapes:false,beep:false,shapeRule:false,ballnum:false,memory:false,callsign:false,junk:false},
+  unlockedPhases:new Set(),
+  script:null,        // generated script
+  eventIdx:0,         // next event to fire
+  shapes:[],
+  beepActive:false,beepTime:0,beepExpTO:null,
+  shapeRule:null,
+  shapeRuleGraceUntil:0,
+  ballCmdActive:false,ballExpected:null,ballExpTO:null,ballIssuedAt:0,
+  memNum:null,memEntryActive:false,
+  myCallsign:null,
+  keys:{},touchJoy:{x:0,y:0},
+  lastT:0,startTS:0,
+  taskTOs:[],
+};
+
+function addTO(t){G.taskTOs.push(t);return t;}
+function clearTaskTOs(){G.taskTOs.forEach(clearTimeout);G.taskTOs=[];}
+
+// ═══════════════════════════════════════════════════════
+// HUD
+// ═══════════════════════════════════════════════════════
+function updateHUD(){
+  const rem=Math.max(0,G.totalDur-Math.floor(G.elapsed));
+  const m=Math.floor(rem/60),s=rem%60;
+  document.getElementById('h-time').textContent=`${m}:${s.toString().padStart(2,'0')}`;
+  document.getElementById('h-score').textContent=Math.floor(G.score);
+  document.getElementById('h-ball').textContent=G.ballNum;
+  document.getElementById('h-strikes').textContent=G.strikes;
+}
+
+let bnTO=null;
+function banner(txt,color='#d8b830',dur=5000){
+  const b=document.getElementById('banner');
+  b.textContent=txt;b.style.color=color;b.style.opacity='1';
+  if(bnTO)clearTimeout(bnTO);
+  if(dur>0)bnTO=setTimeout(()=>b.style.opacity='0',dur);
+}
+let sfTO=null;
+function flash(txt,color='#5aaace'){
+  const f=document.getElementById('sf');
+  f.textContent=txt;f.style.color=color;f.style.opacity='1';
+  if(sfTO)clearTimeout(sfTO);
+  sfTO=setTimeout(()=>f.style.opacity='0',2000);
+}
+
+// ═══════════════════════════════════════════════════════
+// TUNNEL — always on screen, slow continuous drift
+// ═══════════════════════════════════════════════════════
+function initTunnel(){
+  const minD=Math.min(canvas.width,canvas.height);
+  G.tr=minD*0.38;
+  G.tx=canvas.width/2; G.ty=canvas.height/2+22;
+  const ang=Math.random()*Math.PI*2;
+  // Start at minimum speed so boundary clamp doesn't need to fight inertia
+  G.tdx=Math.cos(ang)*42; G.tdy=Math.sin(ang)*42;
+  G.tphase=Math.random()*Math.PI*2;
+}
+
+function updateTunnel(dt){
+  G.tphase+=dt*0.10;
+  // Doubled steering force vs v7
+  G.tdx+=Math.cos(G.tphase*0.7)*1.2*dt;
+  G.tdy+=Math.sin(G.tphase*1.1)*1.2*dt;
+  const progress=Math.min(1,G.elapsed/G.totalDur);
+  // Doubled speed range vs v7 (was 21→36, now 42→72)
+  const maxSpd=42+progress*30;
+  const minSpd=20;
+  const spd=Math.hypot(G.tdx,G.tdy);
+  if(spd>maxSpd){G.tdx=G.tdx/spd*maxSpd;G.tdy=G.tdy/spd*maxSpd;}
+  if(spd<minSpd){const sc=minSpd/Math.max(spd,0.01);G.tdx*=sc;G.tdy*=sc;}
+  G.tx+=G.tdx*dt; G.ty+=G.tdy*dt;
+  // STRICT boundary: full radius pad so ring never leaves screen
+  const tr=G.tr;
+  const padL=tr+4,        padR=canvas.width-tr-4;
+  const padT=tr+54,       padB=canvas.height-tr-4;
+  if(G.tx<padL){G.tx=padL; G.tdx=Math.abs(G.tdx)*0.85+5;}
+  if(G.tx>padR){G.tx=padR; G.tdx=-(Math.abs(G.tdx)*0.85+5);}
+  if(G.ty<padT){G.ty=padT; G.tdy=Math.abs(G.tdy)*0.85+5;}
+  if(G.ty>padB){G.ty=padB; G.tdy=-(Math.abs(G.tdy)*0.85+5);}
+  const minD=Math.min(canvas.width,canvas.height);
+  G.tr=minD*(0.36+Math.sin(G.tphase*0.22)*0.022);
+}
+
+// ═══════════════════════════════════════════════════════
+// BALL — smooth accel, hard stop when no input
+// ═══════════════════════════════════════════════════════
+function updateBall(dt){
+  let ix=0,iy=0;
+  if(G.keys['ArrowUp']||G.keys['w']||G.keys['W'])iy-=1;
+  if(G.keys['ArrowDown']||G.keys['s']||G.keys['S'])iy+=1;
+  if(G.keys['ArrowLeft']||G.keys['a']||G.keys['A'])ix-=1;
+  if(G.keys['ArrowRight']||G.keys['d']||G.keys['D'])ix+=1;
+  const dl=Math.hypot(ix,iy);if(dl>1){ix/=dl;iy/=dl;}
+  const gpX=Math.max(-1,Math.min(1,GP.ax*1.5));
+  const gpY=Math.max(-1,Math.min(1,GP.ay*1.5));
+  const tjX=Math.max(-1,Math.min(1,G.touchJoy.x*1.5));
+  const tjY=Math.max(-1,Math.min(1,G.touchJoy.y*1.5));
+  ix+=gpX+tjX;iy+=gpY+tjY;
+  const il=Math.hypot(ix,iy);if(il>1){ix/=il;iy/=il;}
+  const hasInput=Math.abs(ix)>0.05||Math.abs(iy)>0.05||Math.hypot(GP.ax,GP.ay)>0.12||Math.hypot(G.touchJoy.x,G.touchJoy.y)>0.05;
+  // +50% decel vs v7 (was 0.18, now 0.09 — stops ~twice as fast again)
+  G.bvx=G.bvx*Math.pow(hasInput?0.82:0.09,dt)+ix*320*dt;
+  G.bvy=G.bvy*Math.pow(hasInput?0.82:0.09,dt)+iy*320*dt;
+  if(!hasInput&&Math.hypot(G.bvx,G.bvy)<3.5){G.bvx=0;G.bvy=0;}
+  const vs=Math.hypot(G.bvx,G.bvy);
+  if(vs>240){G.bvx=G.bvx/vs*240;G.bvy=G.bvy/vs*240;}
+  G.bx=Math.max(6,Math.min(canvas.width-6,G.bx+G.bvx*dt));
+  G.by=Math.max(6,Math.min(canvas.height-6,G.by+G.bvy*dt));
+}
+
+// ═══════════════════════════════════════════════════════
+// SCRIPT EVENT DISPATCHER
+// Fires scripted events as elapsed time crosses their 'at' value
+// ═══════════════════════════════════════════════════════
+function dispatchEvents(){
+  if(!G.script) return;
+  const evts=G.script.events;
+  while(G.eventIdx<evts.length && G.elapsed>=evts[G.eventIdx].at){
+    fireEvent(evts[G.eventIdx]);
+    G.eventIdx++;
+  }
+}
+
+function fireEvent(e){
+  switch(e.type){
+    case 'shape':          fireShape(e.data); break;
+    case 'beep':           fireBeep(); break;
+    case 'shapeRule':      fireShapeRule(e.data); break;
+    case 'ballCmd':        fireBallCmd(e.data); break;
+    case 'memSpeak':       fireMemSpeak(e.data); break;
+    case 'memRecall':      fireMemRecall(e.data); break;
+    case 'callsign':       fireCallsign(e.data); break;
+    case 'narrativeStart': fireNarrativeStart(e.data); break;
+  }
+}
+
+// Also handle phase unlocks from script
+function checkPhaseUnlocks(){
+  if(!G.script) return;
+  for(const p of G.script.phases){
+    if(!G.unlockedPhases.has(p.phase)&&G.elapsed>=p.at){
+      G.unlockedPhases.add(p.phase);
+      G.phases[p.phase]=true;
+      if(p.intro) speak(p.intro,0.87,1,false);
+      if(p.phase==='junk') startBG();
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// EVENT HANDLERS
+// ═══════════════════════════════════════════════════════
+
+// SHAPE
+function fireShape(d){
+  if(!G.phases.shapes) return;
+  const now=Date.now();
+  // Enforce 5s grace after a rule was issued
+  if(now<G.shapeRuleGraceUntil) return; // skip this shape if in grace window
+  const sh={
+    id:now+Math.random(),
+    type:d.type, color:d.color,
+    relX:Math.cos(d.angle)*G.tr*d.distFrac,
+    relY:Math.sin(d.angle)*G.tr*d.distFrac,
+    born:now, life:d.life,
+    size:0, maxSize:d.maxSize,
+    active:true, dx:0, dy:0,
+  };
+  G.shapes.push(sh);
+}
+
+function updateShapes(){
+  if(!G.phases.shapes)return;
+  const now=Date.now();
+  for(let i=G.shapes.length-1;i>=0;i--){
+    const sh=G.shapes[i];
+    if(!sh.active){G.shapes.splice(i,1);continue;}
+    const age=(now-sh.born)/sh.life;
+    sh.size=sh.maxSize*Math.min(1,age*1.4);
+    sh.dx=G.tx+sh.relX;
+    sh.dy=G.ty+sh.relY;
+    if(age>=1){
+      const d=Math.hypot(G.bx-sh.dx,G.by-sh.dy);
+      if(d<sh.size+8) evaluateShapeHit(sh);
+      else if(G.shapeRule&&(
+        (G.shapeRule.mode==='only_color'&&G.shapeRule.value===sh.color)||
+        (G.shapeRule.mode==='only_shape'&&G.shapeRule.value===sh.type))){
+        G.strikes++;flash('Missed required shape −Strike','#903030');updateHUD();
+      }
+      sh.active=false;G.shapes.splice(i,1);continue;
+    }
+  }
+}
+
+function evaluateShapeHit(sh){
+  if(!G.shapeRule){G.score+=25;sndOk();flash('+25','#38c858');return;}
+  const{mode,value}=G.shapeRule;
+  let ok=false;
+  if(mode==='only_color')ok=sh.color===value;
+  if(mode==='only_shape')ok=sh.type===value;
+  if(mode==='avoid_color')ok=sh.color!==value;
+  if(mode==='avoid_shape')ok=sh.type!==value;
+  if(ok){G.score+=25;sndOk();flash('+25','#38c858');}
+  else{G.strikes++;sndPenalty();flash('Wrong shape −Strike','#903030');}
+  updateHUD();
+}
+
+// BEEP
+function fireBeep(){
+  if(!G.phases.beep)return;
+  sndBeep();G.beepActive=true;G.beepTime=Date.now();
+  if(G.beepExpTO)clearTimeout(G.beepExpTO);
+  G.beepExpTO=setTimeout(()=>{
+    if(G.beepActive){G.beepActive=false;G.strikes++;flash('Missed beep −Strike','#903030');updateHUD();}
+  },5000);
+}
+
+function respondToBeep(){
+  if(G.beepActive){
+    const rt=Date.now()-G.beepTime;
+    G.beepActive=false;
+    if(G.beepExpTO){clearTimeout(G.beepExpTO);G.beepExpTO=null;}
+    const pts=Math.max(5,70-Math.floor(rt/40));
+    G.score+=pts;sndOk();flash(`+${pts}  ${rt}ms`,'#d8c030');updateHUD();
+  } else if(G.phases.beep){
+    G.strikes++;sndPenalty();flash('False trigger −Strike','#903030');updateHUD();
+  }
+}
+
+// SHAPE RULE
+function fireShapeRule(d){
+  if(!G.phases.shapeRule)return;
+  if(G.shapeRule&&G.shapeRule.expTO)clearTimeout(G.shapeRule.expTO);
+  G.shapeRule=null;
+
+  // Determine instruction text
+  let instruction;
+  if(d.mode==='only_color') instruction=`Only fly through ${d.value} shapes.`;
+  else if(d.mode==='only_shape') instruction=`Only fly through ${d.value} shapes.`;
+  else if(d.mode==='avoid_color') instruction=`Avoid ${d.value} shapes.`;
+  else instruction=`Avoid ${d.value} shapes.`;
+
+  const spoken=deliverInstruction(instruction, d);
+  if(!spoken){
+    // Decoy — no rule applied
+    return;
+  }
+
+  // Grace: no shapes for 5s after rule issued
+  G.shapeRuleGraceUntil=Date.now()+5000;
+
+  const expTO=setTimeout(()=>{
+    G.shapeRule=null;
+    // Return to regular flying — also callsigned
+    const retEvt={data:{addressed:d.addressed,decoySuffix:d.decoySuffix}};
+    deliverInstruction('Return to regular flying.',retEvt.data);
+  },d.dur*1000);
+
+  G.shapeRule={mode:d.mode,value:d.value,expTO};
+}
+
+// BALL CMD
+function fireBallCmd(d){
+  if(!G.phases.ballnum||G.memEntryActive)return;
+  const instruction=`Select ball ${d.n}.`;
+  const spoken=deliverInstruction(instruction,d);
+  if(!spoken)return;
+  G.ballCmdActive=true;G.ballExpected=d.n;G.ballIssuedAt=Date.now();
+  if(G.ballExpTO)clearTimeout(G.ballExpTO);
+  G.ballExpTO=setTimeout(()=>{
+    if(G.ballCmdActive){
+      G.ballCmdActive=false;G.ballExpected=null;
+      G.strikes++;flash('Ball number missed −Strike','#903030');updateHUD();
+    }
+  },5000);
+}
+
+// MEMORY SPEAK
+function fireMemSpeak(d){
+  if(!G.phases.memory)return;
+  G.memNum=d.num;
+  // Commas between digits force the TTS engine to pause between each one
+  const spokenNum=d.num.split('').join(', ');
+  speak(`Remember number, ${spokenNum}.`,0.72,1);
+}
+
+// MEMORY RECALL
+function fireMemRecall(d){
+  if(!G.phases.memory||!G.memNum)return;
+  if(G.ballCmdActive){
+    // Delay 3s if ball cmd active
+    addTO(setTimeout(()=>fireMemRecall(d),3000));return;
+  }
+  G.memEntryActive=true;
+  speak('Enter the number.',0.9,1);
+  const entry=document.getElementById('numentry');
+  const inp=document.getElementById('ne-inp');
+  inp.value='';entry.style.display='block';
+  if(!/Mobi/i.test(navigator.userAgent))inp.focus();
+  const handler=ev=>{
+    if(ev.key==='Enter'){
+      ev.preventDefault();
+      inp.removeEventListener('keydown',handler);
+      entry.style.display='none';
+      G.memEntryActive=false;
+      const val=inp.value.trim();
+      const correct=val===G.memNum;
+      if(correct){G.score+=150;sndOk();flash('+150 Correct!','#38c858');speak('Correct.');}
+      else{G.strikes++;sndError();flash('Wrong number −Strike','#903030');speak(`Incorrect. The number was ${G.memNum}.`);updateHUD();}
+      G.memNum=null;
+    }
+  };
+  inp.addEventListener('keydown',handler);
+}
+
+// CALLSIGN
+function fireCallsign(d){
+  if(!G.phases.callsign)return;
+  G.myCallsign=d.cs;
+  speak(`You are now callsign ${d.cs}.`,0.85,1);
+}
+
+// NARRATIVE START
+function fireNarrativeStart(d){
+  if(!G.phases.junk) return;
+  // Build ordered passage list from seeded order
+  const ordered=d.passageOrder.map(i=>G.script.passages[i]);
+  startNarrative(ordered);
+}
+
+// DELIVER INSTRUCTION
+// Uses event's pre-scripted addressed/decoySuffix to decide callsign prefix
+function deliverInstruction(msg,evtData){
+  if(!G.phases.callsign||!G.myCallsign){
+    speak(msg);return true;
+  }
+  // addressed=true → use user's own callsign (must action)
+  // addressed=false → use a decoy callsign (must ignore)
+  if(!evtData){speak(msg);return true;}
+  if(evtData.addressed){
+    speak(`${G.myCallsign}. ${msg}`);
+    return true;
+  } else {
+    // Pick a callsign that is NOT the user's current one
+    const CALLSIGNS=['Alpha','Bravo','Charlie','Delta','Echo'];
+    let decoy=evtData.decoySuffix||CALLSIGNS[0];
+    if(decoy===G.myCallsign) decoy=CALLSIGNS.find(c=>c!==G.myCallsign)||'Delta';
+    speak(`${decoy}. ${msg}`);
+    return false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// SCORE
+// Tunnel score: +0.09 per frame when inside (≈324pts per min at 60fps)
+// Task scores: fixed per-event amounts
+// Both tracked separately so maxPossible can be calculated accurately.
+// ═══════════════════════════════════════════════════════
+function updateScore(dt){
+  const dc=Math.hypot(G.bx-G.tx,G.by-G.ty);
+  if(dc+8<G.tr){
+    // Rate: 0.09 pts per frame-equivalent (dt normalised to 60fps)
+    const gain=0.09*dt*60;
+    G.tunnelScore=(G.tunnelScore||0)+gain;
+    G.score+=gain;
+  } else {
+    // Penalty for being outside: lose 1.5 pts per frame-equivalent
+    const loss=1.5*dt*60;
+    G.score=Math.max(0,G.score-loss);
+    G.tunnelScore=Math.max(0,(G.tunnelScore||0)-loss);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// MAIN LOOP
+// ═══════════════════════════════════════════════════════
+function loop(ts){
+  if(!G.active)return;
+  pollGP();
+  const dt=G.lastT?Math.min((ts-G.lastT)/1000,0.05):0.016;
+  G.lastT=ts;
+  G.elapsed=(ts-G.startTS)/1000;
+  checkPhaseUnlocks();
+  dispatchEvents();
+  if(G.elapsed>=G.totalDur){endGame();return;}
+  updateTunnel(dt);
+  updateBall(dt);
+  updateShapes();
+  updateScore(dt);
+  if(triggerJustPressed())respondToBeep();
+  updateHUD();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+// ═══════════════════════════════════════════════════════
+// DRAW
+// ═══════════════════════════════════════════════════════
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='#050810';ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='rgba(12,32,60,0.55)';
+  for(let x=50;x<canvas.width;x+=50)
+    for(let y=50;y<canvas.height;y+=50){ctx.beginPath();ctx.arc(x,y,0.65,0,Math.PI*2);ctx.fill();}
+  drawTunnel();G.shapes.forEach(drawShape);drawBall();
+}
+
+function drawTunnel(){
+  const tx=G.tx,ty=G.ty,tr=G.tr;
+  for(let i=5;i>=1;i--){
+    ctx.beginPath();ctx.arc(tx,ty,tr+i*18,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(25,90,185,${0.016*i})`;ctx.lineWidth=20;ctx.stroke();
+  }
+  const g=ctx.createRadialGradient(tx,ty,0,tx,ty,tr);
+  g.addColorStop(0,'rgba(10,35,110,0.11)');g.addColorStop(0.7,'rgba(7,25,90,0.05)');g.addColorStop(1,'rgba(30,110,210,0.02)');
+  ctx.beginPath();ctx.arc(tx,ty,tr,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+  ctx.beginPath();ctx.arc(tx,ty,tr,0,Math.PI*2);ctx.strokeStyle='rgba(55,145,230,0.75)';ctx.lineWidth=2.5;ctx.stroke();
+  ctx.save();ctx.beginPath();ctx.arc(tx,ty,tr*0.58,0,Math.PI*2);
+  ctx.strokeStyle='rgba(35,95,175,0.14)';ctx.lineWidth=1;ctx.setLineDash([5,12]);ctx.stroke();ctx.restore();
+  ctx.save();ctx.strokeStyle='rgba(35,110,190,0.18)';ctx.lineWidth=1;ctx.setLineDash([3,9]);
+  ctx.beginPath();ctx.moveTo(tx-26,ty);ctx.lineTo(tx+26,ty);ctx.moveTo(tx,ty-26);ctx.lineTo(tx,ty+26);ctx.stroke();ctx.restore();
+}
+
+function drawShape(sh){
+  if(!sh.active||sh.size<1||!sh.dx)return;
+  const c=CMAP[sh.color]||'#fff';
+  const isHighlight=G.shapeRule&&((G.shapeRule.mode==='only_color'&&G.shapeRule.value===sh.color)||(G.shapeRule.mode==='only_shape'&&G.shapeRule.value===sh.type));
+  const isAvoid=G.shapeRule&&((G.shapeRule.mode==='avoid_color'&&G.shapeRule.value===sh.color)||(G.shapeRule.mode==='avoid_shape'&&G.shapeRule.value===sh.type));
+  ctx.save();
+  ctx.strokeStyle=isAvoid?'#ff2828':isHighlight?'#ffe040':c;
+  ctx.shadowBlur=14;ctx.shadowColor=isAvoid?'#ff2828':isHighlight?'#ffe040':c;
+  ctx.lineWidth=isAvoid||isHighlight?3.5:2.5;ctx.globalAlpha=0.92;
+  const s=sh.size,x=sh.dx,y=sh.dy;
+  if(sh.type==='circle'){ctx.beginPath();ctx.arc(x,y,s,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=0.1;ctx.fillStyle=c;ctx.fill();}
+  else if(sh.type==='square'){ctx.beginPath();ctx.rect(x-s,y-s,s*2,s*2);ctx.stroke();ctx.globalAlpha=0.1;ctx.fillStyle=c;ctx.fill();}
+  else{ctx.beginPath();ctx.moveTo(x,y-s);ctx.lineTo(x+s*0.9,y+s*0.85);ctx.lineTo(x-s*0.9,y+s*0.85);ctx.closePath();ctx.stroke();ctx.globalAlpha=0.1;ctx.fillStyle=c;ctx.fill();}
+  ctx.restore();
+}
+
+function drawBall(){
+  const bx=G.bx,by=G.by;
+  const dc=Math.hypot(bx-G.tx,by-G.ty);
+  const inside=dc+8<G.tr;
+  const p=0.88+0.12*Math.sin(Date.now()*0.006);
+  ctx.save();
+  const bg=ctx.createRadialGradient(bx,by,1,bx,by,20);
+  bg.addColorStop(0,inside?'rgba(160,210,255,0.4)':'rgba(255,50,50,0.4)');
+  bg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.beginPath();ctx.arc(bx,by,20,0,Math.PI*2);ctx.fillStyle=bg;ctx.fill();
+  ctx.beginPath();ctx.arc(bx,by,8*p,0,Math.PI*2);
+  ctx.fillStyle=inside?'rgba(195,228,255,0.95)':'rgba(255,65,65,0.95)';ctx.fill();
+  ctx.beginPath();ctx.arc(bx,by,3.5,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();
+  ctx.restore();
+  if(!inside){
+    const a=0.08+0.06*Math.sin(Date.now()*0.011);
+    const vg=ctx.createRadialGradient(canvas.width/2,canvas.height/2,canvas.height*0.28,canvas.width/2,canvas.height/2,canvas.height*0.85);
+    vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,`rgba(160,22,22,${a})`);
+    ctx.fillStyle=vg;ctx.fillRect(0,0,canvas.width,canvas.height);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// START / END
+// ═══════════════════════════════════════════════════════
+function startGame(shortMode){
+  document.getElementById('overlay').style.display='none';
+  AC();
+  const seedVal=parseInt(document.getElementById('seed-inp').value)||1;
+  G.seed=seedVal;
+  G.shortMode=shortMode;
+  G.script=generateScript(seedVal,shortMode);
+  G.totalDur=G.script.totalDur;
+  G.active=true;G.elapsed=0;G.score=0;G.strikes=0;G.ballNum=1;G.tunnelScore=0;
+  G.bx=canvas.width/2;G.by=canvas.height/2;G.bvx=0;G.bvy=0;
+  G.shapes=[];G.beepActive=false;G.shapeRule=null;
+  G.shapeRuleGraceUntil=0;
+  G.ballCmdActive=false;G.ballExpected=null;
+  G.memNum=null;G.memEntryActive=false;G.myCallsign=null;
+  G.phases={tunnel:true,shapes:false,beep:false,shapeRule:false,ballnum:false,memory:false,callsign:false,junk:false};
+  G.unlockedPhases=new Set(['tunnel']);
+  G.eventIdx=0;
+  G.lastT=0;G.startTS=performance.now();
+  clearTaskTOs();stopBG();
+  document.getElementById('numentry').style.display='none';
+  document.getElementById('banner').style.opacity='0';
+  document.getElementById('h-seed').textContent=seedVal;
+  initTunnel();updateHUD();
+
+  // Count events for HUD info
+  const shapeCount=G.script.events.filter(e=>e.type==='shape').length;
+  const beepCount=G.script.events.filter(e=>e.type==='beep').length;
+  console.log(`ACT Seed ${seedVal}: ${shapeCount} shapes, ${beepCount} beeps scripted`);
+
+  if(!shortMode){
+    addTO(setTimeout(()=>speak('Test beginning. Keep the ball inside the tunnel.',0.88,1,true),500));
+  }
+  requestAnimationFrame(loop);
+}
+
+function endGame(){
+  G.active=false;
+  clearTaskTOs();clearSpeech();stopBG();stopNarrative();
+  if(G.beepExpTO){clearTimeout(G.beepExpTO);G.beepExpTO=null;}
+  if(G.ballExpTO){clearTimeout(G.ballExpTO);G.ballExpTO=null;}
+  document.getElementById('numentry').style.display='none';
+
+  // maxPossible: tunnel (perfect) + task events
+  // Tunnel max = 0.09 * 60fps * totalDur seconds
+  const tunnelMax=Math.round(0.09*60*G.totalDur);
+  // Only count addressed ball cmds (60% ratio) as actionable
+  const addressedBallCmds=G.script.events.filter(e=>e.type==='ballCmd'&&e.data.addressed).length;
+  const totalShapes=G.script.events.filter(e=>e.type==='shape').length;
+  const totalBeeps=G.script.events.filter(e=>e.type==='beep').length;
+  const totalMem=G.script.events.filter(e=>e.type==='memRecall').length;
+  const totalBallCmds=G.script.events.filter(e=>e.type==='ballCmd').length;
+  // Max per task: shapes=25, beeps=70 (perfect RT), ballCmds=60 (perfect RT), mem=150
+  const maxPossible=tunnelMax+totalShapes*25+totalBeeps*70+addressedBallCmds*60+totalMem*150;
+
+  const r=G.score>maxPossible*0.8?'Exceptional':G.score>maxPossible*0.55?'Proficient':G.score>maxPossible*0.3?'Adequate':'Requires Improvement';
+  const pct=Math.min(100,Math.round(G.score/Math.max(1,maxPossible)*100));
+
+  const ov=document.getElementById('overlay');
+  ov.innerHTML=`
+    <div class="sub">Assessment Complete · Seed ${G.seed}</div>
+    <h1>Test Complete</h1>
+    <p style="font-size:15px;color:#8ab8c8;margin-top:6px;">Score: ${Math.floor(G.score)} / ${maxPossible} &nbsp;(${pct}%)</p>
+    <p style="font-size:13px;color:#4a6070;">Strikes: ${G.strikes} &nbsp;·&nbsp; Rating: ${r}</p>
+    <p style="font-size:11px;color:#1a3050;margin-top:4px;">Seed ${G.seed} · ${totalShapes} shapes · ${totalBeeps} beeps · ${addressedBallCmds}/${totalBallCmds} ball cmds (yours) · ${totalMem} memory recalls</p>
+    <div class="seed-row" style="margin-top:8px;">
+      <label>Next Seed:</label>
+      <input id="seed-inp2" type="number" value="${G.seed+1}" min="1" max="99999" style="background:rgba(5,15,35,0.8);border:1px solid #152840;color:#5aaace;font-family:'Courier New',monospace;font-size:16px;padding:6px 12px;width:100px;text-align:center;outline:none;letter-spacing:3px;"/>
+    </div>
+    <div class="btn-row" style="margin-top:12px;">
+      <button class="btn highlight" id="ov-full">▶ Full Test (10 min)</button>
+      <button class="btn" id="ov-short">▶ Short Test (4 min)</button>
+    </div>`;
+  ov.style.display='flex';
+  document.getElementById('ov-full').onclick=()=>{
+    document.getElementById('seed-inp').value=document.getElementById('seed-inp2').value;
+    ov.style.display='none';startGame(false);
+  };
+  document.getElementById('ov-short').onclick=()=>{
+    document.getElementById('seed-inp').value=document.getElementById('seed-inp2').value;
+    ov.style.display='none';startGame(true);
+  };
+  speak(`Assessment complete. Score ${Math.floor(G.score)} of ${maxPossible}. Rating: ${r}.`,0.88,1,true);
+}
+
+// ═══════════════════════════════════════════════════════
+// INPUT
+// ═══════════════════════════════════════════════════════
+document.addEventListener('keydown',e=>{
+  G.keys[e.key]=true;
+  if(!G.active)return;
+  if(e.key===' '){e.preventDefault();respondToBeep();return;}
+  if(e.key>='1'&&e.key<='5'){
+    if(G.memEntryActive)return;
+    const n=parseInt(e.key);
+    if(G.phases.ballnum&&G.ballCmdActive&&G.ballExpected===n){
+      // Correct number in time
+      const rt=Date.now()-G.ballIssuedAt;
+      G.ballCmdActive=false;G.ballExpected=null;
+      if(G.ballExpTO){clearTimeout(G.ballExpTO);G.ballExpTO=null;}
+      G.ballNum=n;
+      const pts=Math.max(5,60-Math.floor(rt/50));
+      G.score+=pts;sndOk();flash(`+${pts} Ball set (${rt}ms)`,'#38c858');updateHUD();
+    } else if(G.phases.ballnum&&G.ballCmdActive&&G.ballExpected!==n){
+      // Wrong number during active command
+      G.strikes++;sndPenalty();flash('Wrong ball number −Strike','#903030');updateHUD();
+    } else if(G.phases.ballnum&&!G.ballCmdActive){
+      // No command active — unsolicited press
+      G.strikes++;sndPenalty();flash('No ball command active −Strike','#903030');updateHUD();
+    }
+  }
+});
+document.addEventListener('keyup',e=>G.keys[e.key]=false);
+
+// Touch joystick
+(()=>{
+  const joy=document.createElement('div');
+  joy.style.cssText='position:absolute;bottom:22px;left:22px;z-index:40;display:none;';
+  const base=document.createElement('div');
+  base.style.cssText='width:110px;height:110px;border-radius:50%;background:rgba(12,30,70,0.4);border:1px solid #0a1a30;position:relative;touch-action:none;';
+  const thumb=document.createElement('div');
+  thumb.style.cssText='width:44px;height:44px;border-radius:50%;background:rgba(80,155,195,0.65);border:1px solid #5aaace;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;';
+  base.appendChild(thumb);joy.appendChild(base);
+  document.getElementById('app').appendChild(joy);
+  if(navigator.maxTouchPoints>0)joy.style.display='block';
+  let active=false,ox=0,oy=0;const R=33;
+  base.addEventListener('touchstart',e=>{e.preventDefault();active=true;const r=base.getBoundingClientRect();ox=r.left+r.width/2;oy=r.top+r.height/2;},{passive:false});
+  document.addEventListener('touchmove',e=>{
+    if(!active)return;e.preventDefault();
+    const t=e.touches[0];let dx=t.clientX-ox,dy=t.clientY-oy;
+    const d=Math.hypot(dx,dy);if(d>R){dx=dx/d*R;dy=dy/d*R;}
+    thumb.style.transform=`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px))`;
+    G.touchJoy.x=dx/R;G.touchJoy.y=dy/R;
+  },{passive:false});
+  document.addEventListener('touchend',()=>{if(!active)return;active=false;thumb.style.transform='translate(-50%,-50%)';G.touchJoy.x=0;G.touchJoy.y=0;});
+  canvas.addEventListener('touchstart',()=>{if(G.active)respondToBeep();});
+})();
+
+document.getElementById('btn-full').onclick=()=>startGame(false);
+document.getElementById('btn-short').onclick=()=>startGame(true);
+</script>
+</body>
+</html>

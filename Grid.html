@@ -7,148 +7,142 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
-:root {
-  --bg:#f5f4f0; --surface:#fff; --surface2:#f0efe9;
-  --border:#e0ddd5; --border2:#ccc9be;
-  --text:#1a1915; --text2:#6b6860; --text3:#a09d97;
-  --accent:#1e3a5f; --hit:#1a5e3a; --hit-bg:#e6f4ec;
-  --miss:#6b1e1e; --miss-bg:#f4e6e6;
-  --hl:rgba(30,58,95,0.08); --hl-cell:#1e3a5f; --hl-alt:#2d5a8e;
-  --hl-col:rgba(30,58,95,0.12);
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f4f0;--surface:#fff;--surface2:#f0efe9;
+  --border:#e0ddd5;--border2:#ccc9be;
+  --text:#1a1915;--text2:#6b6860;--text3:#a09d97;
+  --accent:#1e3a5f;--hit:#1a5e3a;--hit-bg:#e6f4ec;
+  --miss:#6b1e1e;--miss-bg:#f4e6e6;
+  --hl:rgba(30,58,95,0.08);--hl-col:rgba(30,58,95,0.13);--hl-cell:#1e3a5f;--hl-alt:#2d5a8e;
 }
-html,body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); }
-body { display:flex; flex-direction:column; min-height:100vh; }
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text)}
+body{display:flex;flex-direction:column;min-height:100vh}
 
-/* ── HEADER ── */
-header {
-  padding:14px 28px; border-bottom:1px solid var(--border);
-  background:var(--surface); display:flex; align-items:baseline; gap:14px; flex-shrink:0;
-}
-header h1 { font-family:'DM Mono',monospace; font-size:14px; font-weight:500; letter-spacing:.04em; }
-#hdr-sub { font-size:11px; color:var(--text3); font-family:'DM Mono',monospace; }
-#hdr-hint { margin-left:auto; font-size:11px; color:var(--text3); font-family:'DM Mono',monospace; }
-#hdr-back { margin-left:auto; font-size:11px; color:var(--text3); font-family:'DM Mono',monospace; cursor:pointer; border:none; background:none; padding:0; }
-#hdr-back:hover { color:var(--text2); }
+/* HEADER */
+header{padding:14px 28px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:baseline;gap:14px;flex-shrink:0}
+header h1{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;letter-spacing:.04em}
+#hdr-sub{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace}
+#hdr-hint{margin-left:auto;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace}
+#hdr-back{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;cursor:pointer;border:none;background:none;padding:0}
+#hdr-back:hover{color:var(--text2)}
 
-/* ── SCREENS ── */
-.scr { display:none; flex:1; overflow:hidden; }
+/* SCREENS */
+.scr{display:none;flex:1;overflow:hidden}
 
-/* ── MENU ── */
-#s-menu { flex-direction:column; align-items:center; justify-content:center; padding:60px 32px; gap:16px; }
-.menu-tag { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--text3); margin-bottom:8px; }
-.menu-card { width:100%; max-width:360px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:22px 24px; cursor:pointer; transition:border-color .15s,background .15s; }
-.menu-card:hover { border-color:var(--border2); background:var(--surface2); }
-.mc-title { font-family:'DM Mono',monospace; font-size:15px; font-weight:500; margin-bottom:6px; }
-.mc-desc { font-size:12px; color:var(--text2); line-height:1.5; }
-.mc-tag { display:inline-block; margin-top:10px; font-family:'DM Mono',monospace; font-size:10px; color:var(--text3); }
+/* MENU */
+#s-menu{flex-direction:column;align-items:center;justify-content:center;padding:60px 32px;gap:14px}
+.menu-tag{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.menu-card{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 22px;cursor:pointer;transition:border-color .15s,background .15s}
+.menu-card:hover{border-color:var(--border2);background:var(--surface2)}
+.mc-title{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;margin-bottom:5px}
+.mc-desc{font-size:12px;color:var(--text2);line-height:1.5}
+.mc-tag{display:inline-block;margin-top:8px;font-family:'DM Mono',monospace;font-size:10px;color:var(--text3)}
+/* seed row inside card */
+.seed-row{display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.seed-row label{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);white-space:nowrap}
+.seed-input{flex:1;font-family:'DM Mono',monospace;font-size:12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);min-width:0}
+.seed-input:focus{outline:none;border-color:var(--border2)}
+.seed-btn{font-family:'DM Mono',monospace;font-size:11px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;color:var(--text2);white-space:nowrap}
+.seed-btn:hover{border-color:var(--border2);color:var(--text)}
+.seed-tag{font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);min-width:60px}
 
-/* ── SHARED ── */
-.prog-row { display:flex; align-items:center; gap:12px; }
-.prog-wrap { flex:1; height:2px; background:var(--border); border-radius:1px; overflow:hidden; }
-.prog-fill { height:100%; width:0%; background:var(--border2); border-radius:1px; transition:width .3s; }
-.prog-lbl { font-family:'DM Mono',monospace; font-size:11px; color:var(--text3); white-space:nowrap; }
-.prog-time { font-family:'DM Mono',monospace; font-size:11px; color:var(--text3); min-width:36px; text-align:right; }
+/* SHARED */
+.prog-row{display:flex;align-items:center;gap:12px}
+.prog-wrap{flex:1;height:2px;background:var(--border);border-radius:1px;overflow:hidden}
+.prog-fill{height:100%;width:0%;background:var(--border2);border-radius:1px;transition:width .3s}
+.prog-lbl{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);white-space:nowrap}
+.prog-time{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);min-width:36px;text-align:right}
 
-.opts { display:flex; flex-direction:column; gap:7px; }
-.opt { display:flex; align-items:center; gap:11px; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 14px; cursor:pointer; transition:background .1s,border-color .1s,transform .08s; font-size:14px; font-family:'DM Mono',monospace; color:var(--text); user-select:none; }
-.opt:hover:not(.locked) { background:var(--surface2); border-color:var(--border2); }
-.opt:active:not(.locked) { transform:scale(.99); }
-.kb { width:20px; height:20px; border-radius:4px; background:var(--surface2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:10px; color:var(--text3); font-weight:500; flex-shrink:0; font-family:'DM Mono',monospace; }
-.opt.correct { background:var(--hit-bg); border-color:#8ec8a8; }
-.opt.correct .kb { background:var(--hit-bg); border-color:#8ec8a8; color:var(--hit); }
-.opt.correct .v { color:var(--hit); font-weight:500; }
-.opt.wrong { background:var(--miss-bg); border-color:#e0a0a0; }
-.opt.wrong .kb { background:var(--miss-bg); border-color:#e0a0a0; color:var(--miss); }
-.opt.wrong .v { color:var(--miss); }
-.opt.reveal { background:var(--hit-bg); border-color:#8ec8a8; }
-.opt.reveal .v { color:var(--hit); font-weight:500; }
+.opts{display:flex;flex-direction:column;gap:7px}
+.opt{display:flex;align-items:center;gap:11px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;cursor:pointer;transition:background .1s,border-color .1s,transform .08s;font-size:14px;font-family:'DM Mono',monospace;color:var(--text);user-select:none}
+.opt:hover:not(.locked){background:var(--surface2);border-color:var(--border2)}
+.opt:active:not(.locked){transform:scale(.99)}
+.kb{width:20px;height:20px;border-radius:4px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text3);font-weight:500;flex-shrink:0;font-family:'DM Mono',monospace}
+.opt.correct{background:var(--hit-bg);border-color:#8ec8a8}
+.opt.correct .kb{background:var(--hit-bg);border-color:#8ec8a8;color:var(--hit)}
+.opt.correct .v{color:var(--hit);font-weight:500}
+.opt.wrong{background:var(--miss-bg);border-color:#e0a0a0}
+.opt.wrong .kb{background:var(--miss-bg);border-color:#e0a0a0;color:var(--miss)}
+.opt.wrong .v{color:var(--miss)}
+.opt.reveal{background:var(--hit-bg);border-color:#8ec8a8}
+.opt.reveal .v{color:var(--hit);font-weight:500}
 
-.fb { font-size:12px; font-family:'DM Mono',monospace; color:var(--text3); min-height:16px; }
-.fb.good { color:var(--hit); }
-.fb.bad { color:var(--miss); }
-.nxt-btn { width:100%; padding:10px; border-radius:8px; border:1px solid var(--border2); background:var(--surface); color:var(--text); font-size:13px; font-family:'DM Mono',monospace; cursor:pointer; transition:background .1s; display:none; }
-.nxt-btn:hover { background:var(--surface2); }
+.fb{font-size:12px;font-family:'DM Mono',monospace;color:var(--text3);min-height:16px}
+.fb.good{color:var(--hit)}
+.fb.bad{color:var(--miss)}
+.nxt-btn{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:13px;font-family:'DM Mono',monospace;cursor:pointer;transition:background .1s;display:none}
+.nxt-btn:hover{background:var(--surface2)}
 
-/* ── RESULTS ── */
-.res-scr { display:none; flex:1; align-items:center; justify-content:center; overflow-y:auto; padding:40px 32px; }
-.res-inner { max-width:500px; width:100%; }
-.res-tag { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--text3); margin-bottom:16px; }
-.res-pct { font-family:'DM Mono',monospace; font-size:64px; font-weight:300; color:var(--text); line-height:1; margin-bottom:4px; }
-.res-sub { font-size:13px; color:var(--text2); font-family:'DM Mono',monospace; margin-bottom:28px; }
-.res-cards { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:28px; }
-.scard { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 14px; text-align:center; }
-.scard-lbl { font-size:10px; color:var(--text3); font-family:'DM Mono',monospace; letter-spacing:.05em; text-transform:uppercase; margin-bottom:4px; }
-.scard-val { font-size:20px; font-family:'DM Mono',monospace; font-weight:400; color:var(--text); }
-.rst-btn { width:100%; padding:11px; border-radius:8px; border:1px solid var(--border2); background:var(--surface); color:var(--text); font-size:13px; font-family:'DM Mono',monospace; cursor:pointer; margin-top:4px; }
-.rst-btn:hover { background:var(--surface2); }
+/* RESULTS */
+.res-scr{display:none;flex:1;align-items:center;justify-content:center;overflow-y:auto;padding:40px 32px}
+.res-inner{max-width:500px;width:100%}
+.res-tag{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:16px}
+.res-pct{font-family:'DM Mono',monospace;font-size:64px;font-weight:300;color:var(--text);line-height:1;margin-bottom:4px}
+.res-sub{font-size:13px;color:var(--text2);font-family:'DM Mono',monospace;margin-bottom:28px}
+.res-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:28px}
+.scard{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center}
+.scard-lbl{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px}
+.scard-val{font-size:20px;font-family:'DM Mono',monospace;font-weight:400;color:var(--text)}
+.res-seed{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);margin-bottom:20px}
+.res-seed span{color:var(--text2)}
+.rst-btn{width:100%;padding:11px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:13px;font-family:'DM Mono',monospace;cursor:pointer;margin-top:4px}
+.rst-btn:hover{background:var(--surface2)}
 
-/* ══ PART 1 — GRID ══ */
-#s-grid { flex-direction:row; justify-content:center; }
-#grid-panel { flex:0 0 auto; overflow:auto; background:var(--surface); border-right:1px solid var(--border); padding:14px; }
-#grid-panel table { border-collapse:collapse; font-family:'DM Mono',monospace; font-size:8.5px; }
-#grid-panel td,#grid-panel th { width:17px; height:17px; text-align:center; line-height:17px; border:.5px solid var(--border); color:var(--text2); transition:background .12s; white-space:nowrap; }
-#grid-panel th { background:var(--surface2); color:var(--text); font-weight:500; position:sticky; }
-#grid-panel thead th { top:0; z-index:2; }
-#grid-panel tbody th { left:0; z-index:1; }
-#grid-panel thead th:first-child { left:0; z-index:3; }
-#grid-panel td.hr { background:var(--hl); color:var(--text); }
-#grid-panel td.hc { background:var(--hl-col); color:var(--text); }
-#grid-panel td.hx { background:var(--hl-cell); color:#fff; font-weight:500; }
-#grid-panel td.hx2 { background:var(--hl-alt); color:#fff; opacity:.65; }
-#grid-right { width:420px; flex-shrink:0; display:flex; flex-direction:column; padding:32px 28px; gap:18px; overflow-y:auto; }
+/* GRID */
+#s-grid{flex-direction:row;justify-content:center}
+#grid-panel{flex:0 0 auto;overflow:auto;background:var(--surface);border-right:1px solid var(--border);padding:14px}
+#grid-panel table{border-collapse:collapse;font-family:'DM Mono',monospace;font-size:8.5px}
+#grid-panel td,#grid-panel th{width:17px;height:17px;text-align:center;line-height:17px;border:.5px solid var(--border);color:var(--text2);transition:background .12s;white-space:nowrap}
+#grid-panel th{background:var(--surface2);color:var(--text);font-weight:500;position:sticky}
+#grid-panel thead th{top:0;z-index:2}
+#grid-panel tbody th{left:0;z-index:1}
+#grid-panel thead th:first-child{left:0;z-index:3}
+#grid-panel td.hr{background:var(--hl);color:var(--text)}
+#grid-panel td.hc{background:var(--hl-col);color:var(--text)}
+#grid-panel td.hx{background:var(--hl-cell);color:#fff;font-weight:500}
+#grid-panel td.hx2{background:var(--hl-alt);color:#fff;opacity:.65}
+#grid-right{width:420px;flex-shrink:0;display:flex;flex-direction:column;padding:32px 28px;gap:18px;overflow-y:auto}
+.qbox{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 20px}
+.qlbl{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+.qmain{font-family:'DM Mono',monospace;font-size:34px;font-weight:300;color:var(--text);margin-bottom:8px}
+.qmain span{color:var(--accent);font-weight:500}
+.qsub{font-size:11px;color:var(--text2);display:flex;gap:18px;font-family:'DM Mono',monospace}
+.qsub span{color:var(--text3);margin-right:3px}
 
-.qbox { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px 20px; }
-.qlbl { font-size:10px; color:var(--text3); font-family:'DM Mono',monospace; letter-spacing:.06em; text-transform:uppercase; margin-bottom:10px; }
-.qmain { font-family:'DM Mono',monospace; font-size:34px; font-weight:300; color:var(--text); margin-bottom:8px; }
-.qmain span { color:var(--accent); font-weight:500; }
-.qsub { font-size:11px; color:var(--text2); display:flex; gap:18px; font-family:'DM Mono',monospace; }
-.qsub span { color:var(--text3); margin-right:3px; }
+/* TABLE */
+#s-table{flex-direction:row;justify-content:center}
+#tables-panel{flex:0 0 auto;width:440px;overflow-y:auto;overflow-x:hidden;background:var(--surface);border-right:1px solid var(--border);padding:16px 14px;display:flex;flex-direction:column;gap:22px}
+.lt-block{width:100%}
+.lt-title{font-family:'DM Mono',monospace;font-size:10px;font-weight:500;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.lt-block table{border-collapse:collapse;width:100%;font-family:'DM Mono',monospace;font-size:9.5px}
+.lt-block th,.lt-block td{border:.5px solid var(--border);padding:3px 5px;text-align:center;white-space:nowrap;color:var(--text2)}
+.lt-block th{background:var(--surface2);color:var(--text);font-weight:500}
+.lt-block td.vel-col{color:var(--text);font-weight:500;background:var(--surface2)}
+.lt-block td.hl-row{background:var(--hl);color:var(--text)}
+.lt-block td.hl-col{background:var(--hl-col);color:var(--text)}
+.lt-block td.hl-cell{background:var(--hl-cell)!important;color:#fff!important;font-weight:500}
+.lt-block th.hl-col-hdr{background:var(--hl-col)!important;color:var(--text)}
+#table-right{width:420px;flex-shrink:0;display:flex;flex-direction:column;padding:32px 28px;gap:18px;overflow-y:auto}
+.tqcard{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.tqhdr{padding:10px 16px;background:var(--surface2);border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase}
+.tqbody{display:grid;grid-template-columns:1fr 1fr 1fr}
+.tqcell{padding:14px 16px;text-align:center;border-right:1px solid var(--border)}
+.tqcell:last-child{border-right:none}
+.tqcell-lbl{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:6px}
+.tqcell-val{font-family:'DM Mono',monospace;font-size:28px;font-weight:300;color:var(--text)}
+.tqask{padding:12px 16px;border-top:1px solid var(--border);font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)}
+.tqask strong{color:var(--text);font-weight:500}
 
-/* ══ PART 2 — TABLE ══ */
-#s-table { flex-direction:row; justify-content:center; }
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
 
-#tables-panel {
-  flex:0 0 auto; width:440px; overflow-y:auto; overflow-x:hidden;
-  background:var(--surface); border-right:1px solid var(--border);
-  padding:16px 14px; display:flex; flex-direction:column; gap:22px;
-}
-.lt-block { width:100%; }
-.lt-title { font-family:'DM Mono',monospace; font-size:10px; font-weight:500; color:var(--text3); letter-spacing:.06em; text-transform:uppercase; margin-bottom:6px; }
-.lt-block table { border-collapse:collapse; width:100%; font-family:'DM Mono',monospace; font-size:9.5px; }
-.lt-block th,.lt-block td { border:.5px solid var(--border); padding:3px 5px; text-align:center; white-space:nowrap; color:var(--text2); }
-.lt-block th { background:var(--surface2); color:var(--text); font-weight:500; }
-.lt-block td.vel-col { color:var(--text); font-weight:500; background:var(--surface2); }
-/* Row highlight (horizontal) */
-.lt-block td.hl-row { background:var(--hl); color:var(--text); }
-/* Column highlight (vertical) */
-.lt-block td.hl-col { background:var(--hl-col); color:var(--text); }
-/* Both row + col = answer cell */
-.lt-block td.hl-cell { background:var(--hl-cell) !important; color:#fff !important; font-weight:500; }
-/* Column header highlight */
-.lt-block th.hl-col-hdr { background:var(--hl-col) !important; color:var(--text); }
-
-#table-right { width:420px; flex-shrink:0; display:flex; flex-direction:column; padding:32px 28px; gap:18px; overflow-y:auto; }
-
-.tqcard { background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
-.tqhdr { padding:10px 16px; background:var(--surface2); border-bottom:1px solid var(--border); font-family:'DM Mono',monospace; font-size:10px; color:var(--text3); letter-spacing:.06em; text-transform:uppercase; }
-.tqbody { display:grid; grid-template-columns:1fr 1fr 1fr; }
-.tqcell { padding:14px 16px; text-align:center; border-right:1px solid var(--border); }
-.tqcell:last-child { border-right:none; }
-.tqcell-lbl { font-size:10px; color:var(--text3); font-family:'DM Mono',monospace; margin-bottom:6px; }
-.tqcell-val { font-family:'DM Mono',monospace; font-size:28px; font-weight:300; color:var(--text); }
-.tqask { padding:12px 16px; border-top:1px solid var(--border); font-family:'DM Mono',monospace; font-size:11px; color:var(--text3); }
-.tqask strong { color:var(--text); font-weight:500; }
-
-::-webkit-scrollbar { width:6px; height:6px; }
-::-webkit-scrollbar-track { background:transparent; }
-::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px; }
-
-@media (max-width:960px) {
-  #s-grid,#s-table { flex-direction:column; }
-  #grid-panel,#tables-panel { border-right:none; border-bottom:1px solid var(--border); max-height:42vh; flex:0 0 auto; width:100%; }
-  #grid-right,#table-right { width:100%; padding:20px; }
-  #hdr-hint { display:none; }
+@media(max-width:960px){
+  #s-grid,#s-table{flex-direction:column}
+  #grid-panel,#tables-panel{border-right:none;border-bottom:1px solid var(--border);max-height:42vh;flex:0 0 auto;width:100%}
+  #grid-right,#table-right{width:100%;padding:20px}
+  #hdr-hint{display:none}
 }
 </style>
 </head>
@@ -162,17 +156,33 @@ header h1 { font-family:'DM Mono',monospace; font-size:14px; font-weight:500; le
 </header>
 
 <!-- MENU -->
-<div id="s-menu" class="scr" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 32px;gap:16px;">
+<div id="s-menu" class="scr" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 32px;gap:14px;">
   <div class="menu-tag">choose test</div>
-  <div class="menu-card" onclick="startGrid()">
-    <div class="mc-title">Part 1 — Grid Reading</div>
-    <div class="mc-desc">Cross-reference two axis values on a −17 to +17 grid. Axes shift slightly each round to prevent familiarity.</div>
-    <div class="mc-tag">20 questions &nbsp;·&nbsp; 1–5 keys</div>
+
+  <!-- Grid card -->
+  <div class="menu-card">
+    <div class="mc-title" onclick="startGrid(false)">Part 1 — Grid Reading</div>
+    <div class="mc-desc" onclick="startGrid(false)">Cross-reference two axis values on a −17 to +17 grid. 20 questions per round.</div>
+    <div class="mc-tag" onclick="startGrid(false)">20 questions &nbsp;·&nbsp; 1–5 keys</div>
+    <div class="seed-row">
+      <label>seed</label>
+      <input class="seed-input" id="g-seed-input" type="text" placeholder="e.g. alpha" maxlength="20">
+      <span class="seed-tag" id="g-seed-tag"></span>
+      <button class="seed-btn" onclick="startGrid(true)">use seed →</button>
+    </div>
   </div>
-  <div class="menu-card" onclick="startTable()">
-    <div class="mc-title">Part 2 — Table Reading</div>
-    <div class="mc-desc">Given Air Speed, Wind Velocity, and Wind Angle — read the Drift Correction or Ground Speed from the reference tables.</div>
-    <div class="mc-tag">20 questions &nbsp;·&nbsp; 1–5 keys</div>
+
+  <!-- Table card -->
+  <div class="menu-card">
+    <div class="mc-title" onclick="startTable(false)">Part 2 — Table Reading</div>
+    <div class="mc-desc" onclick="startTable(false)">Given Air Speed, Wind Velocity, and Wind Angle — read the Drift Correction or Ground Speed from the reference tables.</div>
+    <div class="mc-tag" onclick="startTable(false)">20 questions &nbsp;·&nbsp; 1–5 keys</div>
+    <div class="seed-row">
+      <label>seed</label>
+      <input class="seed-input" id="t-seed-input" type="text" placeholder="e.g. bravo" maxlength="20">
+      <span class="seed-tag" id="t-seed-tag"></span>
+      <button class="seed-btn" onclick="startTable(true)">use seed →</button>
+    </div>
   </div>
 </div>
 
@@ -181,7 +191,7 @@ header h1 { font-family:'DM Mono',monospace; font-size:14px; font-weight:500; le
   <div id="grid-panel"><table id="gtbl"></table></div>
   <div id="grid-right">
     <div class="prog-row">
-      <span class="prog-lbl" id="g-qlbl">1 of 10</span>
+      <span class="prog-lbl" id="g-qlbl">1 of 20</span>
       <div class="prog-wrap"><div class="prog-fill" id="g-prog"></div></div>
       <span class="prog-time" id="g-time">0.0s</span>
     </div>
@@ -210,8 +220,9 @@ header h1 { font-family:'DM Mono',monospace; font-size:14px; font-weight:500; le
       <div class="scard"><div class="scard-lbl">avg / q</div><div class="scard-val" id="gres-avg">—</div></div>
       <div class="scard"><div class="scard-lbl">best</div><div class="scard-val" id="gres-best">—</div></div>
     </div>
+    <div class="res-seed" id="gres-seed"></div>
     <div id="gres-bd" style="margin-bottom:24px;"></div>
-    <button class="rst-btn" onclick="startGrid()">new round →</button>
+    <button class="rst-btn" id="gres-rst">new round →</button>
   </div>
 </div>
 
@@ -254,25 +265,51 @@ header h1 { font-family:'DM Mono',monospace; font-size:14px; font-weight:500; le
       <div class="scard"><div class="scard-lbl">avg / q</div><div class="scard-val" id="tres-avg">—</div></div>
       <div class="scard"><div class="scard-lbl">best</div><div class="scard-val" id="tres-best">—</div></div>
     </div>
+    <div class="res-seed" id="tres-seed"></div>
     <div id="tres-bd" style="margin-bottom:24px;"></div>
-    <button class="rst-btn" onclick="startTable()">new round →</button>
+    <button class="rst-btn" id="tres-rst">new round →</button>
   </div>
 </div>
 
 <script>
-/* ══ UTILS ══ */
-const rnd  = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
-const fmt  = ms => (ms/1000).toFixed(1)+'s';
-const pick = arr => arr[rnd(0,arr.length-1)];
-
-const ALL = ['s-menu','s-grid','s-gres','s-table','s-tres'];
-function show(id){
-  ALL.forEach(s=>{ document.getElementById(s).style.display='none'; });
-  document.getElementById(id).style.display='flex';
+/* ═══════════════════════════════════════
+   SEEDED PRNG  (mulberry32)
+═══════════════════════════════════════ */
+function strToSeed(s){
+  // hash string to uint32
+  let h=0x811c9dc5;
+  for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=(h*0x01000193)>>>0; }
+  return h||1;
+}
+function makePRNG(seed){
+  let s=seed>>>0||1;
+  return function(){
+    s+=0x6d2b79f5; let t=s;
+    t=Math.imul(t^t>>>15,t|1); t^=t+Math.imul(t^t>>>7,t|61);
+    return ((t^t>>>14)>>>0)/4294967296;
+  };
 }
 
+let R=Math.random; // default: browser random; replaced when seeded
+
+/* ═══════════════════════════════════════
+   UTILS
+═══════════════════════════════════════ */
+const fmt=ms=>(ms/1000).toFixed(1)+'s';
+function rndR(a,b){return Math.floor(R()*(b-a+1))+a;}
+function pickR(arr){return arr[rndR(0,arr.length-1)];}
+function shuffleR(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+const ALL=['s-menu','s-grid','s-gres','s-table','s-tres'];
+function show(id){ALL.forEach(s=>{document.getElementById(s).style.display='none';});document.getElementById(id).style.display='flex';}
+
 function goMenu(){
-  clearInterval(gTimer); clearInterval(tTimer);
+  clearInterval(gTimer);clearInterval(tTimer);
+  R=Math.random;
   document.getElementById('hdr-sub').textContent='select a mode';
   document.getElementById('hdr-back').style.display='none';
   show('s-menu');
@@ -282,36 +319,37 @@ function setHdr(sub){
   document.getElementById('hdr-back').style.display='';
 }
 
-function buildOpts(cid, vals, correct, cb){
-  const c=document.getElementById(cid); c.innerHTML='';
+function buildOpts(cid,vals,correct,cb){
+  const c=document.getElementById(cid);c.innerHTML='';
   vals.forEach((v,i)=>{
     const b=document.createElement('button');
-    b.className='opt'; b.dataset.val=v;
+    b.className='opt';b.dataset.val=v;
     b.innerHTML=`<span class="kb">${i+1}</span><span class="v">${v}</span>`;
     b.addEventListener('click',()=>cb(v,b));
     c.appendChild(b);
   });
 }
-function lockOpts(cid, correct, chosen){
+function lockOpts(cid,correct,chosen){
   document.querySelectorAll(`#${cid} .opt`).forEach(o=>{
     o.classList.add('locked');
     const v=+o.dataset.val;
-    if(v===chosen&&v!==correct) o.classList.add('wrong');
-    if(v===correct&&v===chosen) o.classList.add('correct');
-    if(v===correct&&v!==chosen) o.classList.add('reveal');
+    if(v===chosen&&v!==correct)o.classList.add('wrong');
+    if(v===correct&&v===chosen)o.classList.add('correct');
+    if(v===correct&&v!==chosen)o.classList.add('reveal');
   });
 }
-function showResults(pfx, score, total, times, results, bdId){
+function showResults(pfx,score,total,times,results,bdId,seedLabel){
   const tot=times.reduce((a,b)=>a+b,0);
-  const pct=Math.round(score/total*100);
-  document.getElementById(`${pfx}-pct`).textContent=pct+'%';
+  document.getElementById(`${pfx}-pct`).textContent=Math.round(score/total*100)+'%';
   document.getElementById(`${pfx}-sub`).textContent=`${score} / ${total} correct`;
   document.getElementById(`${pfx}-tot`).textContent=fmt(tot);
   document.getElementById(`${pfx}-avg`).textContent=fmt(tot/times.length);
   document.getElementById(`${pfx}-best`).textContent=fmt(Math.min(...times));
+  const seedEl=document.getElementById(`${pfx}-seed`);
+  seedEl.innerHTML=seedLabel?`seed: <span>${seedLabel}</span>`:'';
   const mx=Math.max(...times);
   document.getElementById(bdId).innerHTML=results.map((r,i)=>{
-    const w=Math.round(r.ms/mx*100), col=r.correct?'var(--hit)':'var(--miss)';
+    const w=Math.round(r.ms/mx*100),col=r.correct?'var(--hit)':'var(--miss)';
     return `<div style="display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:.5px solid var(--border);font-family:'DM Mono',monospace;font-size:11px;">
       <span style="color:${col};width:14px;">${r.correct?'✓':'✗'}</span>
       <span style="color:var(--text3);width:26px;">q${i+1}</span>
@@ -324,39 +362,47 @@ function showResults(pfx, score, total, times, results, bdId){
   }).join('');
 }
 
-/* ══════════════════════════════
+/* ═══════════════════════════════════════
    PART 1 — GRID
-══════════════════════════════ */
-let gMin,gMax,gScore,gQN,gT0,gQT0,gTimes,gRes,gAns,gCurR,gCurC,gCorrect,gTimer;
-const G_QPR=20, G_OFF=4;
+═══════════════════════════════════════ */
+let gMin,gMax,gScore,gQN,gT0,gQT0,gTimes,gRes,gAns,gCurR,gCurC,gCorrect,gTimer,gSeedLabel;
+const G_QPR=20,G_OFF=4;
 
-function gridVal(r,c){ let v=r+c; while(v>10)v-=20; while(v<-10)v+=20; return v; }
+function gridVal(r,c){let v=r+c;while(v>10)v-=20;while(v<-10)v+=20;return v;}
 
-function pickGOff(){
-  let last=parseInt(sessionStorage.getItem('gOff')||'999'),o;
-  do{o=rnd(-G_OFF,G_OFF);}while(o===last);
-  sessionStorage.setItem('gOff',o); return o;
-}
-
-function startGrid(){
+function startGrid(useSeed){
   clearInterval(gTimer);
-  const off=pickGOff(); gMin=-17+off; gMax=17+off;
-  gScore=0; gQN=0; gTimes=[]; gRes=[];
-  setHdr(`part 1 · ${gMin} → ${gMax}`);
+  const inp=document.getElementById('g-seed-input').value.trim();
+  if(useSeed&&inp){
+    R=makePRNG(strToSeed(inp));
+    gSeedLabel=inp;
+    document.getElementById('g-seed-tag').textContent='✓ seeded';
+  } else {
+    R=Math.random;
+    gSeedLabel='';
+    document.getElementById('g-seed-tag').textContent='';
+  }
+  // pick axis offset, different from last
+  let last=parseInt(sessionStorage.getItem('gOff')||'999'),off;
+  do{off=rndR(-G_OFF,G_OFF);}while(off===last&&!useSeed);
+  if(!useSeed)sessionStorage.setItem('gOff',off);
+  gMin=-17+off;gMax=17+off;
+  gScore=0;gQN=0;gTimes=[];gRes=[];
+  setHdr(`part 1 · grid · ${gMin} → ${gMax}${gSeedLabel?' · seed: '+gSeedLabel:''}`);
   buildGTable();
   gT0=Date.now();
-  gTimer=setInterval(()=>{ document.getElementById('g-time').textContent=fmt(Date.now()-gT0); },100);
-  show('s-grid'); gQ();
+  gTimer=setInterval(()=>{document.getElementById('g-time').textContent=fmt(Date.now()-gT0);},100);
+  show('s-grid');gQ();
 }
 
 function buildGTable(){
   const t=document.getElementById('gtbl');
   let h='<thead><tr><th></th>';
-  for(let c=gMin;c<=gMax;c++) h+=`<th>${c}</th>`;
+  for(let c=gMin;c<=gMax;c++)h+=`<th>${c}</th>`;
   h+='</tr></thead><tbody>';
   for(let r=gMin;r<=gMax;r++){
     h+=`<tr><th>${r}</th>`;
-    for(let c=gMin;c<=gMax;c++) h+=`<td data-r="${r}" data-c="${c}">${gridVal(r,c)}</td>`;
+    for(let c=gMin;c<=gMax;c++)h+=`<td data-r="${r}" data-c="${c}">${gridVal(r,c)}</td>`;
     h+='</tr>';
   }
   t.innerHTML=h+'</tbody>';
@@ -366,30 +412,29 @@ function gHL(r,c){
   const mr=c,mc=r,same=(mr===r&&mc===c);
   document.querySelectorAll('#gtbl td').forEach(el=>{
     el.className='';
-    const er=+el.dataset.r, ec=+el.dataset.c;
-    if(er===r&&ec===c) el.classList.add('hx');
-    else if(!same&&er===mr&&ec===mc) el.classList.add('hx2');
-    // row band (horizontal) for primary
-    else if(er===r&&(!same||ec!==mc)) el.classList.add('hr');
-    // col band (vertical) for primary
-    else if(ec===c&&(!same||er!==mr)) el.classList.add('hc');
-    // row/col bands for mirror
-    if(!same){
-      if(er===mr&&ec!==mc&&!(er===r&&ec===c)) el.classList.add('hr');
-      if(ec===mc&&er!==mr&&!(er===r&&ec===c)) el.classList.add('hc');
-    }
+    const er=+el.dataset.r,ec=+el.dataset.c;
+    if(er===r&&ec===c){el.classList.add('hx');return;}
+    if(!same&&er===mr&&ec===mc){el.classList.add('hx2');return;}
+    let cls='';
+    if(er===r||(!same&&er===mr))cls='hr';
+    if(ec===c||(!same&&ec===mc))cls=cls?'hr':' hc'; // both bands if corner
+    if(er===r&&(ec===c||(!same&&ec===mc)))cls='hr';
+    if(ec===c&&(er===r||(!same&&er===mr)))cls+=' hc';
+    if(er===r)el.classList.add('hr');
+    if(ec===c)el.classList.add('hc');
+    if(!same){if(er===mr)el.classList.add('hr');if(ec===mc)el.classList.add('hc');}
   });
   const p=document.querySelector(`#gtbl td[data-r="${r}"][data-c="${c}"]`);
-  if(p) p.scrollIntoView({behavior:'smooth',block:'center',inline:'center'});
+  if(p)p.scrollIntoView({behavior:'smooth',block:'center',inline:'center'});
 }
-function gClear(){ document.querySelectorAll('#gtbl td').forEach(e=>e.className=''); }
+function gClear(){document.querySelectorAll('#gtbl td').forEach(e=>e.className='');}
 
 function gQ(){
   gAns=false;
-  document.getElementById('g-fb').textContent=''; document.getElementById('g-fb').className='fb';
+  document.getElementById('g-fb').textContent='';document.getElementById('g-fb').className='fb';
   document.getElementById('g-nxt').style.display='none';
-  gClear(); gQT0=Date.now();
-  gCurR=rnd(gMin,gMax); gCurC=rnd(gMin,gMax);
+  gClear();gQT0=Date.now();
+  gCurR=rndR(gMin,gMax);gCurC=rndR(gMin,gMax);
   gCorrect=gridVal(gCurR,gCurC);
   document.getElementById('g-r').textContent=gCurR;
   document.getElementById('g-c').textContent=gCurC;
@@ -397,148 +442,117 @@ function gQ(){
   document.getElementById('g-c2').textContent=gCurC;
   document.getElementById('g-qlbl').textContent=`${gQN+1} of ${G_QPR}`;
   document.getElementById('g-prog').style.width=`${gQN/G_QPR*100}%`;
-  // Build a prioritised candidate pool of plausible mistakes,
-  // then pick 4 that are sufficiently spread from each other and the correct answer.
-  const gCandidates = [];
 
-  // Mistake type A: sign inversion of the answer
-  const negated = -gCorrect;
-  if(negated !== gCorrect && negated >= -10 && negated <= 10) gCandidates.push(negated);
+  // Distractors: build pool of mistake-type candidates, enforce spread ≥2, no adjacency
+  const seen=new Set([gCorrect]);
+  const cands=[];
+  const tryPush=v=>{if(v>=-10&&v<=10&&!seen.has(v)){seen.add(v);cands.push(v);}};
 
-  // Mistake type B: negated axis readings
-  const negRow = gridVal(-gCurR, gCurC);
-  const negCol = gridVal(gCurR, -gCurC);
-  if(negRow !== gCorrect && negRow >= -10 && negRow <= 10) gCandidates.push(negRow);
-  if(negCol !== gCorrect && negCol !== negRow && negCol >= -10 && negCol <= 10) gCandidates.push(negCol);
+  tryPush(-gCorrect);                        // sign flip
+  tryPush(gridVal(-gCurR,gCurC));            // negated row
+  tryPush(gridVal(gCurR,-gCurC));            // negated col
+  for(const dr of [-1,1,2,-2])              // adjacent coord errors
+    for(const dc of [0,-1,1])
+      tryPush(gridVal(gCurR+dr,gCurC+dc));
+  for(const dr of [-3,3,-5,5])              // further coord errors
+    for(const dc of [0,-1,1])
+      tryPush(gridVal(gCurR+dr,gCurC+dc));
 
-  // Mistake type C: off-by-one coordinate (adjacent row or col)
-  const adjCoord = [
-    gridVal(gCurR+1, gCurC), gridVal(gCurR-1, gCurC),
-    gridVal(gCurR, gCurC+1), gridVal(gCurR, gCurC-1),
-    gridVal(gCurR+2, gCurC), gridVal(gCurR, gCurC+2),
-  ];
-  for(const v of adjCoord){
-    if(v !== gCorrect && v >= -10 && v <= 10 && !gCandidates.includes(v)) gCandidates.push(v);
-  }
+  // shuffle so category mix varies
+  for(let i=cands.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[cands[i],cands[j]]=[cands[j],cands[i]];}
 
-  // Mistake type D: values from elsewhere on the grid (varied per question — seed with row+col sum quirks)
-  for(const dr of [-3,3,-5,5]){
-    for(const dc of [0,1,-1]){
-      const v = gridVal(gCurR+dr, gCurC+dc);
-      if(v !== gCorrect && v >= -10 && v <= 10 && !gCandidates.includes(v)) gCandidates.push(v);
+  // pick 4 with minimum gap ≥2 from correct and each other; relax to ≥1 if needed
+  const chosen=[];
+  for(let gap=2;gap>=1;gap--){
+    chosen.length=0;
+    for(const v of cands){
+      if(chosen.length>=4)break;
+      if(Math.abs(v-gCorrect)<gap)continue;
+      if(chosen.some(x=>Math.abs(x-v)<gap))continue;
+      chosen.push(v);
     }
+    if(chosen.length>=4)break;
   }
+  // fallback: full range, anything unique
+  const full=shuffleR([...Array.from({length:21},(_,i)=>i-10)].filter(v=>v!==gCorrect&&!chosen.includes(v)));
+  for(const v of full){if(chosen.length>=4)break;if(!chosen.some(x=>Math.abs(x-v)<1))chosen.push(v);}
+  for(const v of full){if(chosen.length>=4)break;chosen.push(v);}
 
-  // Shuffle candidates so the mix varies question-to-question
-  for(let i=gCandidates.length-1;i>0;i--){ const j=rnd(0,i); [gCandidates[i],gCandidates[j]]=[gCandidates[j],gCandidates[i]]; }
-
-  // Pick 4 distractors that are not within ±1 of each other or the correct answer
-  const gChosen = [];
-  const tooClose = (a, b) => Math.abs(a - b) <= 1;
-  for(const c of gCandidates){
-    if(gChosen.length >= 4) break;
-    if(tooClose(c, gCorrect)) continue;
-    if(gChosen.some(x => tooClose(x, c))) continue;
-    gChosen.push(c);
-  }
-
-  // If still short, draw from the full valid range with spread enforcement
-  const fullRange = [];
-  for(let v=-10;v<=10;v++) if(v!==gCorrect && !gChosen.includes(v)) fullRange.push(v);
-  for(let i=fullRange.length-1;i>0;i--){ const j=rnd(0,i); [fullRange[i],fullRange[j]]=[fullRange[j],fullRange[i]]; }
-  for(const v of fullRange){
-    if(gChosen.length >= 4) break;
-    if(tooClose(v, gCorrect)) continue;
-    if(gChosen.some(x => tooClose(x, v))) continue;
-    gChosen.push(v);
-  }
-  // Last resort: add anything valid
-  for(let v=-10;v<=10;v++){
-    if(gChosen.length >= 4) break;
-    if(v !== gCorrect && !gChosen.includes(v)) gChosen.push(v);
-  }
-
-  buildOpts('g-opts',[gCorrect,...gChosen.slice(0,4)].sort(()=>Math.random()-.5),gCorrect,gSel);
+  buildOpts('g-opts',[gCorrect,...chosen.slice(0,4)].sort(()=>R()-.5),gCorrect,gSel);
 }
 
 function gSel(val,btn){
-  if(gAns)return; gAns=true;
-  const ms=Date.now()-gQT0; gTimes.push(ms);
+  if(gAns)return;gAns=true;
+  const ms=Date.now()-gQT0;gTimes.push(ms);
   const ok=val===gCorrect;
   gRes.push({ms,correct:ok,lbl:`${gCurR}, ${gCurC}`});
   lockOpts('g-opts',gCorrect,val);
   if(ok){gScore++;document.getElementById('g-fb').textContent='✓  correct';document.getElementById('g-fb').className='fb good';}
   else{document.getElementById('g-fb').textContent=`✗  answer was ${gCorrect}`;document.getElementById('g-fb').className='fb bad';}
-  gHL(gCurR,gCurC); gQN++;
+  gHL(gCurR,gCurC);gQN++;
   document.getElementById('g-nxt').textContent=gQN>=G_QPR?'see results →':'next question →';
   document.getElementById('g-nxt').style.display='block';
 }
 document.getElementById('g-nxt').addEventListener('click',()=>{
-  if(gQN>=G_QPR){ clearInterval(gTimer); showResults('gres',gScore,G_QPR,gTimes,gRes,'gres-bd'); show('s-gres'); }
+  if(gQN>=G_QPR){clearInterval(gTimer);showResults('gres',gScore,G_QPR,gTimes,gRes,'gres-bd',gSeedLabel);show('s-gres');}
   else gQ();
 });
+document.getElementById('gres-rst').addEventListener('click',()=>startGrid(!!gSeedLabel));
 
-/* ══════════════════════════════
+/* ═══════════════════════════════════════
    PART 2 — TABLE
-══════════════════════════════ */
+═══════════════════════════════════════ */
 const T_QPR=20;
-let SPEEDS_R=[100,200,300];
-let VELS=[], ANGLES=[];
-
-// Base drift correction values (for angle offsets 0,10,20 from base angle)
-// These are relative to the table in the example with angles 70,80,90
-const BASE_DRI={
-  0:{10:5, 20:10,30:15,40:20,50:25,60:30,70:35,80:40,90:45,100:50},
-  10:{10:20,20:40,30:60,40:80,50:100,60:120,70:140,80:160,90:180,100:200},
-  20:{10:35,20:70,30:105,40:140,50:175,60:210,70:245,80:280,90:315,100:350}
-};
-const BASE_GS_DROP={
-  0:{10:4, 20:7, 30:10,40:13,50:16,60:19,70:22,80:25,90:28,100:31},
-  10:{10:9, 20:13,30:17,40:21,50:25,60:29,70:33,80:37,90:41,100:45},
-  20:{10:12,20:16,30:20,40:24,50:28,60:32,70:36,80:40,90:44,100:48}
-};
-
-let tData={};
-let COL_ORDER=['dri','gs'];
+let SPEEDS_R=[],VELS=[],ANGLES=[],COL_ORDER=['dri','gs'];
+let tData={},tSeedLabel='';
 let tScore,tQN,tT0,tQT0,tTimes,tRes,tAns,tCorrect,tTimer;
 let tCurAS,tCurWV,tCurWA,tCurType;
 
 function genTables(){
-  // Randomise which side (dri or gs) appears first
-  COL_ORDER = Math.random()<0.5 ? ['dri','gs'] : ['gs','dri'];
+  COL_ORDER=R()<0.5?['dri','gs']:['gs','dri'];
 
-  // Pick a starting velocity (10–30) and angle (50–70), both in steps of 10
-  const velStart = rnd(1,3)*10;
-  const angStart = rnd(5,7)*10;
-  VELS   = Array.from({length:10}, (_,i)=>(velStart + i*10));
-  ANGLES = [angStart, angStart+10, angStart+20];
+  const velStart=rndR(1,3)*10;
+  const angStart=rndR(5,7)*10;
+  VELS=Array.from({length:10},(_,i)=>velStart+i*10);
+  ANGLES=[angStart,angStart+10,angStart+20];
 
-  // Pick air speeds: 3 values between 50–500 with either 50 or 100 spacing
-  const spacing = Math.random()<0.5 ? 50 : 100;
-  // start must allow 3 values with chosen spacing within 50–500
-  const maxStart = 500 - 2*spacing;
-  // round start to nearest spacing multiple, min 50
-  let asStart = Math.round(rnd(50, maxStart) / spacing) * spacing;
-  if(asStart < 50) asStart = 50;
-  if(asStart > maxStart) asStart = maxStart;
-  SPEEDS_R = [asStart, asStart+spacing, asStart+2*spacing];
+  const spacing=R()<0.5?50:100;
+  const maxStart=500-2*spacing;
+  let asStart=Math.round(rndR(50,maxStart)/spacing)*spacing;
+  if(asStart<50)asStart=50;
+  if(asStart>maxStart)asStart=maxStart;
+  SPEEDS_R=[asStart,asStart+spacing,asStart+2*spacing];
 
   tData={};
   for(const as of SPEEDS_R){
     tData[as]={};
-    // scale factor: higher airspeed → slightly lower relative drift
-    const af = Math.max(0.5, 1.0 - (as-100)/1000);
     for(let ai=0;ai<3;ai++){
       const wa=ANGLES[ai];
       tData[as][wa]={};
       for(let vi=0;vi<VELS.length;vi++){
         const wv=VELS[vi];
-        const baseKey=(vi+1)*10;
-        const baseDri   = BASE_DRI[ai*10]?.[baseKey]    ?? 50;
-        const baseGsDrop= BASE_GS_DROP[ai*10]?.[baseKey] ?? 31;
-        const dri = Math.max(1, Math.round(baseDri*af + rnd(-2,2)));
-        const gs  = Math.max(as-Math.round(as*0.15), as - Math.round(baseGsDrop*af + rnd(-1,1)));
-        tData[as][wa][wv]={dri, gs};
+        // --- Drift Correction ---
+        // Formula: angle_factor * velocity_factor * airspeed_factor + jitter
+        // angle_factor: 0→small, 1→medium, 2→large (use multipliers 0.5, 2.0, 3.5)
+        const angFactor=[0.5,2.0,3.5][ai];
+        // velocity: use actual wv value (not remapped to 1–10)
+        const dri=Math.round(angFactor*(wv/10)*5*(1+rndR(-3,3)/100));
+        // Ensure strictly increasing with velocity and distinguishable between angles
+        // Floor dri so it's at least 5 more than previous row's value won't apply here
+        // but we ensure dri >= ai*10 so angles stay well separated
+        const driMin=ai===0?1:ai===1?15:50;
+        tData[as][wa][wv]={dri:Math.max(driMin,dri)};
+
+        // --- Ground Speed ---
+        // GS = airspeed - (wind_component)
+        // wind_component grows with angle and velocity
+        // angle 0→ small component, angle 1→ medium, angle 2→ large
+        const gsFactor=[0.04,0.09,0.14][ai];
+        const gsDropBase=Math.round(gsFactor*wv*as/100);
+        // add jitter ±5% of drop, min 1
+        const jitter=Math.round(gsDropBase*0.05*rndR(-1,1));
+        const gs=Math.max(Math.round(as*0.6),as-gsDropBase-jitter);
+        tData[as][wa][wv].gs=gs;
       }
     }
   }
@@ -546,34 +560,21 @@ function genTables(){
 
 function buildTableHTML(as){
   const nA=ANGLES.length;
-  const first = COL_ORDER[0], second = COL_ORDER[1];
-  const firstLabel = first==='dri' ? 'Dri. Cor.' : 'Ground Speed';
-  const secondLabel= second==='dri'? 'Dri. Cor.' : 'Ground Speed';
+  const [f,s]=COL_ORDER;
+  const fLbl=f==='dri'?'Dri. Cor.':'Ground Speed';
+  const sLbl=s==='dri'?'Dri. Cor.':'Ground Speed';
   let h='<thead>';
-  // Row 0: "Wind Angle" spanning both halves
+  h+=`<tr><th rowspan="3" style="min-width:38px;vertical-align:middle;">Wind<br>Vel.</th>`;
+  h+=`<th colspan="${nA}">Wind Angle</th><th colspan="${nA}">Wind Angle</th></tr>`;
+  h+=`<tr><th colspan="${nA}">${fLbl}</th><th colspan="${nA}">${sLbl}</th></tr>`;
   h+=`<tr>`;
-  h+=`<th rowspan="3" style="min-width:38px;vertical-align:middle;">Wind<br>Vel.</th>`;
-  h+=`<th colspan="${nA}" style="border-bottom:.5px solid var(--border);">Wind Angle</th>`;
-  h+=`<th colspan="${nA}" style="border-bottom:.5px solid var(--border);">Wind Angle</th>`;
-  h+=`</tr>`;
-  // Row 1: column group labels (order randomised)
-  h+=`<tr>`;
-  h+=`<th colspan="${nA}">${firstLabel}</th>`;
-  h+=`<th colspan="${nA}">${secondLabel}</th>`;
-  h+=`</tr>`;
-  // Row 2: angle values
-  h+=`<tr>`;
-  for(const a of ANGLES) h+=`<th data-col-wa="${a}" data-col-type="${first}">${a}</th>`;
-  for(const a of ANGLES) h+=`<th data-col-wa="${a}" data-col-type="${second}">${a}</th>`;
+  for(const a of ANGLES)h+=`<th data-col-wa="${a}" data-col-type="${f}">${a}</th>`;
+  for(const a of ANGLES)h+=`<th data-col-wa="${a}" data-col-type="${s}">${a}</th>`;
   h+=`</tr></thead><tbody>`;
   for(const wv of VELS){
     h+=`<tr><td class="vel-col" data-as="${as}" data-wv="${wv}">${wv}</td>`;
-    for(const wa of ANGLES){
-      h+=`<td data-as="${as}" data-wv="${wv}" data-wa="${wa}" data-type="${first}">${tData[as][wa][wv][first]}</td>`;
-    }
-    for(const wa of ANGLES){
-      h+=`<td data-as="${as}" data-wv="${wv}" data-wa="${wa}" data-type="${second}">${tData[as][wa][wv][second]}</td>`;
-    }
+    for(const a of ANGLES)h+=`<td data-as="${as}" data-wv="${wv}" data-wa="${a}" data-type="${f}">${tData[as][a][wv][f]}</td>`;
+    for(const a of ANGLES)h+=`<td data-as="${as}" data-wv="${wv}" data-wa="${a}" data-type="${s}">${tData[as][a][wv][s]}</td>`;
     h+=`</tr>`;
   }
   return h+'</tbody>';
@@ -581,62 +582,56 @@ function buildTableHTML(as){
 
 function renderTables(){
   SPEEDS_R.forEach((as,i)=>{
-    const block=document.getElementById(`lt${i}`);
-    block.querySelector('.lt-title').textContent=`air speed  ${as}`;
-    block.querySelector('table').innerHTML=buildTableHTML(as);
+    const b=document.getElementById(`lt${i}`);
+    b.querySelector('.lt-title').textContent=`air speed  ${as}`;
+    b.querySelector('table').innerHTML=buildTableHTML(as);
   });
 }
 
 function hlTable(as,wv,wa,type){
-  // Clear
   document.querySelectorAll('#tables-panel td,#tables-panel th').forEach(el=>{
     el.classList.remove('hl-row','hl-col','hl-cell','hl-col-hdr');
   });
-  // Only highlight inside the matching airspeed table
-  const block=SPEEDS_R.indexOf(as);
-  if(block<0) return;
-  const tbl=document.getElementById(`lt${block}`).querySelector('table');
-
-  // Row highlight: all cells in the wv row of this table
+  const idx=SPEEDS_R.indexOf(as);if(idx<0)return;
+  const tbl=document.getElementById(`lt${idx}`).querySelector('table');
   tbl.querySelectorAll(`td[data-wv="${wv}"]`).forEach(td=>td.classList.add('hl-row'));
-
-  // Col highlight: all cells in the wa+type column
   tbl.querySelectorAll(`td[data-wa="${wa}"][data-type="${type}"]`).forEach(td=>td.classList.add('hl-col'));
-
-  // Col header highlight
   tbl.querySelectorAll(`th[data-col-wa="${wa}"][data-col-type="${type}"]`).forEach(th=>th.classList.add('hl-col-hdr'));
-
-  // Answer cell (intersection)
   const cell=tbl.querySelector(`td[data-as="${as}"][data-wv="${wv}"][data-wa="${wa}"][data-type="${type}"]`);
-  if(cell){ cell.classList.remove('hl-row','hl-col'); cell.classList.add('hl-cell'); cell.scrollIntoView({behavior:'smooth',block:'center'}); }
+  if(cell){cell.classList.remove('hl-row','hl-col');cell.classList.add('hl-cell');cell.scrollIntoView({behavior:'smooth',block:'center'});}
 }
+function clearHL(){document.querySelectorAll('#tables-panel td,#tables-panel th').forEach(el=>{el.classList.remove('hl-row','hl-col','hl-cell','hl-col-hdr');});}
 
-function clearHL(){
-  document.querySelectorAll('#tables-panel td,#tables-panel th').forEach(el=>{
-    el.classList.remove('hl-row','hl-col','hl-cell','hl-col-hdr');
-  });
-}
-
-function startTable(){
+function startTable(useSeed){
   clearInterval(tTimer);
-  genTables(); renderTables();
-  tScore=0; tQN=0; tTimes=[]; tRes=[];
-  setHdr(`part 2 · table reading  ·  AS ${SPEEDS_R.join(', ')}`);
+  const inp=document.getElementById('t-seed-input').value.trim();
+  if(useSeed&&inp){
+    R=makePRNG(strToSeed(inp));
+    tSeedLabel=inp;
+    document.getElementById('t-seed-tag').textContent='✓ seeded';
+  } else {
+    R=Math.random;
+    tSeedLabel='';
+    document.getElementById('t-seed-tag').textContent='';
+  }
+  genTables();renderTables();
+  tScore=0;tQN=0;tTimes=[];tRes=[];
+  setHdr(`part 2 · table reading · AS ${SPEEDS_R.join(', ')}${tSeedLabel?' · seed: '+tSeedLabel:''}`);
   tT0=Date.now();
-  tTimer=setInterval(()=>{ document.getElementById('t-time').textContent=fmt(Date.now()-tT0); },100);
-  show('s-table'); clearHL(); tQ();
+  tTimer=setInterval(()=>{document.getElementById('t-time').textContent=fmt(Date.now()-tT0);},100);
+  show('s-table');clearHL();tQ();
 }
 
 function tQ(){
   tAns=false;
-  document.getElementById('t-fb').textContent=''; document.getElementById('t-fb').className='fb';
+  document.getElementById('t-fb').textContent='';document.getElementById('t-fb').className='fb';
   document.getElementById('t-nxt').style.display='none';
-  clearHL(); tQT0=Date.now();
+  clearHL();tQT0=Date.now();
 
-  tCurAS=pick(SPEEDS_R);
-  tCurWV=pick(VELS);
-  tCurWA=pick(ANGLES);
-  tCurType=Math.random()<0.5?'dri':'gs';
+  tCurAS=pickR(SPEEDS_R);
+  tCurWV=pickR(VELS);
+  tCurWA=pickR(ANGLES);
+  tCurType=R()<0.5?'dri':'gs';
   tCorrect=tData[tCurAS][tCurWA][tCurWV][tCurType];
 
   document.getElementById('tq-as').textContent=tCurAS;
@@ -646,98 +641,77 @@ function tQ(){
   document.getElementById('t-qlbl').textContent=`${tQN+1} of ${T_QPR}`;
   document.getElementById('t-prog').style.width=`${tQN/T_QPR*100}%`;
 
-  const wrongType = tCurType==='dri'?'gs':'dri';
-  const velIdx    = VELS.indexOf(tCurWV);
-  const angIdx    = ANGLES.indexOf(tCurWA);
-
-  // --- Step 1: build labelled candidate pool from real table mistakes ---
-  const rawCands = [];
-  const seenVals = new Set([tCorrect]);
-  const addCand  = (v, pri) => { if(v!=null && v>0 && !seenVals.has(v)){ seenVals.add(v); rawCands.push({v, pri}); } };
-
-  // Pri 1: type reversal — most deceptive
-  addCand(tData[tCurAS]?.[tCurWA]?.[tCurWV]?.[wrongType], 1);
-
-  // Pri 2: wrong airspeed, same cell + type
-  for(const as of [...SPEEDS_R].sort(()=>Math.random()-.5))
-    if(as!==tCurAS) addCand(tData[as][tCurWA][tCurWV][tCurType], 2);
-
-  // Pri 3: adjacent velocity rows
-  for(const di of [-1,1,-2,2]){
-    const vi=velIdx+di;
-    if(vi>=0&&vi<VELS.length) addCand(tData[tCurAS][tCurWA][VELS[vi]][tCurType], 3);
-  }
-
-  // Pri 4: adjacent angle columns
-  for(const di of [-1,1]){
-    const ai=angIdx+di;
-    if(ai>=0&&ai<ANGLES.length) addCand(tData[tCurAS][ANGLES[ai]][tCurWV][tCurType], 4);
-  }
-
-  // Pri 5: type reversal at adjacent velocity
-  for(const di of [-1,1]){
-    const vi=velIdx+di;
-    if(vi>=0&&vi<VELS.length) addCand(tData[tCurAS][tCurWA][VELS[vi]][wrongType], 5);
-  }
-
-  // Pri 6: wrong airspeed + wrong type
-  for(const as of SPEEDS_R)
-    if(as!==tCurAS) addCand(tData[as][tCurWA][tCurWV][wrongType], 6);
-
-  // Also throw every other value in the entire dataset into a fallback pool
-  const allTableVals = [];
+  // --- Collect ALL unique values from the current table data ---
+  const allUnique=[];
+  const uSeen=new Set([tCorrect]);
   for(const as of SPEEDS_R)
     for(const wa of ANGLES)
       for(const wv of VELS)
         for(const tp of ['dri','gs']){
           const v=tData[as][wa][wv][tp];
-          if(v!==tCorrect && !allTableVals.includes(v)) allTableVals.push(v);
+          if(!uSeen.has(v)){uSeen.add(v);allUnique.push(v);}
         }
-  // shuffle fallback pool
-  for(let i=allTableVals.length-1;i>0;i--){ const j=rnd(0,i); [allTableVals[i],allTableVals[j]]=[allTableVals[j],allTableVals[i]]; }
 
-  // --- Step 2: pick 4 with adaptive minimum gap ---
-  // Sort candidates by priority then shuffle within same priority
-  rawCands.sort((a,b)=>a.pri-b.pri||(Math.random()-.5));
+  // --- Build prioritised plausible-mistake candidates ---
+  const wrongType=tCurType==='dri'?'gs':'dri';
+  const velIdx=VELS.indexOf(tCurWV);
+  const angIdx=ANGLES.indexOf(tCurWA);
+  const cSeen=new Set([tCorrect]);
+  const pri=[];
+  const addP=(v,p)=>{if(v!=null&&!cSeen.has(v)){cSeen.add(v);pri.push({v,p});}};
 
-  const tChosen = [];
+  addP(tData[tCurAS]?.[tCurWA]?.[tCurWV]?.[wrongType],1);          // type reversal
+  for(const as of SPEEDS_R)if(as!==tCurAS)addP(tData[as][tCurWA][tCurWV][tCurType],2);   // wrong AS same type
+  for(const di of [-1,1,-2,2]){const vi=velIdx+di;if(vi>=0&&vi<VELS.length)addP(tData[tCurAS][tCurWA][VELS[vi]][tCurType],3);}
+  for(const di of [-1,1]){const ai=angIdx+di;if(ai>=0&&ai<ANGLES.length)addP(tData[tCurAS][ANGLES[ai]][tCurWV][tCurType],4);}
+  for(const di of [-1,1]){const vi=velIdx+di;if(vi>=0&&vi<VELS.length)addP(tData[tCurAS][tCurWA][VELS[vi]][wrongType],5);}
+  for(const as of SPEEDS_R)if(as!==tCurAS)addP(tData[as][tCurWA][tCurWV][wrongType],6);  // wrong AS wrong type
 
-  // Try decreasing min-gap: start strict, relax until we fill 4 slots
-  for(let minGap = 8; minGap >= 1; minGap--){
-    tChosen.length = 0; // reset each pass
-    const notTooClose = (a,b) => Math.abs(a-b) >= minGap;
+  // Shuffle within each priority tier so category mix varies
+  pri.sort((a,b)=>a.p-b.p||(R()-.5));
 
-    // pass through priority candidates
-    for(const {v} of rawCands){
-      if(tChosen.length>=4) break;
-      if(!notTooClose(v, tCorrect)) continue;
-      if(tChosen.some(x=>!notTooClose(x,v))) continue;
-      tChosen.push(v);
+  // Shuffle the full unique pool for fallback
+  const fallback=shuffleR(allUnique.filter(v=>!cSeen.has(v)));
+
+  // --- Pick 4 with relaxing minimum gap ---
+  // Determine a sensible minimum gap based on the range of values in play
+  const vals=[...uSeen,...allUnique];
+  const vMin=Math.min(...vals),vMax=Math.max(...vals);
+  const vRange=vMax-vMin||1;
+  // target: options at least ~8% of range apart from each other
+  const targetGap=Math.max(2,Math.round(vRange*0.08));
+
+  const chosen=[];
+  for(let gap=targetGap;gap>=1;gap--){
+    chosen.length=0;
+    const notClose=(a,b)=>Math.abs(a-b)>=gap;
+    for(const {v} of pri){
+      if(chosen.length>=4)break;
+      if(!notClose(v,tCorrect))continue;
+      if(chosen.some(x=>!notClose(x,v)))continue;
+      chosen.push(v);
     }
-    // fill from full table value pool
-    for(const v of allTableVals){
-      if(tChosen.length>=4) break;
-      if(tChosen.includes(v)) continue;
-      if(!notTooClose(v, tCorrect)) continue;
-      if(tChosen.some(x=>!notTooClose(x,v))) continue;
-      tChosen.push(v);
+    for(const v of fallback){
+      if(chosen.length>=4)break;
+      if(chosen.includes(v))continue;
+      if(!notClose(v,tCorrect))continue;
+      if(chosen.some(x=>!notClose(x,v)))continue;
+      chosen.push(v);
     }
-
-    if(tChosen.length>=4) break;
+    if(chosen.length>=4)break;
+  }
+  // absolute last resort — just pick unique values
+  for(const v of [...fallback,...allUnique]){
+    if(chosen.length>=4)break;
+    if(!chosen.includes(v)&&v!==tCorrect)chosen.push(v);
   }
 
-  // Absolute last resort: just pick any unique values
-  for(const v of allTableVals){
-    if(tChosen.length>=4) break;
-    if(!tChosen.includes(v)) tChosen.push(v);
-  }
-
-  buildOpts('t-opts',[tCorrect,...tChosen.slice(0,4)].sort(()=>Math.random()-.5),tCorrect,tSel);
+  buildOpts('t-opts',[tCorrect,...chosen.slice(0,4)].sort(()=>R()-.5),tCorrect,tSel);
 }
 
 function tSel(val,btn){
-  if(tAns)return; tAns=true;
-  const ms=Date.now()-tQT0; tTimes.push(ms);
+  if(tAns)return;tAns=true;
+  const ms=Date.now()-tQT0;tTimes.push(ms);
   const ok=val===tCorrect;
   tRes.push({ms,correct:ok,lbl:`AS${tCurAS} V${tCurWV} A${tCurWA}`});
   lockOpts('t-opts',tCorrect,val);
@@ -749,27 +723,28 @@ function tSel(val,btn){
   document.getElementById('t-nxt').style.display='block';
 }
 document.getElementById('t-nxt').addEventListener('click',()=>{
-  if(tQN>=T_QPR){ clearInterval(tTimer); showResults('tres',tScore,T_QPR,tTimes,tRes,'tres-bd'); show('s-tres'); }
-  else{ clearHL(); tQ(); }
+  if(tQN>=T_QPR){clearInterval(tTimer);showResults('tres',tScore,T_QPR,tTimes,tRes,'tres-bd',tSeedLabel);show('s-tres');}
+  else{clearHL();tQ();}
 });
+document.getElementById('tres-rst').addEventListener('click',()=>startTable(!!tSeedLabel));
 
-/* ══ KEYBOARD ══ */
+/* ═══════════════════════════════════════
+   KEYBOARD
+═══════════════════════════════════════ */
 document.addEventListener('keydown',e=>{
   if(e.key>='1'&&e.key<='5'){
     const idx=+e.key-1;
     if(document.getElementById('s-grid').style.display==='flex'&&!gAns){
-      const o=document.querySelectorAll('#g-opts .opt');
-      if(o[idx]) o[idx].click();
+      const o=document.querySelectorAll('#g-opts .opt');if(o[idx])o[idx].click();
     }
     if(document.getElementById('s-table').style.display==='flex'&&!tAns){
-      const o=document.querySelectorAll('#t-opts .opt');
-      if(o[idx]) o[idx].click();
+      const o=document.querySelectorAll('#t-opts .opt');if(o[idx])o[idx].click();
     }
   }
   if(e.key==='Enter'||e.key===' '){
-    const gn=document.getElementById('g-nxt'), tn=document.getElementById('t-nxt');
-    if(gn.style.display!=='none'&&gAns){ gn.click(); e.preventDefault(); }
-    else if(tn.style.display!=='none'&&tAns){ tn.click(); e.preventDefault(); }
+    const gn=document.getElementById('g-nxt'),tn=document.getElementById('t-nxt');
+    if(gn.style.display!=='none'&&gAns){gn.click();e.preventDefault();}
+    else if(tn.style.display!=='none'&&tAns){tn.click();e.preventDefault();}
   }
 });
 
