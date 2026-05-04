@@ -158,7 +158,7 @@ canvas{display:block;}
     <div class="sb-title">Range Rings</div>
     <div class="rr-wrap">
       <div class="rr-outer"><div class="rr-inner"></div></div>
-      <div class="rr-label">Outer ring: <strong>10 nms</strong><br>Inner ring: <strong>5 nms</strong></div>
+      <div class="rr-label">Each ring separation:<br><strong>10 nms</strong></div>
     </div>
   </div>
 
@@ -343,7 +343,7 @@ function resize(){
 
 // Convert nm coordinates (0,0 = centre) to canvas pixels
 // Play area is ±20nm each axis
-const RANGE=20; // nm half-width
+const RANGE=60; // nm half-width — 120nm total play area
 function nmX(x){return OX+SZ/2+x*(SZ/2/RANGE);}
 function nmY(y){return OY+SZ/2-y*(SZ/2/RANGE);}
 function nm(v){return v*(SZ/2/RANGE);}
@@ -351,11 +351,11 @@ function nm(v){return v*(SZ/2/RANGE);}
 // ── CONFIG ──
 const cfg={numAC:2,showUA:true,showDZ:true,showGates:true,speed:3,duration:4};
 // Speeds are 50% of previous values
-const SPD=[0.053,0.090,0.135,0.203,0.281];
+const SPD=[0.212,0.360,0.540,0.812,1.124];
 const DUR=[120,240,360,600,900];
 const SPD_LBL=['Very Slow','Slow','Normal','Fast','Very Fast'];
 const DUR_LBL=['2 min','4 min','6 min','10 min','15 min'];
-const TURN_RATE=8.0; // deg/s — tighter turn radius
+const TURN_RATE=2.0; // deg/s
 const ALT_RATE=5; // alt units per second (each unit = 100ft, so 500ft/min)
 
 function togSet(gid,btn){document.querySelectorAll('#'+gid+' .tog').forEach(b=>b.classList.remove('on'));btn.classList.add('on');}
@@ -389,28 +389,47 @@ let dangerTimeTotal=0,crashMarkers=[],DANGER=[];
 
 const SEP_LAT=5,SEP_VERT=30,DAN_VERT=10,INT_LAT=3,INT_VERT=10;
 const CRASH_LAT=1.8,CRASH_VERT=8;
-const GATE_HW=2.0;
+const GATE_HW=6.0; // nm gate half-width, scaled for 120nm area
 
 const DANGER_DEF=[
-  {x:4,  y:9,  r:2.8,altH:20},
-  {x:-9, y:-10,r:3.2,altH:30},
-  {x:11, y:-4, r:2.4,altH:20},
+  {x:12, y:27, r:8,altH:20},
+  {x:-27,y:-30,r:9,altH:30},
+  {x:33, y:-12,r:7,altH:20},
 ];
 
-function makeGateA(){return[
-  {cx:-2,cy:8,  angle:200,label:'A',done:false},
-  {cx:6, cy:3,  angle:250,label:'B',done:false},
-  {cx:2, cy:-5, angle:310,label:'C',done:false},
-  {cx:-7,cy:-9, angle:260,label:'D',done:false},
-  {cx:-12,cy:2, angle:10, label:'E',done:false},
-];}
-function makeGateN(){return[
-  {cx:9, cy:10, angle:240,label:'1',done:false},
-  {cx:13,cy:-1, angle:200,label:'2',done:false},
-  {cx:7, cy:-11,angle:270,label:'3',done:false},
-  {cx:-3,cy:-13,angle:310,label:'4',done:false},
-  {cx:-13,cy:-5,angle:50, label:'5',done:false},
-];}
+function randGatePos(existing,minR,maxR,minSep){
+  // Try to place a gate randomly within the play area with minimum separation
+  for(let attempt=0;attempt<200;attempt++){
+    const angle=Math.random()*Math.PI*2;
+    const r=minR+Math.random()*(maxR-minR);
+    const cx=Math.cos(angle)*r, cy=Math.sin(angle)*r;
+    let ok=true;
+    for(const e of existing){
+      const d=Math.sqrt((cx-e.cx)**2+(cy-e.cy)**2);
+      if(d<minSep){ok=false;break;}
+    }
+    if(ok)return{cx:Math.round(cx),cy:Math.round(cy),angle:Math.floor(Math.random()*360)};
+  }
+  // Fallback: just place it
+  const a=Math.random()*Math.PI*2,r=minR+Math.random()*(maxR-minR);
+  return{cx:Math.round(Math.cos(a)*r),cy:Math.round(Math.sin(a)*r),angle:Math.floor(Math.random()*360)};
+}
+function makeGateA(){
+  const labels=['A','B','C','D','E'],gates=[];
+  for(const lbl of labels){
+    const pos=randGatePos(gates,12,48,14);
+    gates.push({cx:pos.cx,cy:pos.cy,angle:pos.angle,label:lbl,done:false});
+  }
+  return gates;
+}
+function makeGateN(){
+  const labels=['1','2','3','4','5'],gates=[];
+  for(const lbl of labels){
+    const pos=randGatePos(gates,12,48,14);
+    gates.push({cx:pos.cx,cy:pos.cy,angle:pos.angle,label:lbl,done:false});
+  }
+  return gates;
+}
 
 function checkGateCross(a,g){
   const dx=a.x-g.cx,dy=a.y-g.cy;
@@ -418,7 +437,7 @@ function checkGateCross(a,g){
   const lx=Math.cos(lr),ly=-Math.sin(lr);
   const along=dx*lx+dy*ly;
   const perp=dx*(-ly)+dy*lx;
-  return Math.abs(along)<=GATE_HW&&Math.abs(perp)<=1.2;
+  return Math.abs(along)<=GATE_HW&&Math.abs(perp)<=3.6;
 }
 
 // ── INIT ──
@@ -426,9 +445,9 @@ function init(){
   timeLeft=DUR[cfg.duration-1];
   const rAlt=()=>20+Math.floor(Math.random()*12)*10;
   ac=[
-    {x:-8,y:8,  h:5+Math.random()*40,   th:null,turnDir:0,turnRem:0,alt:rAlt(),altTarget:null,color:'#cc1a1a',border:'#ff5555',label:'CA-A',trail:[],turnQ:[]},
-    {x:9, y:7,  h:170+Math.random()*50,  th:null,turnDir:0,turnRem:0,alt:rAlt(),altTarget:null,color:'#aa6600',border:'#dd8800',label:'CA-N',trail:[],turnQ:[]},
-    {x:-12,y:-4,h:30+Math.random()*50,   th:null,turnDir:0,turnRem:0,alt:rAlt(),altTarget:null,color:'#0a6a28',border:'#18aa44',label:'INT', trail:[],mul:1.1,turnQ:[]},
+    {x:-24,y:24, h:5+Math.random()*40,   th:null,turnDir:0,turnRem:0,alt:rAlt(),altTarget:null,color:'#cc1a1a',border:'#ff5555',label:'CA-A',trail:[],turnQ:[]},
+    {x:27, y:21, h:170+Math.random()*50,  th:null,turnDir:0,turnRem:0,alt:rAlt(),altTarget:null,color:'#aa6600',border:'#dd8800',label:'CA-N',trail:[],turnQ:[]},
+    {x:-36,y:-12,h:30+Math.random()*50,   th:null,turnDir:0,turnRem:0,alt:rAlt(),altTarget:null,color:'#0a6a28',border:'#18aa44',label:'INT', trail:[],mul:1.1,turnQ:[]},
   ].slice(0,cfg.numAC);
 
   gA=cfg.showGates?makeGateA():[];
@@ -452,10 +471,10 @@ function init(){
 function spawnUA(){
   const side=Math.floor(Math.random()*4);
   let x,y;
-  if(side===0){x=-18+Math.random()*36;y=-16;}
-  else if(side===1){x=-18+Math.random()*36;y=16;}
-  else if(side===2){x=-16;y=-16+Math.random()*32;}
-  else{x=16;y=-16+Math.random()*32;}
+  if(side===0){x=-54+Math.random()*108;y=-50;}
+  else if(side===1){x=-54+Math.random()*108;y=50;}
+  else if(side===2){x=-50;y=-50+Math.random()*100;}
+  else{x=50;y=-50+Math.random()*100;}
   const h=norm(Math.atan2(-x,-y)*180/Math.PI+(Math.random()-.5)*60);
   ua={x,y,h,th:h,alt:30+Math.floor(Math.random()*70),trail:[],intercepted:false,flashTimer:0};
   uaTurnTimer=12+Math.random()*10;
@@ -501,7 +520,7 @@ function update(dt){
     a.x+=Math.sin(r)*s*dt;
     a.y+=Math.cos(r)*s*dt;
     // Bounce off square boundary — reflect correctly
-    const B=19.5;
+    const B=58;
     if(a.x>B) {a.x=B;  a.h=norm(360-a.h);if(a.th!==null)a.th=norm(360-a.th);}
     if(a.x<-B){a.x=-B; a.h=norm(360-a.h);if(a.th!==null)a.th=norm(360-a.th);}
     if(a.y>B) {a.y=B;  a.h=norm(180-a.h);if(a.th!==null)a.th=norm(180-a.th);}
@@ -523,7 +542,7 @@ function update(dt){
     ua.x+=Math.sin(r)*spd*0.8*dt;
     ua.y+=Math.cos(r)*spd*0.8*dt;
     // UA hits edge: bounce with random offset and new target heading
-    const B=18;
+    const B=56;
     let hitEdge=false;
     if(ua.x>B) {ua.x=B;  ua.h=norm(360-ua.h);hitEdge=true;}
     if(ua.x<-B){ua.x=-B; ua.h=norm(360-ua.h);hitEdge=true;}
@@ -671,13 +690,12 @@ function drawCompassBorder(){
 // ── RANGE RINGS ──
 function drawRings(){
   const cx=OX+SZ/2, cy=OY+SZ/2;
-  // Fine rings every 2nm
-  for(let r=2;r<=18;r+=2){
-    const isMajor=(r%10===0);
-    const isMid=(r%5===0&&!isMajor);
+  // Rings every 10nm — extend past RANGE so arcs fill square corners too
+  // Corner distance = RANGE*sqrt(2) ≈ 1.42*RANGE
+  const maxRing=Math.ceil(RANGE*Math.SQRT2/10)*10;
+  for(let r=10;r<=maxRing;r+=10){
     ctx.beginPath();ctx.arc(cx,cy,nm(r),0,Math.PI*2);
-    ctx.strokeStyle=isMajor?'rgba(10,55,140,0.38)':isMid?'rgba(10,55,140,0.22)':'rgba(10,55,140,0.10)';
-    ctx.lineWidth=isMajor?1.2:0.6;ctx.stroke();
+    ctx.strokeStyle='rgba(10,55,140,0.35)';ctx.lineWidth=1;ctx.stroke();
   }
   // Crosshairs
   ctx.strokeStyle='rgba(10,55,140,0.15)';ctx.lineWidth=0.5;
@@ -775,24 +793,27 @@ function drawUA(){
   ctx.beginPath();ctx.arc(px,py,7,0,Math.PI*2);
   ctx.strokeStyle='rgba(20,20,70,0.85)';ctx.lineWidth=2;ctx.stroke();
   ctx.fillStyle='rgba(180,200,240,0.12)';ctx.fill();
-  drawDataBlock(px+10,py-2,'UA',String(ua.alt).padStart(3,'0'),'','rgba(20,20,70,0.85)');
+  drawDataBlock(px+24,py,'UA',String(ua.alt).padStart(3,'0'),'','rgba(20,20,70,0.85)');
 }
 
 
 
-function drawDataBlock(x,y,label,alt,hdg,color){
+function drawDataBlock(cx,cy,label,alt,hdg,color){
   const lines=[label,alt,hdg].filter(Boolean);
-  const fs=15;
+  const fs=13;
   ctx.font=`bold ${fs}px Share Tech Mono`;
   const maxW=Math.max(...lines.map(l=>ctx.measureText(l).width));
-  const lh=fs+3;const padX=4,padY=3;
-  const bw=maxW+padX*2,bh=lines.length*lh+padY*2;
-  ctx.fillStyle='rgba(0,0,0,0.75)';
-  ctx.fillRect(x-1,y-fs-padY,bw,bh);
+  const lh=fs+2;const padX=4,padY=3;
+  const bw=maxW+padX*2, bh=lines.length*lh+padY*2;
+  // cx,cy = centre of block
+  const rx=cx-bw/2, ry=cy-bh/2;
+  ctx.fillStyle='rgba(0,0,0,0.78)';
+  ctx.fillRect(rx,ry,bw,bh);
   lines.forEach((l,i)=>{
     ctx.fillStyle=i===0?color:'rgba(255,255,255,0.92)';
-    ctx.font=`bold ${fs}px Share Tech Mono`;ctx.textAlign='left';ctx.textBaseline='alphabetic';
-    ctx.fillText(l,x+padX-1,y+(i*lh));
+    ctx.font=`bold ${fs}px Share Tech Mono`;
+    ctx.textAlign='left';ctx.textBaseline='top';
+    ctx.fillText(l, rx+padX, ry+padY+i*lh);
   });
 }
 
@@ -808,14 +829,20 @@ function drawAircraft(){
       ctx.save();ctx.beginPath();ctx.arc(px,py,11,0,Math.PI*2);
       ctx.setLineDash([3,3]);ctx.strokeStyle='rgba(10,40,120,0.65)';ctx.lineWidth=1.5;ctx.stroke();ctx.restore();
     }
-    // Data block: label, altitude, and climb/descent indicator
+    // Data block behind the dot (opposite to heading direction)
     const altStr=String(Math.round(a.alt)).padStart(3,'0');
     let altState='';
     if(a.altTarget!==null){
       altState=a.altTarget>a.alt?'↑'+String(Math.round(a.altTarget)).padStart(3,'0'):
                                   '↓'+String(Math.round(a.altTarget)).padStart(3,'0');
     }
-    drawDataBlock(px+10,py,a.label,altStr,altState,a.border);
+    // Place label BEHIND the dot — opposite to heading, far enough to not overlap
+    const lblRad=deg2rad(a.h);
+    // Push 36px back from dot centre (behind the tail)
+    const lblOff=36;
+    const lblCX=px - Math.sin(lblRad)*lblOff;
+    const lblCY=py + Math.cos(lblRad)*lblOff;
+    drawDataBlock(lblCX,lblCY,a.label,altStr,altState,a.border);
   });
 }
 
@@ -896,9 +923,13 @@ document.addEventListener('keydown',e=>{
     updateBottomBar();return;
   }
   const n=ac.length;
-  if(e.key==='1'&&n>=1){sel=0;updateSidebar();updateBottomBar();}
-  else if(e.key==='2'&&n>=2){sel=1;updateSidebar();updateBottomBar();}
-  else if(e.key==='3'&&n>=3){sel=2;updateSidebar();updateBottomBar();}
+  const doSel=(i)=>{if(i<n){sel=i;updateSidebar();updateBottomBar();}};
+  if(e.key==='1'){doSel(0);}
+  else if(e.key==='2'){doSel(1);}
+  else if(e.key==='3'){doSel(2);}
+  else if(e.key==='/'){e.preventDefault();doSel(0);}  // numpad / → CA-A red
+  else if(e.key==='*'){e.preventDefault();doSel(1);}  // numpad * → CA-N yellow
+  else if(e.key==='-'){e.preventDefault();doSel(2);}  // numpad - → INT green
   else if(e.key==='Tab'){e.preventDefault();sel=(sel+1)%n;updateSidebar();updateBottomBar();}
   else if(e.key==='ArrowUp'){e.preventDefault();beginInput('alt');}
   else if(e.key==='ArrowDown'){e.preventDefault();beginInput('alt');}

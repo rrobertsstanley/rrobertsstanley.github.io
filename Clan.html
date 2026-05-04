@@ -343,9 +343,9 @@
   </div>
 
   <div id="key-hints">
-    <span>R=Red &nbsp; Y=Yellow &nbsp; G=Green</span>
+    <span>R or /=Red &nbsp; Y or *=Yellow &nbsp; G or -=Green</span>
     <span>|</span>
-    <span>A/B/C/D = letter corners</span>
+    <span>A/N=TL &nbsp; B/M=TR &nbsp; C/,=BL &nbsp; D/.=BR</span>
     <span>|</span>
     <span>Numbers+Enter = maths</span>
   </div>
@@ -750,16 +750,18 @@ document.addEventListener('keydown', e => {
   if (!gameRunning || paused) return;
   const key = e.key.toLowerCase();
 
-  // Colour keys
-  if (['r','y','g','b'].includes(key)) { e.preventDefault(); handleColourKey(key); return; }
+  // Colour keys — r/b/y/g originals + numpad-style: /=Red, *=Yellow, -=Green
+  const colourKeyMap = { 'r':'r', 'b':'b', 'y':'y', 'g':'g', '/':'r', '*':'y', '-':'g' };
+  if (colourKeyMap[key]) { e.preventDefault(); handleColourKey(colourKeyMap[key]); return; }
 
-  // Letter selection
-  if (['a','b','c','d'].includes(key)) { e.preventDefault(); handleLetterKey(key); return; }
+  // Letter selection — a/b/c/d originals + n=A, m=B, ,=C, .=D
+  const letterKeyMap = { 'a':'a', 'b':'b', 'c':'c', 'd':'d', 'n':'a', 'm':'b', ',':'c', '.':'d' };
+  if (letterKeyMap[key]) { e.preventDefault(); handleLetterKey(letterKeyMap[key]); return; }
 
   // Maths input
   if (key === 'enter') { e.preventDefault(); submitMath(); return; }
   if (key === 'backspace') { e.preventDefault(); handleMathDigit('backspace'); return; }
-  if (key === '-') { e.preventDefault(); handleMathDigit('-'); return; }
+  // '-' is reserved for Green colour key, so negative maths input removed
   if (key >= '0' && key <= '9') { e.preventDefault(); handleMathDigit(key); return; }
 });
 
