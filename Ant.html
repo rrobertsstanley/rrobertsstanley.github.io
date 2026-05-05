@@ -1,0 +1,1894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Airborne Numerical Test</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&display=swap');
+
+  :root {
+    --bg: #0a0e14;
+    --panel: #0f1620;
+    --panel2: #131e2c;
+    --border: #1e3a5f;
+    --accent: #00b4d8;
+    --accent2: #0077b6;
+    --green: #00f5a0;
+    --green2: #00c47e;
+    --amber: #ffd60a;
+    --red: #ef233c;
+    --text: #cdd6e0;
+    --text-dim: #6b8399;
+    --menu-active: #00b4d8;
+    --tab1: #2d6a4f;
+    --tab2: #1d4e89;
+    --tab3: #6b3fa0;
+    --highlight: rgba(0,180,216,0.15);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── HEADER ── */
+  #header {
+    background: linear-gradient(135deg, #0d1b2a 0%, #1b2838 100%);
+    border-bottom: 2px solid var(--accent2);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  #header h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+  #header .mode-indicator {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--amber);
+    letter-spacing: 2px;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  #main {
+    display: flex;
+    flex: 1;
+    gap: 0;
+    height: calc(100vh - 46px);
+    overflow: hidden;
+  }
+
+  /* ── LEFT COLUMN ── */
+  #left-col {
+    width: 30%;
+    min-width: 260px;
+    background: var(--panel);
+    border-right: 2px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Menu */
+  #menu-section {
+    border-bottom: 1px solid var(--border);
+    padding: 8px;
+  }
+  #menu-section .menu-label {
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+    padding-left: 4px;
+  }
+  .menu-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+    border-radius: 3px;
+    margin-bottom: 3px;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+  }
+  .menu-tab:hover { background: var(--highlight); border-color: var(--border); }
+  .menu-tab.active { background: rgba(0,180,216,0.12); border-color: var(--accent); }
+  .menu-tab .dot {
+    width: 12px; height: 12px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .menu-tab span { font-size: 13px; font-weight: 600; }
+  .menu-tab.active span { color: var(--accent); }
+
+  /* Scenario box */
+  #scenario-box {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    background: linear-gradient(180deg, #0e1f30 0%, #091524 100%);
+    border-bottom: 1px solid var(--border);
+  }
+  #scenario-box .scenario-header {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 4px;
+  }
+  #scenario-box p {
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  #scenario-box p strong { color: var(--amber); }
+
+  /* Score + controls */
+  #left-controls {
+    padding: 10px;
+    background: var(--panel2);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .score-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .score-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .score-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--green);
+  }
+  .q-progress {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn {
+    flex: 1;
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .btn:hover { background: var(--highlight); border-color: var(--accent); color: var(--accent); }
+  .btn.primary { background: var(--accent2); border-color: var(--accent); color: white; }
+  .btn.primary:hover { background: var(--accent); }
+  .btn.danger { border-color: var(--red); color: var(--red); }
+  .btn.danger:hover { background: rgba(239,35,60,0.15); }
+
+  /* Mode selector */
+  #mode-selector {
+    display: flex;
+    gap: 6px;
+  }
+  .mode-btn {
+    flex: 1;
+    padding: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+  }
+  .mode-btn.active { background: rgba(0,180,216,0.15); border-color: var(--accent); color: var(--accent); }
+
+  /* Practice difficulty */
+  #practice-controls {
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+  }
+  #practice-controls.visible { display: flex; }
+  .slider-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  input[type=range] {
+    width: 100%;
+    accent-color: var(--accent);
+  }
+
+  /* ── RIGHT COLUMN ── */
+  #right-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Tab display area (top 40%) */
+  #tab-display {
+    height: 38%;
+    background: var(--panel2);
+    border-bottom: 2px solid var(--border);
+    padding: 10px;
+    overflow: hidden;
+    position: relative;
+  }
+  .tab-panel { display: none; width: 100%; height: 100%; }
+  .tab-panel.active { display: flex; align-items: center; justify-content: center; }
+
+  /* Network map */
+  #network-svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Bar chart */
+  .chart-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  .chart-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+  .chart-area {
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    padding: 0 30px 30px 50px;
+    position: relative;
+  }
+  .chart-bar-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    justify-content: flex-end;
+  }
+  .chart-bar {
+    width: 80%;
+    background: linear-gradient(180deg, var(--accent) 0%, var(--accent2) 100%);
+    border-radius: 2px 2px 0 0;
+    position: relative;
+    transition: opacity 0.2s;
+    cursor: default;
+  }
+  .chart-bar.alt { background: linear-gradient(180deg, #90e0ef 0%, var(--accent2) 100%); }
+  .chart-bar-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    text-align: center;
+  }
+  .chart-y-axis {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 30px;
+    width: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding-right: 6px;
+  }
+  .chart-y-tick {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    color: var(--text-dim);
+  }
+  .chart-axis-label {
+    position: absolute;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+  .chart-axis-label.x-label {
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .chart-axis-label.y-label {
+    left: 2px;
+    top: 50%;
+    transform: translateY(-50%) rotate(-90deg);
+    transform-origin: center center;
+    white-space: nowrap;
+  }
+  .chart-gridlines {
+    position: absolute;
+    left: 50px;
+    right: 30px;
+    top: 0;
+    bottom: 30px;
+    pointer-events: none;
+  }
+  .chart-gridline {
+    position: absolute;
+    left: 0; right: 0;
+    height: 1px;
+    background: rgba(255,255,255,0.05);
+  }
+
+  /* Mission section (middle 30%) */
+  #mission-section {
+    height: 30%;
+    background: var(--panel);
+    border-bottom: 2px solid var(--border);
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+  }
+  .mission-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .mission-block {
+    flex: 1;
+    background: #071525;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 12px;
+  }
+  .mission-block .mb-label {
+    font-family: 'Orbitron', monospace;
+    font-size: 9px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 3px;
+  }
+  .mission-block .mb-content {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--amber);
+    line-height: 1.4;
+  }
+
+  /* Flight plan table (bottom 30%) */
+  #flightplan-section {
+    height: 32%;
+    background: var(--panel2);
+    padding: 8px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow: hidden;
+  }
+  .fp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .fp-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 2px;
+  }
+  .fp-table-wrap {
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  table.fp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+  }
+  table.fp-table th {
+    background: var(--accent2);
+    color: white;
+    padding: 4px 8px;
+    text-align: center;
+    font-size: 10px;
+    letter-spacing: 1px;
+    border: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  table.fp-table td {
+    background: #071525;
+    color: var(--text);
+    padding: 4px 8px;
+    text-align: center;
+    border: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  table.fp-table td.missing {
+    background: rgba(255,214,10,0.12);
+    border: 2px dashed var(--amber);
+    color: var(--amber);
+    font-weight: bold;
+    font-size: 14px;
+    letter-spacing: 2px;
+  }
+  table.fp-table td.highlight { background: rgba(0,180,216,0.08); }
+
+  /* Answer + Timer row */
+  #answer-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 14px 6px;
+    background: var(--panel2);
+  }
+  .answer-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+  #answer-input {
+    flex: 1;
+    max-width: 200px;
+    background: #071525;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 15px;
+    padding: 5px 10px;
+    border-radius: 3px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  #answer-input:focus { border-color: var(--accent); }
+  #answer-input.correct { border-color: var(--green); background: rgba(0,245,160,0.08); }
+  #answer-input.wrong { border-color: var(--red); background: rgba(239,35,60,0.08); }
+
+  .answer-unit {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  #submit-btn {
+    padding: 6px 16px;
+    background: var(--accent2);
+    border: 1px solid var(--accent);
+    color: white;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 3px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  #submit-btn:hover { background: var(--accent); }
+
+  #feedback-msg {
+    flex: 1;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dim);
+    min-width: 0;
+  }
+  #feedback-msg.good { color: var(--green); }
+  #feedback-msg.bad { color: var(--red); }
+  #feedback-msg.ok { color: var(--amber); }
+
+  /* Timer */
+  #timer-display {
+    font-family: 'Orbitron', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    white-space: nowrap;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: #071525;
+    min-width: 80px;
+    text-align: center;
+  }
+  #timer-display.warn { color: var(--amber); border-color: var(--amber); }
+  #timer-display.danger { color: var(--red); border-color: var(--red); }
+
+  /* Question score badge */
+  #q-score-badge {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 3px;
+    background: rgba(0,180,216,0.1);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  /* ── OVERLAYS ── */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(5,10,18,0.92);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .overlay.visible { display: flex; }
+  .overlay-box {
+    background: var(--panel);
+    border: 2px solid var(--accent);
+    border-radius: 6px;
+    padding: 30px 40px;
+    max-width: 600px;
+    width: 90%;
+    text-align: center;
+  }
+  .overlay-box h2 {
+    font-family: 'Orbitron', monospace;
+    font-size: 20px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    margin-bottom: 16px;
+  }
+  .overlay-box p {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+  .overlay-box .big-score {
+    font-family: 'Orbitron', monospace;
+    font-size: 48px;
+    font-weight: 900;
+    color: var(--green);
+    margin: 16px 0;
+  }
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(5,1fr);
+    gap: 6px;
+    margin: 12px 0;
+  }
+  .result-cell {
+    background: #071525;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 6px 4px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+  }
+  .result-cell .rc-label { color: var(--text-dim); margin-bottom: 2px; }
+  .result-cell .rc-val { color: var(--green); font-size: 13px; font-weight: bold; }
+  .result-cell .rc-val.bad { color: var(--red); }
+  .result-cell .rc-val.ok { color: var(--amber); }
+
+  .overlay-btn-row { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+
+  /* Pause overlay */
+  #pause-overlay .overlay-box h2 { color: var(--amber); }
+
+  /* Practice answer reveal */
+  #practice-reveal {
+    background: rgba(0,245,160,0.05);
+    border: 1px solid var(--green2);
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-top: 6px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--green);
+    display: none;
+  }
+  #practice-reveal.visible { display: block; }
+
+  /* Formula hint */
+  .formula-box {
+    background: #071525;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    text-align: center;
+    letter-spacing: 1px;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--panel); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* Intro screen */
+  #intro-overlay {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    background: rgba(5,10,18,0.97);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 20px;
+  }
+  #intro-overlay h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: 28px;
+    color: var(--accent);
+    letter-spacing: 5px;
+  }
+  #intro-overlay p {
+    font-size: 14px;
+    color: var(--text);
+    max-width: 500px;
+    text-align: center;
+    line-height: 1.7;
+  }
+  #intro-overlay .intro-btns { display: flex; gap: 16px; }
+</style>
+</head>
+<body>
+
+<!-- INTRO OVERLAY -->
+<div id="intro-overlay">
+  <h1>AIRBORNE NUMERICAL TEST</h1>
+  <p>Select a mode to begin. In <strong style="color:var(--amber)">Test Mode</strong> you will receive 10 progressively harder questions scored on accuracy and speed. In <strong style="color:var(--green)">Practice Mode</strong> you can generate unlimited questions at your chosen difficulty with no time pressure.</p>
+  <div class="intro-btns">
+    <button class="btn primary" onclick="startMode('test')">▶ TEST MODE</button>
+    <button class="btn" style="border-color:var(--green);color:var(--green)" onclick="startMode('practice')">◈ PRACTICE MODE</button>
+  </div>
+</div>
+
+<!-- PAUSE OVERLAY -->
+<div class="overlay" id="pause-overlay">
+  <div class="overlay-box">
+    <h2>⏸ PAUSED</h2>
+    <p>Test paused. Your timer has stopped.</p>
+    <div class="overlay-btn-row">
+      <button class="btn primary" onclick="resumeTest()">▶ RESUME</button>
+      <button class="btn danger" onclick="endTest()">✕ END TEST</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS OVERLAY -->
+<div class="overlay" id="results-overlay">
+  <div class="overlay-box">
+    <h2>MISSION DEBRIEF</h2>
+    <div class="big-score" id="final-score-display">0%</div>
+    <p id="results-summary">Results summary</p>
+    <div class="results-grid" id="results-grid"></div>
+    <div class="overlay-btn-row">
+      <button class="btn primary" onclick="startMode('test')">↺ NEW TEST</button>
+      <button class="btn" onclick="startMode('practice')">◈ PRACTICE MODE</button>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div id="header">
+  <h1>Airborne Numerical Test</h1>
+  <div style="display:flex;gap:16px;align-items:center">
+    <div class="mode-indicator" id="header-mode">-- SELECT MODE --</div>
+    <div class="mode-indicator" id="header-q">Q: -/10</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- LEFT COL -->
+  <div id="left-col">
+
+    <!-- Menu -->
+    <div id="menu-section">
+      <div class="menu-label">MENU</div>
+      <div class="menu-tab active" id="tab-btn-intro" onclick="switchTab('intro')">
+        <div class="dot" style="background:#e63946"></div>
+        <span>Introduction</span>
+      </div>
+      <div class="menu-tab" id="tab-btn-fuel" onclick="switchTab('fuel')">
+        <div class="dot" style="background:#2a9d8f"></div>
+        <span>Speed and Fuel Consumption</span>
+      </div>
+      <div class="menu-tab" id="tab-btn-weight" onclick="switchTab('weight')">
+        <div class="dot" style="background:#457b9d"></div>
+        <span>Speed and Parcel Weight</span>
+      </div>
+    </div>
+
+    <!-- Scenario -->
+    <div id="scenario-box">
+      <div class="scenario-header">SCENARIO BRIEFING</div>
+      <p>You are the operator of a large Remote Controlled Aerial Vehicle.</p>
+      <p>The Aerial Vehicle operates as part of a high-tech mail delivery service.</p>
+      <p>Always assume refuelling and deliveries and collections take no time.</p>
+      <p><strong>Answer in whole numbers only.</strong> Always round up if the number is 0.5 or greater and round down if the answer is 0.49 or less.</p>
+      <p>Work as quickly and as accurately as possible. However you will be given marks for estimated answers.</p>
+      <div class="formula-box" style="margin-top:8px">Speed = Distance ÷ Time</div>
+    </div>
+
+    <!-- Controls -->
+    <div id="left-controls">
+      <div class="score-row">
+        <span class="score-label">TOTAL SCORE</span>
+        <span class="score-value" id="total-score-display">—</span>
+      </div>
+      <div class="score-row">
+        <span class="q-progress" id="q-progress-label">Ready to begin</span>
+        <span class="q-progress" id="next-btn-label"></span>
+      </div>
+
+      <div id="mode-selector">
+        <button class="mode-btn active" id="mbtn-test" onclick="startMode('test')">▶ Test</button>
+        <button class="mode-btn" id="mbtn-practice" onclick="startMode('practice')">◈ Practice</button>
+      </div>
+
+      <div id="practice-controls">
+        <div class="slider-label">
+          <span>Difficulty</span>
+          <span id="diff-label">Medium</span>
+        </div>
+        <input type="range" id="diff-slider" min="1" max="3" value="2" oninput="updateDiffLabel()">
+        <button class="btn primary" id="next-q-btn" onclick="nextQuestion()" style="display:none">NEXT QUESTION →</button>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" id="pause-btn" onclick="pauseTest()" disabled>⏸ PAUSE</button>
+        <button class="btn danger" id="end-btn" onclick="endTest()" disabled>✕ END</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT COL -->
+  <div id="right-col">
+
+    <!-- Tab display -->
+    <div id="tab-display">
+      <div class="tab-panel active" id="panel-intro">
+        <svg id="network-svg" viewBox="0 0 600 240" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <div class="tab-panel" id="panel-fuel">
+        <div class="chart-container" id="fuel-chart-container"></div>
+      </div>
+      <div class="tab-panel" id="panel-weight">
+        <div class="chart-container" id="weight-chart-container"></div>
+      </div>
+    </div>
+
+    <!-- Mission -->
+    <div id="mission-section">
+      <div class="mission-row">
+        <div class="mission-block" style="flex:1.2">
+          <div class="mb-label">MISSION</div>
+          <div class="mb-content" id="mission-text">Awaiting mission briefing...</div>
+        </div>
+        <div class="mission-block" style="flex:0.8">
+          <div class="mb-label">TASK</div>
+          <div class="mb-content" id="task-text">—</div>
+        </div>
+      </div>
+      <div id="practice-reveal"></div>
+    </div>
+
+    <!-- Flight Plan -->
+    <div id="flightplan-section">
+      <div class="fp-header">
+        <div class="fp-title">FLIGHT PLAN</div>
+        <div id="q-score-badge" class="q-score-badge">Q SCORE: —</div>
+      </div>
+      <div class="fp-table-wrap">
+        <table class="fp-table" id="fp-table">
+          <thead><tr id="fp-thead-row"></tr></thead>
+          <tbody><tr id="fp-tbody-row"></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Answer row -->
+    <div id="answer-row">
+      <span class="answer-label">ANSWER:</span>
+      <input type="number" id="answer-input" placeholder="Enter value" step="1">
+      <span class="answer-unit" id="answer-unit">—</span>
+      <button id="submit-btn" onclick="submitAnswer()">SUBMIT</button>
+      <div id="feedback-msg"></div>
+      <div id="timer-display">0:00</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// GLOBALS
+// ══════════════════════════════════════════════
+let appMode = null; // 'test' | 'practice'
+let currentQuestion = null;
+let questionIndex = 0;
+let totalScore = 0;
+let questionScores = [];
+let timerInterval = null;
+let questionStartTime = null;
+let elapsedSeconds = 0;
+let paused = false;
+let pausedAt = 0;
+let answered = false;
+
+// World data (regenerated each round)
+let network = null;
+let fuelChart = null;
+let weightChart = null;
+
+// ══════════════════════════════════════════════
+// CALLSIGNS
+// ══════════════════════════════════════════════
+const CALLSIGNS = ['Alpha','Bravo','Charlie','Delta','Echo','Foxtrot','Golf','Hotel','India','Juliet','Kilo','Lima','Mike','November','Oscar','Papa'];
+
+// ══════════════════════════════════════════════
+// UTILITY
+// ══════════════════════════════════════════════
+function rnd(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function shuffle(arr){ let a=[...arr]; for(let i=a.length-1;i>0;i--){let j=rnd(0,i);[a[i],a[j]]=[a[j],a[i]];} return a; }
+function round2(n){ return Math.round(n); }
+function pct(v,dec=1){ return v.toFixed(dec)+'%'; }
+
+function formatTime(secs){
+  let m=Math.floor(secs/60), s=Math.floor(secs%60);
+  return m+':'+(s<10?'0':'')+s;
+}
+
+// ══════════════════════════════════════════════
+// SCORING
+// ══════════════════════════════════════════════
+function calcAccuracyScore(answer, correct){
+  if(correct===0) return answer===0?100:0;
+  let errPct = Math.abs(answer-correct)/Math.abs(correct)*100;
+  if(errPct<=0) return 100;
+  if(errPct>=10) return 0;
+  if(errPct<=5){
+    // 0→100, 5→60, linear
+    return 100 - (errPct/5)*40;
+  } else {
+    // 5→60, 10→0, linear
+    return 60 - ((errPct-5)/5)*60;
+  }
+}
+
+function calcTimeMultiplier(secs){
+  if(secs<=60) return 1.0;
+  if(secs>=300) return 0.0;
+  return 1.0 - (secs-60)/(300-60);
+}
+
+function calcQuestionScore(answer, correct, secs){
+  let acc = calcAccuracyScore(answer,correct);
+  let timeMult = calcTimeMultiplier(secs);
+  return Math.round(acc * timeMult);
+}
+
+// ══════════════════════════════════════════════
+// WORLD GENERATION
+// ══════════════════════════════════════════════
+function generateNetwork(){
+  let nodeCount = rnd(5,7);
+  let names = shuffle(CALLSIGNS).slice(0,nodeCount);
+  
+  // Place nodes in SVG space (600x240), with margins
+  let positions = [];
+  let margin = 50;
+  let w = 600, h = 240;
+  
+  // Simple spread
+  let attempts = 0;
+  while(positions.length < nodeCount && attempts < 500){
+    attempts++;
+    let x = rnd(margin, w-margin);
+    let y = rnd(margin+10, h-margin+10);
+    let ok = true;
+    for(let p of positions){
+      let dx=p.x-x, dy=p.y-y;
+      if(Math.sqrt(dx*dx+dy*dy)<80){ ok=false; break; }
+    }
+    if(ok) positions.push({x,y});
+  }
+
+  let nodes = names.map((n,i)=>({id:i, name:n, x:positions[i].x, y:positions[i].y}));
+  
+  // Create edges (ensure connectivity)
+  let edges = [];
+  // Minimum spanning style: connect each node to nearest unconnected
+  let connected = new Set([0]);
+  while(connected.size < nodeCount){
+    let best = null, bestDist = Infinity;
+    for(let a of connected){
+      for(let b=0;b<nodeCount;b++){
+        if(connected.has(b)) continue;
+        let dx=nodes[a].x-nodes[b].x, dy=nodes[a].y-nodes[b].y;
+        let d=Math.sqrt(dx*dx+dy*dy);
+        if(d<bestDist){ bestDist=d; best={a,b}; }
+      }
+    }
+    connected.add(best.b);
+    edges.push({from:best.a, to:best.b});
+  }
+  // Add 2-3 extra edges for variety
+  let extras = rnd(2,3);
+  for(let e=0;e<extras;e++){
+    let tries=0;
+    while(tries<20){
+      tries++;
+      let a=rnd(0,nodeCount-1), b=rnd(0,nodeCount-1);
+      if(a===b) continue;
+      if(edges.some(x=>(x.from===a&&x.to===b)||(x.from===b&&x.to===a))) continue;
+      edges.push({from:a,to:b}); break;
+    }
+  }
+
+  // Assign distances: proportional to pixel distance, scaled to nice km values
+  edges.forEach(e=>{
+    let dx=nodes[e.from].x-nodes[e.to].x, dy=nodes[e.from].y-nodes[e.to].y;
+    let pixDist=Math.sqrt(dx*dx+dy*dy);
+    // Scale: ~1px = 1km roughly, then snap to multiples of 5
+    let km = Math.round(pixDist * 0.5 / 5)*5;
+    km = Math.max(20, Math.min(200, km));
+    e.distance = km;
+  });
+
+  return {nodes, edges};
+}
+
+function generateFuelChart(){
+  // X: fuel loads (litres), Y: speed (km/min)
+  let fuelLoads = [];
+  let start = pick([100,200,400,500]);
+  let step = pick([100,200]);
+  let count = rnd(5,7);
+  for(let i=0;i<count;i++) fuelLoads.push(start + i*step);
+  
+  // Speed decreases as fuel load increases (heavier = slower)
+  let maxSpeed = rnd(6,10); // km/min at lowest load
+  let speeds = fuelLoads.map((f,i)=>{
+    let s = maxSpeed - i * rnd(1,2);
+    return Math.max(1, s);
+  });
+
+  return {fuelLoads, speeds, unit:'litres', yLabel:'SPEED (KM/MIN)', xLabel:'FUEL LOAD (LITRES)'};
+}
+
+function generateWeightChart(){
+  // X: parcel weight (kg), Y: speed (km/min)
+  let weights = [];
+  let step = pick([100,50,200]);
+  let count = rnd(5,7);
+  for(let i=0;i<count;i++) weights.push((i+1)*step);
+  
+  let maxSpeed = rnd(7,12);
+  let speeds = weights.map((w,i)=>{
+    let s = maxSpeed - i * rnd(1,2);
+    return Math.max(1,s);
+  });
+
+  return {weights, speeds, unit:'kg', yLabel:'SPEED (KM/MIN)', xLabel:'PARCEL WEIGHT (KG)'};
+}
+
+// ══════════════════════════════════════════════
+// RENDER NETWORK
+// ══════════════════════════════════════════════
+function renderNetwork(net){
+  const svg = document.getElementById('network-svg');
+  svg.innerHTML = '';
+
+  // Gridlines
+  for(let x=0;x<=600;x+=60){
+    let l=document.createElementNS('http://www.w3.org/2000/svg','line');
+    l.setAttribute('x1',x);l.setAttribute('y1',0);l.setAttribute('x2',x);l.setAttribute('y2',240);
+    l.setAttribute('stroke','rgba(30,58,95,0.3)');l.setAttribute('stroke-width','0.5');
+    svg.appendChild(l);
+  }
+  for(let y=0;y<=240;y+=40){
+    let l=document.createElementNS('http://www.w3.org/2000/svg','line');
+    l.setAttribute('x1',0);l.setAttribute('y1',y);l.setAttribute('x2',600);l.setAttribute('y2',y);
+    l.setAttribute('stroke','rgba(30,58,95,0.3)');l.setAttribute('stroke-width','0.5');
+    svg.appendChild(l);
+  }
+
+  // Draw edges
+  net.edges.forEach(e=>{
+    let n1=net.nodes[e.from], n2=net.nodes[e.to];
+    let line=document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',n1.x);line.setAttribute('y1',n1.y);
+    line.setAttribute('x2',n2.x);line.setAttribute('y2',n2.y);
+    line.setAttribute('stroke','#1e3a5f');line.setAttribute('stroke-width','1.5');
+    svg.appendChild(line);
+
+    // Distance label at midpoint
+    let mx=(n1.x+n2.x)/2, my=(n1.y+n2.y)/2;
+    let bg=document.createElementNS('http://www.w3.org/2000/svg','rect');
+    bg.setAttribute('x',mx-14);bg.setAttribute('y',my-8);
+    bg.setAttribute('width',28);bg.setAttribute('height',13);
+    bg.setAttribute('fill','#0a0e14');bg.setAttribute('rx','2');
+    svg.appendChild(bg);
+
+    let txt=document.createElementNS('http://www.w3.org/2000/svg','text');
+    txt.setAttribute('x',mx);txt.setAttribute('y',my+3);
+    txt.setAttribute('text-anchor','middle');
+    txt.setAttribute('font-family','Share Tech Mono,monospace');
+    txt.setAttribute('font-size','9');
+    txt.setAttribute('fill','#6b9cc7');
+    txt.textContent=e.distance+'km';
+    svg.appendChild(txt);
+  });
+
+  // Measurement note
+  let note=document.createElementNS('http://www.w3.org/2000/svg','text');
+  note.setAttribute('x',4);note.setAttribute('y',234);
+  note.setAttribute('font-family','Share Tech Mono,monospace');
+  note.setAttribute('font-size','8');note.setAttribute('fill','#3a5a7a');
+  note.textContent='All measurements in km';
+  svg.appendChild(note);
+
+  // Draw nodes
+  net.nodes.forEach(n=>{
+    let g=document.createElementNS('http://www.w3.org/2000/svg','g');
+    
+    let outer=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    outer.setAttribute('cx',n.x);outer.setAttribute('cy',n.y);outer.setAttribute('r','12');
+    outer.setAttribute('fill','#0d2137');outer.setAttribute('stroke','#00b4d8');outer.setAttribute('stroke-width','1.5');
+    g.appendChild(outer);
+
+    let inner=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    inner.setAttribute('cx',n.x);inner.setAttribute('cy',n.y);inner.setAttribute('r','5');
+    inner.setAttribute('fill','#00b4d8');
+    g.appendChild(inner);
+
+    // Label box
+    let lx=n.x+16, ly=n.y-6;
+    let lbg=document.createElementNS('http://www.w3.org/2000/svg','rect');
+    lbg.setAttribute('x',lx-2);lbg.setAttribute('y',ly-1);
+    lbg.setAttribute('width',n.name.length*7+4);lbg.setAttribute('height',13);
+    lbg.setAttribute('fill','rgba(10,14,20,0.85)');lbg.setAttribute('rx','2');
+    g.appendChild(lbg);
+
+    let lbl=document.createElementNS('http://www.w3.org/2000/svg','text');
+    lbl.setAttribute('x',lx);lbl.setAttribute('y',ly+9);
+    lbl.setAttribute('font-family','Orbitron,monospace');
+    lbl.setAttribute('font-size','9');lbl.setAttribute('font-weight','bold');
+    lbl.setAttribute('fill','#cdd6e0');
+    lbl.textContent=n.name;
+    g.appendChild(lbl);
+
+    svg.appendChild(g);
+  });
+}
+
+// ══════════════════════════════════════════════
+// RENDER CHARTS
+// ══════════════════════════════════════════════
+function renderBarChart(containerId, chartData, altColor){
+  let container = document.getElementById(containerId);
+  container.innerHTML = '';
+
+  let {yLabel, xLabel} = chartData;
+  let xs = chartData.fuelLoads || chartData.weights;
+  let ys = chartData.speeds;
+  let maxY = Math.max(...ys);
+  let yTicks = [];
+  let tickCount = 5;
+  for(let i=0;i<=tickCount;i++) yTicks.push(Math.round(maxY*i/tickCount*10)/10);
+
+  container.innerHTML = `
+    <div class="chart-title">${yLabel.split('(')[0].trim()}</div>
+    <div class="chart-area" id="${containerId}-area">
+      <div class="chart-y-axis" id="${containerId}-yaxis"></div>
+      <div class="chart-gridlines" id="${containerId}-grid"></div>
+      ${xs.map((x,i)=>`
+        <div class="chart-bar-group">
+          <div class="chart-bar ${altColor?'alt':''}" style="height:${(ys[i]/maxY)*100}%"></div>
+          <div class="chart-bar-label">${x}</div>
+        </div>
+      `).join('')}
+      <div class="chart-axis-label x-label">${xLabel}</div>
+      <div class="chart-axis-label y-label">${yLabel}</div>
+    </div>
+  `;
+
+  // Y axis ticks
+  let yaxis = document.getElementById(containerId+'-yaxis');
+  for(let i=tickCount;i>=0;i--){
+    let d=document.createElement('div');
+    d.className='chart-y-tick';
+    d.textContent=yTicks[i];
+    yaxis.appendChild(d);
+  }
+
+  // Gridlines
+  let grid = document.getElementById(containerId+'-grid');
+  for(let i=0;i<=tickCount;i++){
+    let g=document.createElement('div');
+    g.className='chart-gridline';
+    g.style.bottom=(i/tickCount*100)+'%';
+    grid.appendChild(g);
+  }
+}
+
+// ══════════════════════════════════════════════
+// QUESTION GENERATION
+// ══════════════════════════════════════════════
+function getDistance(net, fromName, toName){
+  let fi=net.nodes.findIndex(n=>n.name===fromName);
+  let ti=net.nodes.findIndex(n=>n.name===toName);
+  let e=net.edges.find(e=>(e.from===fi&&e.to===ti)||(e.from===ti&&e.to===fi));
+  return e?e.distance:null;
+}
+
+function getRouteDistance(net, route){
+  let total=0;
+  for(let i=0;i<route.length-1;i++){
+    let d=getDistance(net,route[i],route[i+1]);
+    if(d===null) return null;
+    total+=d;
+  }
+  return total;
+}
+
+function findRoute(net, from, to){
+  // Simple path finding (BFS)
+  let fi=net.nodes.findIndex(n=>n.name===from);
+  let ti=net.nodes.findIndex(n=>n.name===to);
+  let adj={};
+  net.nodes.forEach(n=>{adj[n.id]=[];});
+  net.edges.forEach(e=>{adj[e.from].push(e.to);adj[e.to].push(e.from);});
+  let queue=[[fi]]; let visited=new Set([fi]);
+  while(queue.length){
+    let path=queue.shift();
+    let cur=path[path.length-1];
+    if(cur===ti) return path.map(i=>net.nodes[i].name);
+    for(let nb of adj[cur]){
+      if(!visited.has(nb)){visited.add(nb);queue.push([...path,nb]);}
+    }
+  }
+  return null;
+}
+
+function getSpeedFromFuel(fuel){
+  let xs=fuelChart.fuelLoads, ys=fuelChart.speeds;
+  if(fuel<=xs[0]) return ys[0];
+  if(fuel>=xs[xs.length-1]) return ys[xs.length-1];
+  for(let i=0;i<xs.length-1;i++){
+    if(fuel>=xs[i]&&fuel<=xs[i+1]){
+      return ys[i]+(ys[i+1]-ys[i])*(fuel-xs[i])/(xs[i+1]-xs[i]);
+    }
+  }
+  return ys[0];
+}
+
+function getSpeedFromWeight(wt){
+  let xs=weightChart.weights, ys=weightChart.speeds;
+  if(wt<=xs[0]) return ys[0];
+  if(wt>=xs[xs.length-1]) return ys[xs.length-1];
+  for(let i=0;i<xs.length-1;i++){
+    if(wt>=xs[i]&&wt<=xs[i+1]){
+      return ys[i]+(ys[i+1]-ys[i])*(wt-xs[i])/(xs[i+1]-xs[i]);
+    }
+  }
+  return ys[0];
+}
+
+// Difficulty 1=easy, 2=medium, 3=hard
+function generateQuestion(difficulty){
+  let types = getQuestionTypes(difficulty);
+  let type = pick(types);
+  return buildQuestion(type, difficulty);
+}
+
+function getQuestionTypes(diff){
+  if(diff===1) return ['arrival_direct','arrival_via'];
+  if(diff===2) return ['arrival_direct','arrival_via','fuel_required_direct','fuel_required_via','arrival_weight'];
+  return ['arrival_direct','arrival_via','fuel_required_direct','fuel_required_via','arrival_weight','fuel_remaining','divert_fuel','divert_time','compare_time','compare_fuel','arrival_headwind'];
+}
+
+function buildQuestion(type, difficulty){
+  let nodes=network.nodes;
+  let nodeNames=nodes.map(n=>n.name);
+
+  // Pick route
+  function pickRoute(len){
+    for(let attempts=0;attempts<50;attempts++){
+      let s=shuffle(nodeNames);
+      let route=[s[0]];
+      for(let i=1;i<len;i++){
+        let cands=nodeNames.filter(n=>n!==route[route.length-1]);
+        // prefer directly connected
+        let connected=network.edges.filter(e=>{
+          let fi=nodes.findIndex(n=>n.name===route[route.length-1]);
+          return e.from===fi||e.to===fi;
+        }).map(e=>{
+          let fi=nodes.findIndex(n=>n.name===route[route.length-1]);
+          return nodes[e.from===fi?e.to:e.from].name;
+        });
+        if(connected.length>0) route.push(pick(connected));
+        else route.push(pick(cands));
+      }
+      if(new Set(route).size===route.length) return route;
+    }
+    return null;
+  }
+
+  // Standard fuel consumption rate: 10 litres/km (nice round number)
+  let fuelRate = pick([8,10,12,15]); // litres per km
+
+  let q = {type, difficulty, fuelRate};
+
+  if(type==='arrival_direct'){
+    let route=pickRoute(2);
+    if(!route){return buildQuestion('arrival_direct',difficulty);}
+    let dist=getDistance(network,route[0],route[1]);
+    // Pick speed from weight chart (give parcel weight)
+    let wi=rnd(0,weightChart.weights.length-1);
+    let parcelWeight=weightChart.weights[wi];
+    let speed=weightChart.speeds[wi];
+    let startTime=pick([800,900,1000,1100,1200,600,700]);
+    let timeMin=Math.round(dist/speed);
+    let arrivalTime=startTime+timeMin;
+    // Handle hour overflow
+    let hrs=Math.floor(arrivalTime/100), mins=arrivalTime%100;
+    mins+=timeMin%60;// recompute properly
+    let startMins=Math.floor(startTime/100)*60+(startTime%100);
+    let arrMins=startMins+timeMin;
+    let arrH=Math.floor(arrMins/60), arrM=arrMins%60;
+    let arrival=(arrH<10?'0':'')+arrH+(arrM<10?'0':'')+arrM;
+
+    q.route=route;
+    q.parcelWeight=parcelWeight;
+    q.speed=speed;
+    q.distance=dist;
+    q.startTime=formatTime4(startTime);
+    q.timeMin=timeMin;
+    q.answer=parseInt(arrival);
+    q.answerLabel='Arrival Time (HHMM)';
+    q.unit='HHMM';
+    q.mission=`Deliver parcel from ${route[0]} to ${route[1]}.`;
+    q.task='Calculate the arrival time.';
+    q.fpCols=['Start Point','Destination','Depart Time','Distance','Speed','Parcel Wt','Arrival Time'];
+    q.fpVals=[route[0],route[1],formatTime4(startTime),dist+'km',speed+' km/min',parcelWeight+'kg','?'];
+    q.missingCol='Arrival Time';
+    q.workings=`Distance: ${dist}km ÷ Speed: ${speed}km/min = ${timeMin} mins. Depart ${formatTime4(startTime)} + ${timeMin}min = ${arrival}`;
+
+  } else if(type==='arrival_via'){
+    let route=pickRoute(3);
+    if(!route){return buildQuestion('arrival_via',difficulty);}
+    let d1=getDistance(network,route[0],route[1]);
+    let d2=getDistance(network,route[1],route[2]);
+    if(!d1||!d2){return buildQuestion('arrival_via',difficulty);}
+    let dist=d1+d2;
+    let wi=rnd(0,weightChart.weights.length-1);
+    let parcelWeight=weightChart.weights[wi];
+    let speed=weightChart.speeds[wi];
+    let startTime=pick([800,900,1000,1100,700]);
+    let timeMin=Math.round(dist/speed);
+    let startMins=Math.floor(startTime/100)*60+(startTime%100);
+    let arrMins=startMins+timeMin;
+    let arrH=Math.floor(arrMins/60), arrM=arrMins%60;
+    let arrival=(arrH<10?'0':'')+arrH+(arrM<10?'0':'')+arrM;
+
+    q.route=route;
+    q.parcelWeight=parcelWeight;
+    q.speed=speed;
+    q.distance=dist;
+    q.startTime=formatTime4(startTime);
+    q.timeMin=timeMin;
+    q.answer=parseInt(arrival);
+    q.answerLabel='Arrival Time (HHMM)';
+    q.unit='HHMM';
+    q.mission=`Deliver parcel from ${route[0]} to ${route[2]} via ${route[1]}.`;
+    q.task='Calculate the arrival time.';
+    q.fpCols=['Start','Via','Destination','Depart','Dist','Speed','Parcel Wt','Arrival'];
+    q.fpVals=[route[0],route[1],route[2],formatTime4(startTime),dist+'km',speed+' km/min',parcelWeight+'kg','?'];
+    q.missingCol='Arrival';
+    q.workings=`${route[0]}→${route[1]}: ${d1}km. ${route[1]}→${route[2]}: ${d2}km. Total: ${dist}km ÷ ${speed}km/min = ${timeMin}min. ${formatTime4(startTime)} + ${timeMin}min = ${arrival}`;
+
+  } else if(type==='fuel_required_direct'){
+    let route=pickRoute(2);
+    if(!route){return buildQuestion('fuel_required_direct',difficulty);}
+    let dist=getDistance(network,route[0],route[1]);
+    let wi=rnd(0,weightChart.weights.length-1);
+    let parcelWeight=weightChart.weights[wi];
+    let speed=weightChart.speeds[wi];
+    let fuel=Math.round(dist*fuelRate);
+
+    q.route=route;
+    q.parcelWeight=parcelWeight;
+    q.speed=speed;
+    q.distance=dist;
+    q.fuelRate=fuelRate;
+    q.answer=fuel;
+    q.answerLabel='Fuel Required (litres)';
+    q.unit='litres';
+    q.mission=`Deliver parcel from ${route[0]} to ${route[1]}.`;
+    q.task='Calculate the fuel required.';
+    q.fpCols=['Start','Destination','Distance','Fuel Rate','Parcel Wt','Fuel Required'];
+    q.fpVals=[route[0],route[1],dist+'km',fuelRate+'L/km',parcelWeight+'kg','?'];
+    q.missingCol='Fuel Required';
+    q.workings=`Distance: ${dist}km × Fuel Rate: ${fuelRate}L/km = ${fuel}L`;
+
+  } else if(type==='fuel_required_via'){
+    let route=pickRoute(3);
+    if(!route){return buildQuestion('fuel_required_via',difficulty);}
+    let d1=getDistance(network,route[0],route[1]);
+    let d2=getDistance(network,route[1],route[2]);
+    if(!d1||!d2){return buildQuestion('fuel_required_via',difficulty);}
+    let dist=d1+d2;
+    let wi=rnd(0,weightChart.weights.length-1);
+    let parcelWeight=weightChart.weights[wi];
+    let speed=weightChart.speeds[wi];
+    let fuel=Math.round(dist*fuelRate);
+
+    q.route=route;
+    q.parcelWeight=parcelWeight;
+    q.speed=speed;
+    q.distance=dist;
+    q.answer=fuel;
+    q.unit='litres';
+    q.mission=`Deliver parcel from ${route[0]} to ${route[2]} via ${route[1]}.`;
+    q.task='Calculate the fuel required.';
+    q.fpCols=['Start','Via','Destination','Distance','Fuel Rate','Fuel Required'];
+    q.fpVals=[route[0],route[1],route[2],dist+'km',fuelRate+'L/km','?'];
+    q.missingCol='Fuel Required';
+    q.workings=`${route[0]}→${route[1]}: ${d1}km + ${route[1]}→${route[2]}: ${d2}km = ${dist}km × ${fuelRate}L/km = ${fuel}L`;
+
+  } else if(type==='arrival_weight'){
+    // Speed given directly, no chart lookup needed
+    let route=pickRoute(2);
+    if(!route){return buildQuestion('arrival_weight',difficulty);}
+    let dist=getDistance(network,route[0],route[1]);
+    // Use fuel chart this time
+    let fi=rnd(0,fuelChart.fuelLoads.length-1);
+    let fuelLoad=fuelChart.fuelLoads[fi];
+    let speed=fuelChart.speeds[fi];
+    let startTime=pick([800,900,1000,1100,700]);
+    let timeMin=Math.round(dist/speed);
+    let startMins=Math.floor(startTime/100)*60+(startTime%100);
+    let arrMins=startMins+timeMin;
+    let arrH=Math.floor(arrMins/60),arrM=arrMins%60;
+    let arrival=(arrH<10?'0':'')+arrH+(arrM<10?'0':'')+arrM;
+
+    q.route=route;
+    q.fuelLoad=fuelLoad;
+    q.speed=speed;
+    q.distance=dist;
+    q.startTime=formatTime4(startTime);
+    q.timeMin=timeMin;
+    q.answer=parseInt(arrival);
+    q.unit='HHMM';
+    q.mission=`Deliver parcel from ${route[0]} to ${route[1]}. Fuel load: ${fuelLoad}L.`;
+    q.task='Calculate the arrival time using the Speed & Fuel chart.';
+    q.fpCols=['Start','Destination','Depart','Fuel Load','Distance','Speed','Arrival'];
+    q.fpVals=[route[0],route[1],formatTime4(startTime),fuelLoad+'L',dist+'km',speed+' km/min','?'];
+    q.missingCol='Arrival';
+    q.workings=`Fuel ${fuelLoad}L → Speed ${speed}km/min (from chart). ${dist}km ÷ ${speed} = ${timeMin}min. ${formatTime4(startTime)} + ${timeMin}min = ${arrival}`;
+
+  } else if(type==='fuel_remaining'){
+    let route=pickRoute(2);
+    if(!route){return buildQuestion('fuel_remaining',difficulty);}
+    let dist=getDistance(network,route[0],route[1]);
+    let fuelLoad = fuelChart.fuelLoads[rnd(0,fuelChart.fuelLoads.length-1)];
+    let fuelUsed=Math.round(dist*fuelRate);
+    let remaining=Math.max(0,fuelLoad-fuelUsed);
+
+    q.route=route;
+    q.fuelLoad=fuelLoad;
+    q.distance=dist;
+    q.fuelRate=fuelRate;
+    q.fuelUsed=fuelUsed;
+    q.answer=remaining;
+    q.unit='litres';
+    q.mission=`Fly from ${route[0]} to ${route[1]}. Starting fuel: ${fuelLoad}L.`;
+    q.task='Calculate the fuel remaining upon arrival.';
+    q.fpCols=['Start','Destination','Distance','Fuel Rate','Start Fuel','Fuel Used','Fuel Remaining'];
+    q.fpVals=[route[0],route[1],dist+'km',fuelRate+'L/km',fuelLoad+'L',fuelUsed+'L','?'];
+    q.missingCol='Fuel Remaining';
+    q.workings=`Fuel used: ${dist}km × ${fuelRate}L/km = ${fuelUsed}L. Remaining: ${fuelLoad}L − ${fuelUsed}L = ${remaining}L`;
+
+  } else if(type==='divert_fuel'){
+    let route1=pickRoute(2);
+    let route2=pickRoute(2);
+    if(!route1||!route2){return buildQuestion('divert_fuel',difficulty);}
+    let d1=getDistance(network,route1[0],route1[1]);
+    let d2=getDistance(network,route2[0],route2[1]);
+    if(!d1||!d2||d1===d2){return buildQuestion('divert_fuel',difficulty);}
+    let diff=Math.abs(d2-d1);
+    let extra=Math.round(diff*fuelRate);
+
+    q.route1=route1;q.route2=route2;
+    q.d1=d1;q.d2=d2;
+    q.answer=extra;
+    q.unit='litres';
+    q.mission=`Due to bad weather, aircraft diverted from ${route1[0]}→${route1[1]} to ${route2[0]}→${route2[1]}.`;
+    q.task='Calculate the additional fuel required for the new route.';
+    q.fpCols=['Original Route','Original Dist','New Route','New Dist','Fuel Rate','Additional Fuel'];
+    q.fpVals=[route1.join('→'),d1+'km',route2.join('→'),d2+'km',fuelRate+'L/km','?'];
+    q.missingCol='Additional Fuel';
+    q.workings=`New dist ${d2}km − Original ${d1}km = ${diff}km extra. ${diff}km × ${fuelRate}L/km = ${extra}L`;
+
+  } else if(type==='divert_time'){
+    let route1=pickRoute(2);
+    let route2=pickRoute(2);
+    if(!route1||!route2){return buildQuestion('divert_time',difficulty);}
+    let d1=getDistance(network,route1[0],route1[1]);
+    let d2=getDistance(network,route2[0],route2[1]);
+    if(!d1||!d2||d1===d2){return buildQuestion('divert_time',difficulty);}
+    let wi=rnd(0,weightChart.weights.length-1);
+    let speed=weightChart.speeds[wi];
+    let parcelWeight=weightChart.weights[wi];
+    let t1=Math.round(d1/speed),t2=Math.round(d2/speed);
+    let diff=Math.abs(t2-t1);
+
+    q.route1=route1;q.route2=route2;
+    q.parcelWeight=parcelWeight;
+    q.speed=speed;
+    q.d1=d1;q.d2=d2;
+    q.answer=diff;
+    q.unit='minutes';
+    q.mission=`Bad weather: divert from ${route1[0]}→${route1[1]} to ${route2[0]}→${route2[1]}. Parcel: ${parcelWeight}kg.`;
+    q.task='Calculate the additional time required (minutes).';
+    q.fpCols=['Original Route','Orig Dist','New Route','New Dist','Speed','Additional Time'];
+    q.fpVals=[route1.join('→'),d1+'km',route2.join('→'),d2+'km',speed+'km/min','?'];
+    q.missingCol='Additional Time';
+    q.workings=`Original: ${d1}÷${speed}=${t1}min. New: ${d2}÷${speed}=${t2}min. Difference: ${diff}min`;
+
+  } else if(type==='compare_time'){
+    // Two aircraft, same route, different weights
+    let route=pickRoute(2);
+    if(!route){return buildQuestion('compare_time',difficulty);}
+    let dist=getDistance(network,route[0],route[1]);
+    let wi1=rnd(0,weightChart.weights.length-2);
+    let wi2=wi1+1;
+    let w1=weightChart.weights[wi1],s1=weightChart.speeds[wi1];
+    let w2=weightChart.weights[wi2],s2=weightChart.speeds[wi2];
+    let t1=Math.round(dist/s1),t2=Math.round(dist/s2);
+    let diff=Math.abs(t1-t2);
+    let faster=t1<t2?`Aircraft 1 (${w1}kg)`:`Aircraft 2 (${w2}kg)`;
+
+    q.route=route;
+    q.w1=w1;q.w2=w2;q.s1=s1;q.s2=s2;
+    q.t1=t1;q.t2=t2;
+    q.answer=diff;
+    q.unit='minutes';
+    q.mission=`Two aircraft fly ${route[0]}→${route[1]} (${dist}km). Aircraft 1: ${w1}kg parcel. Aircraft 2: ${w2}kg parcel.`;
+    q.task=`How many minutes faster does the quicker aircraft arrive?`;
+    q.fpCols=['Route','Distance','Aircraft 1 Wt','A1 Speed','A1 Time','Aircraft 2 Wt','A2 Speed','A2 Time','Time Difference'];
+    q.fpVals=[route.join('→'),dist+'km',w1+'kg',s1+' km/min',t1+'min',w2+'kg',s2+' km/min',t2+'min','?'];
+    q.missingCol='Time Difference';
+    q.workings=`A1: ${dist}÷${s1}=${t1}min. A2: ${dist}÷${s2}=${t2}min. Difference: ${diff}min. ${faster} is faster.`;
+
+  } else if(type==='compare_fuel'){
+    // Two aircraft, same route, different fuel loads
+    let route=pickRoute(2);
+    if(!route){return buildQuestion('compare_fuel',difficulty);}
+    let dist=getDistance(network,route[0],route[1]);
+    let fi1=rnd(0,fuelChart.fuelLoads.length-2);
+    let fi2=fi1+1;
+    let f1=fuelChart.fuelLoads[fi1],f2=fuelChart.fuelLoads[fi2];
+    let fuel1=Math.round(dist*fuelRate),fuel2=Math.round(dist*fuelRate);
+    // Same fuel rate, different speeds
+    let diff=Math.abs(fuel1-fuel2);
+    // Make this interesting: actually the heavier fuel load means faster speed but same fuel rate
+    // So extra fuel used is just dist*rate for both (same). Let's vary fuel RATE by weight
+    let rate1=fuelRate, rate2=fuelRate+pick([2,3,4]);
+    fuel1=Math.round(dist*rate1);fuel2=Math.round(dist*rate2);
+    diff=Math.abs(fuel2-fuel1);
+
+    q.route=route;
+    q.f1=f1;q.f2=f2;
+    q.answer=diff;
+    q.unit='litres';
+    q.mission=`Two aircraft fly ${route.join('→')} (${dist}km). Aircraft 1 fuel rate: ${rate1}L/km. Aircraft 2 fuel rate: ${rate2}L/km.`;
+    q.task='How many more litres does Aircraft 2 use than Aircraft 1?';
+    q.fpCols=['Route','Distance','A1 Fuel Rate','A1 Fuel Used','A2 Fuel Rate','A2 Fuel Used','Difference'];
+    q.fpVals=[route.join('→'),dist+'km',rate1+'L/km',fuel1+'L',rate2+'L/km',fuel2+'L','?'];
+    q.missingCol='Difference';
+    q.workings=`A1: ${dist}×${rate1}=${fuel1}L. A2: ${dist}×${rate2}=${fuel2}L. Difference: ${diff}L`;
+
+  } else if(type==='arrival_headwind'){
+    let route=pickRoute(2);
+    if(!route){return buildQuestion('arrival_headwind',difficulty);}
+    let dist=getDistance(network,route[0],route[1]);
+    let wi=rnd(0,weightChart.weights.length-1);
+    let parcelWeight=weightChart.weights[wi];
+    let baseSpeed=weightChart.speeds[wi];
+    // Nice headwind percentage
+    let hwPct=pick([10,20,25,50]);
+    let reducedSpeed=baseSpeed*(1-hwPct/100);
+    let startTime=pick([800,900,1000]);
+    let timeMin=Math.round(dist/reducedSpeed);
+    let startMins=Math.floor(startTime/100)*60+(startTime%100);
+    let arrMins=startMins+timeMin;
+    let arrH=Math.floor(arrMins/60),arrM=arrMins%60;
+    let arrival=(arrH<10?'0':'')+arrH+(arrM<10?'0':'')+arrM;
+
+    q.route=route;
+    q.parcelWeight=parcelWeight;
+    q.baseSpeed=baseSpeed;
+    q.hwPct=hwPct;
+    q.reducedSpeed=reducedSpeed;
+    q.distance=dist;
+    q.answer=parseInt(arrival);
+    q.unit='HHMM';
+    q.mission=`Deliver parcel from ${route[0]} to ${route[1]}. Parcel: ${parcelWeight}kg. Headwind reduces speed by ${hwPct}%.`;
+    q.task='Calculate the arrival time accounting for headwind.';
+    q.fpCols=['Start','Destination','Depart','Parcel Wt','Base Speed','Headwind','Adj Speed','Distance','Arrival'];
+    q.fpVals=[route[0],route[1],formatTime4(startTime),parcelWeight+'kg',baseSpeed+' km/min','-'+hwPct+'%',reducedSpeed+' km/min',dist+'km','?'];
+    q.missingCol='Arrival';
+    q.workings=`Base speed ${baseSpeed} × (1−${hwPct}%) = ${reducedSpeed} km/min. ${dist}÷${reducedSpeed}=${timeMin}min. ${formatTime4(startTime)}+${timeMin}min = ${arrival}`;
+  }
+
+  return q;
+}
+
+function formatTime4(t){
+  let h=Math.floor(t/100),m=t%100;
+  return (h<10?'0':'')+h+(m<10?'0':'')+m;
+}
+
+// ══════════════════════════════════════════════
+// FLIGHT PLAN RENDER
+// ══════════════════════════════════════════════
+function renderFlightPlan(q){
+  let thead=document.getElementById('fp-thead-row');
+  let tbody=document.getElementById('fp-tbody-row');
+  thead.innerHTML=''; tbody.innerHTML='';
+
+  q.fpCols.forEach((col,i)=>{
+    let th=document.createElement('th');
+    th.textContent=col;
+    thead.appendChild(th);
+
+    let td=document.createElement('td');
+    if(col===q.missingCol || q.fpVals[i]==='?'){
+      td.className='missing';
+      td.textContent='?';
+    } else {
+      td.textContent=q.fpVals[i];
+    }
+    tbody.appendChild(td);
+  });
+}
+
+// ══════════════════════════════════════════════
+// TAB SWITCHING
+// ══════════════════════════════════════════════
+function switchTab(tab){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.menu-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+tab).classList.add('active');
+  document.getElementById('tab-btn-'+tab).classList.add('active');
+}
+
+// ══════════════════════════════════════════════
+// TIMER
+// ══════════════════════════════════════════════
+function startTimer(){
+  questionStartTime = Date.now() - elapsedSeconds*1000;
+  clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{
+    if(paused) return;
+    elapsedSeconds=(Date.now()-questionStartTime)/1000;
+    updateTimerDisplay();
+  },200);
+}
+
+function updateTimerDisplay(){
+  let el=document.getElementById('timer-display');
+  let s=Math.floor(elapsedSeconds);
+  el.textContent=formatTime(s);
+  el.className='';
+  if(s>180) el.classList.add('danger');
+  else if(s>60) el.classList.add('warn');
+}
+
+function stopTimer(){
+  clearInterval(timerInterval);
+}
+
+// ══════════════════════════════════════════════
+// MODE START
+// ══════════════════════════════════════════════
+function startMode(mode){
+  document.getElementById('intro-overlay').style.display='none';
+  document.getElementById('results-overlay').classList.remove('visible');
+  appMode=mode;
+  questionIndex=0;
+  totalScore=0;
+  questionScores=[];
+
+  // Generate world
+  network=generateNetwork();
+  fuelChart=generateFuelChart();
+  weightChart=generateWeightChart();
+
+  // Render world visuals
+  renderNetwork(network);
+  renderBarChart('fuel-chart-container',fuelChart,false);
+  renderBarChart('weight-chart-container',weightChart,true);
+
+  // UI state
+  document.getElementById('header-mode').textContent = mode==='test'?'TEST MODE':'PRACTICE MODE';
+  document.getElementById('mbtn-test').classList.toggle('active',mode==='test');
+  document.getElementById('mbtn-practice').classList.toggle('active',mode==='practice');
+  document.getElementById('practice-controls').classList.toggle('visible',mode==='practice');
+  document.getElementById('pause-btn').disabled=mode!=='test';
+  document.getElementById('end-btn').disabled=false;
+
+  let nqBtn=document.getElementById('next-q-btn');
+  nqBtn.style.display=mode==='practice'?'block':'none';
+
+  updateScoreDisplay();
+  switchTab('intro');
+  loadQuestion();
+}
+
+function updateDiffLabel(){
+  let v=parseInt(document.getElementById('diff-slider').value);
+  document.getElementById('diff-label').textContent=['Easy','Medium','Hard'][v-1];
+}
+
+// ══════════════════════════════════════════════
+// LOAD QUESTION
+// ══════════════════════════════════════════════
+function loadQuestion(){
+  answered=false;
+  elapsedSeconds=0;
+
+  let diff;
+  if(appMode==='practice'){
+    diff=parseInt(document.getElementById('diff-slider').value);
+  } else {
+    // Progressive: Q1-3=1, Q4-7=2, Q8-10=3
+    if(questionIndex<3) diff=1;
+    else if(questionIndex<7) diff=2;
+    else diff=3;
+  }
+
+  currentQuestion=generateQuestion(diff);
+
+  // UI
+  document.getElementById('mission-text').textContent=currentQuestion.mission||'—';
+  document.getElementById('task-text').textContent=currentQuestion.task||'—';
+  document.getElementById('answer-unit').textContent=currentQuestion.unit||'';
+  document.getElementById('answer-input').value='';
+  document.getElementById('answer-input').className='';
+  document.getElementById('feedback-msg').textContent='';
+  document.getElementById('feedback-msg').className='';
+  document.getElementById('q-score-badge').textContent='Q SCORE: —';
+  document.getElementById('practice-reveal').className='';
+  document.getElementById('practice-reveal').style.display='none';
+  document.getElementById('next-q-btn').style.display='none';
+
+  if(appMode==='test'){
+    document.getElementById('header-q').textContent=`Q: ${questionIndex+1}/10`;
+    document.getElementById('q-progress-label').textContent=`Question ${questionIndex+1} of 10`;
+  } else {
+    document.getElementById('header-q').textContent='PRACTICE';
+    document.getElementById('q-progress-label').textContent='Practice Mode';
+  }
+
+  renderFlightPlan(currentQuestion);
+  startTimer();
+}
+
+// ══════════════════════════════════════════════
+// SUBMIT
+// ══════════════════════════════════════════════
+function submitAnswer(){
+  if(!currentQuestion) return;
+
+  let val=document.getElementById('answer-input').value.trim();
+  if(val==='') return;
+  let userAnswer=parseFloat(val);
+
+  stopTimer();
+  let secs=Math.floor(elapsedSeconds);
+  answered=true;
+
+  let correct=currentQuestion.answer;
+  let score=calcQuestionScore(userAnswer,correct,secs);
+  let accScore=calcAccuracyScore(userAnswer,correct);
+  let timeMult=calcTimeMultiplier(secs);
+
+  // Feedback
+  let feedbackEl=document.getElementById('feedback-msg');
+  let inputEl=document.getElementById('answer-input');
+  let errPct=Math.abs(userAnswer-correct)/Math.abs(correct||1)*100;
+
+  if(errPct<1){
+    feedbackEl.textContent=`✓ CORRECT! Answer: ${correct} ${currentQuestion.unit}. Score: ${score}%`;
+    feedbackEl.className='good'; inputEl.className='correct';
+  } else if(errPct<=10){
+    feedbackEl.textContent=`≈ Close. Answer: ${correct} ${currentQuestion.unit}. Off by ${errPct.toFixed(1)}%. Score: ${score}%`;
+    feedbackEl.className='ok'; inputEl.className='wrong';
+  } else {
+    feedbackEl.textContent=`✗ Answer: ${correct} ${currentQuestion.unit}. Error: ${errPct.toFixed(1)}%. Score: ${score}%`;
+    feedbackEl.className='bad'; inputEl.className='wrong';
+  }
+
+  document.getElementById('q-score-badge').textContent=`Q SCORE: ${score}%`;
+  document.getElementById('timer-display').textContent=formatTime(secs);
+
+  // Practice reveal
+  if(appMode==='practice'){
+    let rev=document.getElementById('practice-reveal');
+    rev.style.display='block';
+    rev.className='visible';
+    rev.textContent='WORKINGS: '+currentQuestion.workings;
+    document.getElementById('next-q-btn').style.display='block';
+  }
+
+  // Test mode
+  if(appMode==='test'){
+    questionScores.push({score,userAnswer,correct,secs,type:currentQuestion.type});
+    totalScore=Math.round(questionScores.reduce((a,b)=>a+b.score,0)/questionScores.length);
+    updateScoreDisplay();
+    questionIndex++;
+    if(questionIndex>=10){
+      setTimeout(showResults,1500);
+    } else {
+      setTimeout(()=>{ if(!paused) loadQuestion(); },2000);
+    }
+  }
+}
+
+function updateScoreDisplay(){
+  let el=document.getElementById('total-score-display');
+  if(appMode==='test' && questionScores.length>0){
+    el.textContent=totalScore+'%';
+    el.style.color=totalScore>70?'var(--green)':totalScore>40?'var(--amber)':'var(--red)';
+  } else {
+    el.textContent='—';
+    el.style.color='var(--green)';
+  }
+}
+
+// ══════════════════════════════════════════════
+// NEXT Q (practice)
+// ══════════════════════════════════════════════
+function nextQuestion(){
+  // Regenerate world occasionally
+  if(Math.random()<0.3){
+    network=generateNetwork();
+    fuelChart=generateFuelChart();
+    weightChart=generateWeightChart();
+    renderNetwork(network);
+    renderBarChart('fuel-chart-container',fuelChart,false);
+    renderBarChart('weight-chart-container',weightChart,true);
+  }
+  loadQuestion();
+}
+
+// ══════════════════════════════════════════════
+// PAUSE / RESUME / END
+// ══════════════════════════════════════════════
+function pauseTest(){
+  if(appMode!=='test') return;
+  paused=true;
+  pausedAt=elapsedSeconds;
+  stopTimer();
+  document.getElementById('pause-overlay').classList.add('visible');
+}
+
+function resumeTest(){
+  paused=false;
+  document.getElementById('pause-overlay').classList.remove('visible');
+  if(!answered){
+    elapsedSeconds=pausedAt;
+    startTimer();
+  }
+}
+
+function endTest(){
+  stopTimer();
+  if(appMode==='test'&& questionScores.length>0){
+    showResults();
+  } else {
+    document.getElementById('intro-overlay').style.display='flex';
+  }
+  document.getElementById('pause-overlay').classList.remove('visible');
+  document.getElementById('end-btn').disabled=true;
+  document.getElementById('pause-btn').disabled=true;
+}
+
+// ══════════════════════════════════════════════
+// RESULTS
+// ══════════════════════════════════════════════
+function showResults(){
+  stopTimer();
+  let avg=questionScores.length>0?Math.round(questionScores.reduce((a,b)=>a+b.score,0)/questionScores.length):0;
+  document.getElementById('final-score-display').textContent=avg+'%';
+  document.getElementById('final-score-display').style.color=avg>70?'var(--green)':avg>40?'var(--amber)':'var(--red)';
+  document.getElementById('results-summary').textContent=
+    `Completed ${questionScores.length} of 10 questions. Average score: ${avg}%.`;
+
+  let grid=document.getElementById('results-grid');
+  grid.innerHTML='';
+  questionScores.forEach((s,i)=>{
+    let cell=document.createElement('div');
+    cell.className='result-cell';
+    let cls=s.score>70?'':'s.score>40?ok:bad';
+    if(s.score>70) cls='';
+    else if(s.score>40) cls='ok';
+    else cls='bad';
+    cell.innerHTML=`<div class="rc-label">Q${i+1}</div><div class="rc-val ${cls}">${s.score}%</div>`;
+    grid.appendChild(cell);
+  });
+
+  document.getElementById('results-overlay').classList.add('visible');
+  document.getElementById('end-btn').disabled=true;
+  document.getElementById('pause-btn').disabled=true;
+}
+
+// ══════════════════════════════════════════════
+// KEYBOARD
+// ══════════════════════════════════════════════
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter' && !answered){
+    submitAnswer();
+  }
+});
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+updateDiffLabel();
+</script>
+</body>
+</html>
