@@ -1,0 +1,521 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+#app{background:#00008B;font-family:'Segoe UI',system-ui,sans-serif;color:#D8D8B4;border:2px solid #5050A0;display:flex;flex-direction:column;min-height:580px;}
+#titlebar{background:#000066;border-bottom:2px solid #5050A0;text-align:center;padding:8px 16px;font-size:14px;font-weight:600;letter-spacing:3px;color:#E0E0B8;text-transform:uppercase;}
+#content{flex:1;padding:20px 32px;display:flex;flex-direction:column;gap:14px;}
+.screen{display:none;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:18px;text-align:center;}
+.screen.active{display:flex;}
+#screen-game{display:none;flex-direction:column;gap:12px;flex:1;}
+#screen-game.active{display:flex;}
+#start-title{font-size:20px;font-weight:700;color:#E8E8C0;letter-spacing:2px;}
+#start-sub{font-size:13px;color:#9090A0;line-height:1.8;max-width:420px;}
+.big-btn{background:#9090A8;color:#000050;border:2px solid #6868A0;padding:9px 36px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:1px;border-radius:3px;}
+.big-btn:hover{background:#C8C8A0;}
+#hud{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#8080A0;font-weight:500;}
+#progress-wrap{background:#000055;height:6px;border-radius:3px;overflow:hidden;}
+#progress-bar{height:100%;background:#5858B8;border-radius:3px;transition:width 0.3s;}
+#scenario-box{background:#C8C870;color:#000055;border:2px solid #A0A040;border-radius:3px;padding:14px 18px;font-size:13.5px;line-height:1.75;font-weight:500;text-align:center;}
+#question-text{color:#D8D8C0;font-size:14px;text-align:center;font-weight:600;padding:4px 0;}
+#options{display:flex;flex-direction:column;gap:9px;align-items:center;}
+.opt{display:flex;align-items:center;gap:12px;background:none;border:none;cursor:pointer;color:#D0D0B0;font-family:inherit;font-size:13.5px;width:310px;text-align:left;padding:2px 0;}
+.opt-key{background:#808090;color:#000050;border:2px solid #606080;width:28px;height:26px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;border-radius:2px;}
+.opt:hover .opt-key{background:#C0C088;}
+.opt.correct .opt-key{background:#2EA850;color:#fff;border-color:#1A7030;}
+.opt.wrong .opt-key{background:#C03030;color:#fff;border-color:#901818;}
+.opt.reveal .opt-key{background:#2EA850;color:#fff;border-color:#1A7030;}
+.opt.correct .opt-label{color:#80FF80;}
+.opt.wrong .opt-label{color:#FF8080;}
+.opt.reveal .opt-label{color:#80FF80;}
+#feedback{text-align:center;font-size:13px;min-height:20px;font-weight:500;}
+#footer{background:#000066;border-top:2px solid #5050A0;padding:8px 20px;display:flex;justify-content:space-between;align-items:center;}
+#footer-hint{font-size:11px;color:#606080;}
+#next-btn{background:#9090A8;color:#000050;border:2px solid #6868A0;padding:5px 20px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;border-radius:3px;display:none;}
+#next-btn:hover{background:#C0C088;}
+#end-score{font-size:42px;font-weight:700;color:#FFFF80;}
+#end-stats{font-size:13px;color:#8888A0;line-height:2.2;}
+#end-grade{font-size:16px;font-weight:700;color:#C0C060;letter-spacing:1px;}
+</style>
+
+<div id="app">
+  <div id="titlebar">Directions &amp; Distances — CBAT Practice</div>
+  <div id="content">
+    <div class="screen active" id="screen-start">
+      <div id="start-title">CBAT Trainer</div>
+      <div id="start-sub">10 questions per round · Spatial reasoning, navigation &amp; direction chains<br>Journeys, relative positions, distances &amp; intercardinal bearings</div>
+      <button class="big-btn" onclick="startGame()">&#9654;&nbsp; Start Test</button>
+    </div>
+    <div id="screen-game">
+      <div id="hud"><span id="q-counter">Q 1/10</span><span id="score-live">Score: 0</span><span id="timer-live">0s</span></div>
+      <div id="progress-wrap"><div id="progress-bar" style="width:10%"></div></div>
+      <div id="scenario-box"></div>
+      <div id="question-text"></div>
+      <div id="options"></div>
+      <div id="feedback">&nbsp;</div>
+    </div>
+    <div class="screen" id="screen-end">
+      <div id="start-title">Round Complete</div>
+      <div id="end-score"></div>
+      <div id="end-grade"></div>
+      <div id="end-stats"></div>
+      <button class="big-btn" onclick="startGame()">&#9654;&nbsp; Try Again</button>
+    </div>
+  </div>
+  <div id="footer">
+    <span id="footer-hint">Keys 1–4 to answer &nbsp;|&nbsp; Enter / Space for next</span>
+    <button id="next-btn" onclick="nextQ()">Next &#9658;</button>
+  </div>
+</div>
+
+<script>
+const CN={N:'North',S:'South',E:'East',W:'West',NE:'Northeast',NW:'Northwest',SE:'Southeast',SW:'Southwest'};
+const OPP={N:'S',S:'N',E:'W',W:'E',NE:'SW',NW:'SE',SE:'NW',SW:'NE'};
+const DV={N:{x:0,y:1},S:{x:0,y:-1},E:{x:1,y:0},W:{x:-1,y:0},NE:{x:1,y:1},NW:{x:-1,y:1},SE:{x:1,y:-1},SW:{x:-1,y:-1}};
+const C4=['N','S','E','W'];
+const C8=['N','S','E','W','NE','NW','SE','SW'];
+const PLACES=['cinema','supermarket','swimming pool','library','hospital','school','post office','train station','park','fire station','police station','town hall','sports centre','bus depot','marina','museum','clock tower','football ground','courthouse','lighthouse','airport','water tower'];
+const VESSELS=['boat','ship','aircraft','helicopter','car','truck','drone','submarine','ferry','trawler'];
+const PEOPLE=['pilot','driver','captain','navigator','cyclist','hiker','runner'];
+
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function pickN(a,n){let b=[...a],r=[];for(let i=0;i<n;i++){let j=Math.floor(Math.random()*b.length);r.push(b.splice(j,1)[0]);}return r;}
+function shuffle(a){let b=[...a];for(let i=b.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+function rS(lo,hi,step){step=step||100;let c=Math.floor((hi-lo)/step);return lo+step*(1+Math.floor(Math.random()*c));}
+function fmt(n){n=Math.round(n/100)*100;return n>=1000?(n/1000)+'km':n+'m';}
+function dn(d){return CN[d];}
+function opp(d){return OPP[d];}
+function vd(px,py){
+  if(px===0&&py===0)return null;
+  if(px===0)return py>0?'N':'S';
+  if(py===0)return px>0?'E':'W';
+  if(px>0&&py>0)return'NE';if(px<0&&py>0)return'NW';
+  if(px>0&&py<0)return'SE';return'SW';
+}
+function Q(s,q,ch,ci){return{s,q,choices:ch,correct:ci};}
+
+// ── helpers ──────────────────────────────────────────────────────────────────
+function buildDC(correct,pool){
+  let others=shuffle(pool.filter(d=>d!==correct));
+  // ensure plausible wrong answers: include opp and one neighbour
+  let forced=[opp(correct)];
+  others=shuffle([...new Set([...forced,...others])]).filter(d=>d!==correct).slice(0,3);
+  while(others.length<3){let d=pick(C8);if(d!==correct&&!others.includes(d))others.push(d);}
+  let ch=shuffle([dn(correct),...others.map(dn)]);
+  return{ch,ci:ch.indexOf(dn(correct))};
+}
+
+function buildDistC(correctM,wrongs){
+  let pool=[fmt(correctM)];
+  for(let w of wrongs){let f=fmt(w);if(f!==fmt(correctM)&&!pool.includes(f))pool.push(f);}
+  let attempts=0;
+  while(pool.length<4&&attempts<50){attempts++;let w=rS(100,1800);let f=fmt(w);if(!pool.includes(f))pool.push(f);}
+  pool=shuffle(pool.slice(0,4));
+  return{ch:pool,ci:pool.indexOf(fmt(correctM))};
+}
+
+const PYTH=[[300,400,500],[600,800,1000],[500,1200,1300],[900,1200,1500]];
+
+// ── JOURNEY / NAVIGATION generators ─────────────────────────────────────────
+
+// Boat sails Xm west then Ym north → what direction is it from start?
+function genJourneyDir(){
+  for(let t=0;t<30;t++){
+    const vessel=pick(VESSELS);
+    const d1=pick(C4),d2=pick(C4.filter(x=>x!==d1&&x!==opp(d1)));
+    const r1=rS(300,900),r2=rS(300,900);
+    const px=DV[d1].x*r1+DV[d2].x*r2;
+    const py=DV[d1].y*r1+DV[d2].y*r2;
+    const c=vd(px,py);
+    if(!c)continue;
+    const{ch,ci}=buildDC(c,C8);
+    return Q(
+      `A ${vessel} travels ${fmt(r1)} ${dn(d1)}, then ${fmt(r2)} ${dn(d2)}.`,
+      `In what direction is the ${vessel} from its starting point?`,ch,ci);
+  }return null;
+}
+
+// 3-leg journey, direction from start
+function genJourney3Leg(){
+  for(let t=0;t<30;t++){
+    const vessel=pick(VESSELS);
+    const d1=pick(C4),d2=pick(C4.filter(x=>x!==opp(d1))),d3=pick(C4.filter(x=>x!==opp(d2)));
+    const r1=rS(200,700),r2=rS(200,700),r3=rS(200,700);
+    const px=DV[d1].x*r1+DV[d2].x*r2+DV[d3].x*r3;
+    const py=DV[d1].y*r1+DV[d2].y*r2+DV[d3].y*r3;
+    const c=vd(px,py);
+    if(!c)continue;
+    const pool=(px===0||py===0)?C4:C8;
+    const{ch,ci}=buildDC(c,pool);
+    return Q(
+      `A ${vessel} travels ${fmt(r1)} ${dn(d1)}, then ${fmt(r2)} ${dn(d2)}, then ${fmt(r3)} ${dn(d3)}.`,
+      `In what direction is the ${vessel} from its starting point?`,ch,ci);
+  }return null;
+}
+
+// Boat travels then asks direction back to start (reverse)
+function genJourneyReverse(){
+  for(let t=0;t<30;t++){
+    const vessel=pick(VESSELS);
+    const d1=pick(C4),d2=pick(C4.filter(x=>x!==d1&&x!==opp(d1)));
+    const r1=rS(300,900),r2=rS(300,900);
+    const px=DV[d1].x*r1+DV[d2].x*r2;
+    const py=DV[d1].y*r1+DV[d2].y*r2;
+    const fwd=vd(px,py);
+    if(!fwd)continue;
+    const rev=opp(fwd);
+    const{ch,ci}=buildDC(rev,C8);
+    return Q(
+      `A ${vessel} travels ${fmt(r1)} ${dn(d1)}, then ${fmt(r2)} ${dn(d2)}.`,
+      `In what direction must the ${vessel} travel to return directly to its starting point?`,ch,ci);
+  }return null;
+}
+
+// Journey to a destination then partial backtrack — where are you now?
+function genJourneyBacktrack(){
+  for(let t=0;t<30;t++){
+    const vessel=pick(VESSELS);
+    const d1=pick(C4),d2=pick(C4.filter(x=>x!==d1&&x!==opp(d1)));
+    const r1=rS(400,1000),r2=rS(400,1000);
+    const back1=rS(100,r1-100);
+    const back2=rS(100,r2-100);
+    const px=DV[d1].x*(r1-back1)+DV[d2].x*(r2-back2);
+    const py=DV[d1].y*(r1-back1)+DV[d2].y*(r2-back2);
+    const c=vd(px,py);
+    if(!c)continue;
+    const{ch,ci}=buildDC(c,C8);
+    return Q(
+      `A ${vessel} travels ${fmt(r1)} ${dn(d1)} then ${fmt(r2)} ${dn(d2)}. It then turns back ${fmt(back1)} ${dn(opp(d1))} and ${fmt(back2)} ${dn(opp(d2))}.`,
+      `In what direction is the ${vessel} now from its starting point?`,ch,ci);
+  }return null;
+}
+
+// Two vessels start at same point — which is further N/S/E/W?
+function genTwoVessels(){
+  const [v1,v2]=pickN(VESSELS,2);
+  const mainD=pick(C4);
+  const perpD=pick(C4.filter(x=>x!==mainD&&x!==opp(mainD)));
+  const r1=rS(400,1000); // v1 goes mainD
+  const r2=rS(200,r1-100); // v2 goes mainD but less, then perpD
+  const rPerp=rS(200,600);
+  const choices=shuffle([v1,v2,`They are equal`,`Cannot be determined`]);
+  const ci=choices.indexOf(v1);
+  return Q(
+    `A ${v1} travels ${fmt(r1)} ${dn(mainD)}. A ${v2} travels ${fmt(r2)} ${dn(mainD)} then ${fmt(rPerp)} ${dn(perpD)}.`,
+    `Which is further ${dn(mainD)} from the starting point?`,choices,ci);
+}
+
+// Person walks, asks where they end up relative to a named place
+function genPersonJourneyPlace(){
+  for(let t=0;t<30;t++){
+    const person=pick(PEOPLE);
+    const [place]=pickN(PLACES,1);
+    const d1=pick(C4),d2=pick(C4.filter(x=>x!==d1&&x!==opp(d1)));
+    const r1=rS(300,700),r2=rS(300,700),rStart=rS(300,700);
+    // person starts Xm from place, walks legs
+    const startDir=pick(C4);
+    const sx=DV[startDir].x*rStart;
+    const sy=DV[startDir].y*rStart;
+    const ex=sx+DV[d1].x*r1+DV[d2].x*r2;
+    const ey=sy+DV[d1].y*r1+DV[d2].y*r2;
+    // direction of endpoint relative to place (place is at origin)
+    const c=vd(ex,ey);
+    if(!c)continue;
+    const{ch,ci}=buildDC(c,C8);
+    return Q(
+      `A ${person} starts ${fmt(rStart)} ${dn(startDir)} of the ${place}. They walk ${fmt(r1)} ${dn(d1)}, then ${fmt(r2)} ${dn(d2)}.`,
+      `In what direction is the ${person} now from the ${place}?`,ch,ci);
+  }return null;
+}
+
+// ── SPATIAL RELATIONSHIP generators ─────────────────────────────────────────
+
+// Classic chain 3 steps
+function genChain3(){
+  for(let t=0;t<30;t++){
+    const [A,B,C,D]=pickN(PLACES,4);
+    const d1=pick(C4),d2=pick(C4.filter(x=>x!==opp(d1))),d3=pick(C4.filter(x=>x!==opp(d2)));
+    const r1=rS(200,700),r2=rS(200,700),r3=rS(200,700);
+    const px=DV[d1].x*r1+DV[d2].x*r2+DV[d3].x*r3;
+    const py=DV[d1].y*r1+DV[d2].y*r2+DV[d3].y*r3;
+    const c=vd(px,py);if(!c)continue;
+    const pool=(px===0||py===0)?C4:C8;
+    const{ch,ci}=buildDC(c,pool);
+    return Q(`The ${A} is ${fmt(r1)} ${dn(d1)} of the ${B}. The ${B} is ${fmt(r2)} ${dn(d2)} of the ${C}. The ${C} is ${fmt(r3)} ${dn(d3)} of the ${D}.`,
+      `What direction is the ${A} from the ${D}?`,ch,ci);
+  }return null;
+}
+
+// Reverse: give chain, ask C from A
+function genReverseChain(){
+  for(let t=0;t<30;t++){
+    const [A,B,C,D]=pickN(PLACES,4);
+    const d1=pick(C4),d2=pick(C4.filter(x=>x!==opp(d1))),d3=pick(C4.filter(x=>x!==opp(d2)));
+    const r1=rS(200,700),r2=rS(200,700),r3=rS(200,700);
+    const px=DV[d1].x*r1+DV[d2].x*r2+DV[d3].x*r3;
+    const py=DV[d1].y*r1+DV[d2].y*r2+DV[d3].y*r3;
+    const fwd=vd(px,py);if(!fwd)continue;
+    const rev=opp(fwd);
+    const{ch,ci}=buildDC(rev,C8);
+    return Q(`The ${A} is ${fmt(r1)} ${dn(d1)} of the ${B}. The ${B} is ${fmt(r2)} ${dn(d2)} of the ${C}. The ${C} is ${fmt(r3)} ${dn(d3)} of the ${D}.`,
+      `What direction is the ${D} from the ${A}?`,ch,ci);
+  }return null;
+}
+
+// Intercardinal chain reversed
+function genInterReverse(){
+  for(let t=0;t<30;t++){
+    const [A,B,C]=pickN(PLACES,3);
+    const d1=pick(C8),d2=pick(C8.filter(x=>x!==d1&&x!==opp(d1)));
+    const r1=rS(200,600,200),r2=rS(200,600,200);
+    const px=DV[d1].x*r1+DV[d2].x*r2;
+    const py=DV[d1].y*r1+DV[d2].y*r2;
+    const fwd=vd(px,py);if(!fwd)continue;
+    const rev=opp(fwd);
+    const{ch,ci}=buildDC(rev,C8);
+    return Q(`The ${A} is ${fmt(r1)} ${dn(d1)} of the ${B}. The ${B} is ${fmt(r2)} ${dn(d2)} of the ${C}.`,
+      `What direction is the ${C} from the ${A}?`,ch,ci);
+  }return null;
+}
+
+// Decoy: extra irrelevant location in scenario
+function genDecoyChain(){
+  for(let t=0;t<30;t++){
+    const [A,B,C,D,E]=pickN(PLACES,5);
+    const d1=pick(C4),d2=pick(C4.filter(x=>x!==opp(d1)));
+    const dDecoy=pick(C4);
+    const r1=rS(300,700),r2=rS(300,700),rD=rS(200,600),rE=rS(200,500);
+    const px=DV[d1].x*r1+DV[d2].x*r2;
+    const py=DV[d1].y*r1+DV[d2].y*r2;
+    const c=vd(px,py);if(!c)continue;
+    const{ch,ci}=buildDC(c,C8);
+    return Q(
+      `The ${A} is ${fmt(r1)} ${dn(d1)} of the ${B}. The ${D} is ${fmt(rD)} ${dn(dDecoy)} of the ${B}. The ${B} is ${fmt(r2)} ${dn(d2)} of the ${C}. The ${E} is ${fmt(rE)} ${dn(pick(C4))} of the ${C}.`,
+      `What direction is the ${A} from the ${C}? (not the ${D} or ${E})`,ch,ci);
+  }return null;
+}
+
+// Furthest in a direction (4 locations)
+function genFurthestInDir(){
+  const [ref,A,B,C,D]=pickN(PLACES,5);
+  const mainD=pick(C4);
+  const perpD=pick(C4.filter(x=>x!==mainD&&x!==opp(mainD)));
+  const rA=rS(700,1300);
+  const rB=rS(100,500),rC=rS(100,500),rD=rS(100,500);
+  const s=`The ${A} is ${fmt(rA)} ${dn(mainD)} of the ${ref}. The ${B} is ${fmt(rB)} ${dn(perpD)} of the ${ref}. The ${C} is ${fmt(rC)} ${dn(opp(mainD))} of the ${ref}. The ${D} is ${fmt(rD)} ${dn(opp(perpD))} of the ${ref}.`;
+  const chs=shuffle([A,B,C,D]);
+  return Q(s,`Which location is furthest ${dn(mainD)}?`,chs,chs.indexOf(A));
+}
+
+// Closest of 4
+function genClosest(){
+  const places=pickN(PLACES,5);
+  const ref=places[0],others=places.slice(1);
+  const dirs=shuffle([...C4]);
+  const dists=[rS(150,350),rS(500,900),rS(500,900),rS(500,900)];
+  const shuffledOthers=shuffle(others);
+  const assignedDists=shuffle(dists);
+  const minDist=Math.min(...assignedDists);
+  const correctName=shuffledOthers[assignedDists.indexOf(minDist)];
+  const s=shuffledOthers.map((p,i)=>`The ${p} is ${fmt(assignedDists[i])} ${dn(dirs[i%4])} of the ${ref}.`).join(' ');
+  const chs=shuffle(shuffledOthers);
+  return Q(s,`Which location is closest to the ${ref}?`,chs,chs.indexOf(correctName));
+}
+
+// Distance: same direction gap
+function genDistSameDir(){
+  const [A,B,C]=pickN(PLACES,3);
+  const d=pick(C4);
+  const r1=rS(300,700),extra=rS(200,600);
+  const r2=r1+extra;
+  const gap=r2-r1;
+  const{ch,ci}=buildDistC(gap,[r1,r2,r1+r2]);
+  return Q(`The ${A} is ${fmt(r1)} ${dn(d)} of the ${B}. The ${C} is ${fmt(r2)} ${dn(d)} of the ${B}.`,
+    `How far is the ${A} from the ${C}?`,ch,ci);
+}
+
+// Distance: opposite directions
+function genDistOpposite(){
+  const [A,B,C]=pickN(PLACES,3);
+  const d=pick(C4);
+  const r1=rS(300,900),r2=rS(300,900);
+  const total=r1+r2;
+  const{ch,ci}=buildDistC(total,[Math.abs(r1-r2),r1,r2]);
+  return Q(`The ${A} is ${fmt(r1)} ${dn(d)} of the ${B}. The ${C} is ${fmt(r2)} ${dn(opp(d))} of the ${B}.`,
+    `How far is the ${A} from the ${C}?`,ch,ci);
+}
+
+// Distance: Pythagorean
+function genDistDiag(){
+  const [A,B,C]=pickN(PLACES,3);
+  const d1=pick(C4),d2=pick(C4.filter(x=>x!==d1&&x!==opp(d1)));
+  const tri=pick(PYTH);
+  const r1=tri[0],r2=tri[1],hyp=tri[2];
+  const{ch,ci}=buildDistC(hyp,[r1+r2,Math.abs(r1-r2),Math.max(r1,r2)]);
+  return Q(`The ${A} is ${fmt(r1)} ${dn(d1)} of the ${B}. The ${C} is ${fmt(r2)} ${dn(d2)} of the ${B}.`,
+    `How far is the ${A} from the ${C}? (to nearest 100m)`,ch,ci);
+}
+
+// Net displacement after backtrack
+function genNetDisplacement(){
+  for(let t=0;t<30;t++){
+    const vessel=pick(VESSELS);
+    const d1=pick(C4);
+    const r1=rS(500,1400,100),r2=rS(200,r1-100,100);
+    if(r2>=r1)continue;
+    const net=r1-r2;
+    const decoyD=pick(C4.filter(x=>x!==d1));
+    const rDecoy=rS(300,700);
+    const{ch,ci}=buildDistC(net,[r1,r2,r1+r2]);
+    return Q(
+      `A ${vessel} travels ${fmt(r1)} ${dn(d1)}. It then travels ${fmt(rDecoy)} ${dn(decoyD)} before turning back ${fmt(r2)} ${dn(opp(d1))}.`,
+      `How far is the ${vessel} from its starting point in the ${dn(d1)}/${dn(opp(d1))} direction?`,ch,ci);
+  }return null;
+}
+
+// Which of two vessels is further in a given direction — one goes straight, one zigzags
+function genVesselComparison(){
+  for(let t=0;t<30;t++){
+    const [v1,v2]=pickN(VESSELS,2);
+    const mainD=pick(C4);
+    const perpD=pick(C4.filter(x=>x!==mainD&&x!==opp(mainD)));
+    const r1=rS(500,1100); // v1 goes straight mainD
+    const r2=rS(200,r1-100); // v2 goes mainD less then perpD
+    const rPerp=rS(300,800);
+    const choices=shuffle([`The ${v1}`,`The ${v2}`,`They are equal`,`Cannot be determined`]);
+    const ci=choices.indexOf(`The ${v1}`);
+    return Q(
+      `A ${v1} travels ${fmt(r1)} ${dn(mainD)}. A ${v2} travels ${fmt(r2)} ${dn(mainD)}, then ${fmt(rPerp)} ${dn(perpD)}.`,
+      `Which vessel is further ${dn(mainD)} from the starting point?`,choices,ci);
+  }return null;
+}
+
+// Where does a journey end relative to a named landmark
+function genJourneyFromLandmark(){
+  for(let t=0;t<30;t++){
+    const vessel=pick(VESSELS);
+    const [place]=pickN(PLACES,1);
+    const startD=pick(C4);
+    const rStart=rS(300,700);
+    const d1=pick(C4),d2=pick(C4.filter(x=>x!==d1&&x!==opp(d1)));
+    const r1=rS(300,700),r2=rS(300,700);
+    // start pos relative to place
+    const sx=DV[startD].x*rStart, sy=DV[startD].y*rStart;
+    const ex=sx+DV[d1].x*r1+DV[d2].x*r2;
+    const ey=sy+DV[d1].y*r1+DV[d2].y*r2;
+    const c=vd(ex,ey);if(!c)continue;
+    const rev=opp(c);
+    const{ch,ci}=buildDC(rev,C8);
+    return Q(
+      `A ${vessel} departs from ${fmt(rStart)} ${dn(startD)} of the ${place}. It travels ${fmt(r1)} ${dn(d1)}, then ${fmt(r2)} ${dn(d2)}.`,
+      `In what direction is the ${place} from the ${vessel}'s current position?`,ch,ci);
+  }return null;
+}
+
+// ── REGISTRY ─────────────────────────────────────────────────────────────────
+const GENS=[
+  [genJourneyDir,4],
+  [genJourney3Leg,3],
+  [genJourneyReverse,4],
+  [genJourneyBacktrack,3],
+  [genTwoVessels,3],
+  [genPersonJourneyPlace,3],
+  [genVesselComparison,3],
+  [genJourneyFromLandmark,3],
+  [genChain3,2],
+  [genReverseChain,2],
+  [genInterReverse,2],
+  [genDecoyChain,2],
+  [genFurthestInDir,2],
+  [genClosest,2],
+  [genDistSameDir,1],
+  [genDistOpposite,1],
+  [genDistDiag,1],
+  [genNetDisplacement,2],
+];
+
+function pickGen(){
+  const total=GENS.reduce((a,b)=>a+b[1],0);
+  let r=Math.random()*total;
+  for(const[g,w]of GENS){r-=w;if(r<=0)return g;}
+  return GENS[0][0];
+}
+
+function makeQ(){
+  for(let i=0;i<50;i++){
+    try{
+      const q=pickGen()();
+      if(q&&q.correct>=0&&q.correct<q.choices.length&&q.choices.length===4)return q;
+    }catch(e){}
+  }
+  return genJourneyDir();
+}
+
+let qs=[],qi=0,score=0,answered=false,times=[],qStart=0,gameStart=0,tInt=null;
+
+function startGame(){
+  qs=[];for(let i=0;i<10;i++)qs.push(makeQ());
+  qi=0;score=0;answered=false;times=[];
+  document.getElementById('screen-start').classList.remove('active');
+  document.getElementById('screen-end').classList.remove('active');
+  document.getElementById('screen-game').classList.add('active');
+  gameStart=Date.now();showQ();
+}
+
+function showQ(){
+  answered=false;qStart=Date.now();
+  clearInterval(tInt);
+  tInt=setInterval(()=>{document.getElementById('timer-live').textContent=Math.round((Date.now()-qStart)/1000)+'s';},400);
+  const q=qs[qi];
+  document.getElementById('q-counter').textContent=`Q ${qi+1}/10`;
+  document.getElementById('score-live').textContent=`Score: ${score}`;
+  document.getElementById('progress-bar').style.width=`${(qi+1)*10}%`;
+  document.getElementById('scenario-box').textContent=q.s;
+  document.getElementById('question-text').textContent=q.q;
+  document.getElementById('feedback').innerHTML='&nbsp;';
+  document.getElementById('next-btn').style.display='none';
+  const opts=document.getElementById('options');opts.innerHTML='';
+  q.choices.forEach((c,i)=>{
+    const b=document.createElement('button');b.className='opt';
+    b.innerHTML=`<span class="opt-key">${i+1}</span><span class="opt-label">${c}</span>`;
+    b.onclick=()=>answer(i);opts.appendChild(b);
+  });
+}
+
+function answer(idx){
+  if(answered)return;answered=true;clearInterval(tInt);
+  times.push((Date.now()-qStart)/1000);
+  const q=qs[qi];const btns=document.querySelectorAll('.opt');
+  if(idx===q.correct){
+    btns[idx].classList.add('correct');
+    document.getElementById('feedback').innerHTML='<span style="color:#80FF80">Correct!</span>';score++;
+  }else{
+    btns[idx].classList.add('wrong');
+    if(btns[q.correct])btns[q.correct].classList.add('reveal');
+    document.getElementById('feedback').innerHTML=`<span style="color:#FF8888">Incorrect — answer: ${q.choices[q.correct]}</span>`;
+  }
+  document.getElementById('score-live').textContent=`Score: ${score}`;
+  document.getElementById('next-btn').style.display='block';
+}
+
+function nextQ(){qi++;if(qi>=10){endGame();return;}showQ();}
+
+function endGame(){
+  clearInterval(tInt);
+  document.getElementById('screen-game').classList.remove('active');
+  document.getElementById('screen-end').classList.add('active');
+  const avg=times.length?(times.reduce((a,b)=>a+b,0)/times.length).toFixed(1):'—';
+  const total=((Date.now()-gameStart)/1000).toFixed(0);
+  const pct=score*10;
+  const grade=pct>=90?'PASS — Excellent':pct>=70?'PASS — Good':pct>=50?'BORDERLINE':'FAIL — Keep practising';
+  document.getElementById('end-score').textContent=`${score} / 10`;
+  document.getElementById('end-grade').textContent=grade;
+  document.getElementById('end-stats').innerHTML=`Avg time per question: ${avg}s &nbsp;|&nbsp; Total: ${total}s<br>Accuracy: ${pct}%`;
+}
+
+document.addEventListener('keydown',e=>{
+  if(!document.getElementById('screen-game').classList.contains('active'))return;
+  const n=parseInt(e.key);
+  if(n>=1&&n<=4&&!answered)answer(n-1);
+  if((e.key==='Enter'||e.key===' ')&&answered)nextQ();
+});
+</script>
