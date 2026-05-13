@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TRAc2 – Trace Test 2 Training</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&family=Rajdhani:wght@400;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a1628;color:#d0dff5;font-family:'Rajdhani',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+header{width:100%;background:#0d1f3c;border-bottom:2px solid #2a4a7f;padding:10px 24px;display:flex;align-items:center;justify-content:center;position:relative}
+header::before,header::after{content:'';position:absolute;top:0;bottom:0;width:4px;background:linear-gradient(to bottom,#c8a84b,transparent)}
+header::before{left:0}header::after{right:0}
+.title{font-family:'Orbitron',monospace;font-size:17px;letter-spacing:4px;text-transform:uppercase}
+.title span{color:#c8a84b}
+#stage-ind{position:absolute;right:24px;font-family:'Share Tech Mono',monospace;font-size:12px;color:#7a95c0}
+.wrap{width:100%;max-width:680px;padding:14px;display:flex;flex-direction:column;gap:12px}
+
+/* square canvas frame */
+.frame{width:100%;aspect-ratio:1/1;background:#0f1e38;border:2px solid #2a4a7f;border-radius:4px;position:relative;overflow:hidden;box-shadow:0 0 28px rgba(42,74,127,.4)}
+#cv{display:block;width:100%;height:100%;position:absolute;top:0;left:0}
+.corner{position:absolute;width:16px;height:16px;border-color:#c8a84b;border-style:solid;z-index:4}
+.corner.tl{top:5px;left:5px;border-width:2px 0 0 2px}
+.corner.tr{top:5px;right:5px;border-width:2px 2px 0 0}
+.corner.bl{bottom:5px;left:5px;border-width:0 0 2px 2px}
+.corner.br{bottom:5px;right:5px;border-width:0 2px 2px 0}
+#lbl{position:absolute;top:9px;left:50%;transform:translateX(-50%);font-family:'Orbitron',monospace;font-size:10px;letter-spacing:3px;color:#7a95c0;z-index:4;text-transform:uppercase}
+.tbar{position:absolute;bottom:0;left:0;right:0;height:4px;background:rgba(0,0,0,.5);z-index:4}
+#tbar{height:100%;background:linear-gradient(90deg,#c8a84b,#e8c86b);width:100%;transition:none}
+
+.legend{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.li{display:flex;align-items:center;gap:5px;font-size:12px;color:#7a95c0}
+.ld{width:13px;height:13px;border-radius:50%;border:2px solid rgba(255,255,255,.18);flex-shrink:0}
+
+.btn{font-family:'Orbitron',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;border:1px solid #2a4a7f;background:#0d1f3c;color:#d0dff5;padding:9px 20px;cursor:pointer;transition:all .2s;border-radius:2px;outline:none}
+.btn:hover{border-color:#c8a84b;color:#c8a84b}
+.btn.p{border-color:#c8a84b;color:#c8a84b;background:rgba(200,168,75,.07)}
+.btn.p:hover{background:rgba(200,168,75,.16)}
+
+#qpanel{display:none;flex-direction:column;gap:12px}
+.qhdr{font-family:'Orbitron',monospace;font-size:12px;letter-spacing:3px;color:#c8a84b;text-align:center;padding-bottom:5px;border-bottom:1px solid #2a4a7f}
+.qcard{background:#0f1e38;border:1px solid #2a4a7f;border-radius:4px;padding:12px 16px}
+.qtxt{font-size:15px;color:#d0dff5;margin-bottom:10px;line-height:1.4}
+.qn{font-family:'Share Tech Mono',monospace;font-size:10px;color:#c8a84b;display:block;margin-bottom:5px}
+.opts{display:flex;flex-direction:column;gap:6px}
+.ob{background:#0d1f3c;border:1px solid #2a4a7f;color:#d0dff5;padding:8px 13px;text-align:left;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:14px;border-radius:2px;transition:all .15s}
+.ob:hover:not(:disabled){border-color:#3a6abf;background:rgba(58,106,191,.15)}
+.ob.ok{border-color:#33cc66;background:rgba(51,204,102,.1);color:#33cc66}
+.ob.no{border-color:#ff4444;background:rgba(255,68,68,.09);color:#ff4444}
+.ob:disabled{cursor:default}
+
+#rpanel{display:none;background:#0f1e38;border:2px solid #2a4a7f;border-radius:4px;padding:26px;text-align:center;flex-direction:column;gap:12px;align-items:center}
+.rt{font-family:'Orbitron',monospace;font-size:17px;letter-spacing:4px;color:#c8a84b}
+.rs{font-family:'Share Tech Mono',monospace;font-size:42px;color:#d0dff5}
+.rs span{color:#c8a84b}
+.pb{height:5px;background:#1a2f52;border-radius:3px;overflow:hidden;width:240px}
+.pi{height:100%;background:linear-gradient(90deg,#c8a84b,#e8c86b);transition:width .8s ease}
+.rc{font-size:13px;color:#7a95c0}
+
+#intro{background:#0f1e38;border:2px solid #2a4a7f;border-radius:4px;padding:28px;text-align:center}
+.it{font-family:'Orbitron',monospace;font-size:20px;letter-spacing:5px;color:#c8a84b;margin-bottom:7px}
+.is{color:#7a95c0;font-size:13px;margin-bottom:18px;line-height:1.6}
+.il{text-align:left;display:inline-block;margin-bottom:20px}
+.il li{font-size:12px;color:#7a95c0;margin-bottom:4px;padding-left:13px;position:relative;list-style:none}
+.il li::before{content:'›';position:absolute;left:0;color:#c8a84b}
+
+#nxt{display:none;flex-direction:column;align-items:center;gap:10px}
+.sc{font-family:'Share Tech Mono',monospace;font-size:17px;color:#d0dff5}
+.sc span{color:#c8a84b}
+</style>
+</head>
+<body>
+<header>
+  <div class="title">TRAc2 – <span>Trace Test</span> Training</div>
+  <div id="stage-ind">STAGE – / 10</div>
+</header>
+<div class="wrap">
+
+<div id="intro">
+  <div class="it">TRACE TEST 2</div>
+  <div class="is">Top-Down Airspace Observer Training · 10 Stages · Progressive Difficulty</div>
+  <ul class="il">
+    <li>Aircraft enter from any edge — perpendicular to the boundary</li>
+    <li>All aircraft enter within the first 10 seconds</li>
+    <li>All aircraft exit within the final 10 seconds</li>
+    <li>Watch for turns and barrel rolls</li>
+    <li>Answer three questions after each scene — memory only, no notes</li>
+    <li>Every run generates a completely unique set of scenarios</li>
+  </ul>
+  <button class="btn p" onclick="startTest()">BEGIN TEST</button>
+</div>
+
+<div id="scene" style="display:none;flex-direction:column;gap:12px">
+  <div class="frame">
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
+    <div id="lbl">OBSERVING</div>
+    <canvas id="cv"></canvas>
+    <div class="tbar"><div id="tbar"></div></div>
+  </div>
+  <div class="legend">
+    <div class="li"><div class="ld" style="background:#4488ff"></div>Blue</div>
+    <div class="li"><div class="ld" style="background:#ff4444"></div>Red</div>
+    <div class="li"><div class="ld" style="background:#ffdd00"></div>Yellow</div>
+    <div class="li"><div class="ld" style="background:#eeeeee"></div>White</div>
+    <div class="li"><div class="ld" style="background:#33cc66"></div>Green</div>
+  </div>
+  <div id="qpanel">
+    <div class="qhdr">RECALL — STAGE <span id="qn">1</span> OF 10</div>
+    <div id="qc"></div>
+    <div id="nxt">
+      <div class="sc" id="sc"></div>
+      <button class="btn p" id="nb">NEXT STAGE</button>
+    </div>
+  </div>
+  <div id="rpanel">
+    <div class="rt">TEST COMPLETE</div>
+    <div class="rs" id="fs"></div>
+    <div class="pb"><div class="pi" id="pb" style="width:0"></div></div>
+    <div class="rc" id="rc"></div>
+    <button class="btn p" onclick="restart()">RESTART TEST</button>
+  </div>
+</div>
+
+</div><!-- .wrap -->
+<script>
+// ─────────────────────────────────────────────────────────────
+//  CANVAS
+// ─────────────────────────────────────────────────────────────
+const cv  = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+let   SZ  = 600;
+function sizeCanvas(){
+  const w=cv.parentElement.clientWidth||600;
+  if(w===SZ&&cv.width===SZ)return;
+  SZ=w; cv.width=cv.height=SZ;
+}
+window.addEventListener('resize',sizeCanvas);
+
+// ─────────────────────────────────────────────────────────────
+//  CONSTANTS  (all positions in fraction-of-SZ: 0..1)
+// ─────────────────────────────────────────────────────────────
+const SPEED      = 0.08;   // fraction/sec — constant always
+const TURN_RATE  = 1.6;    // rad/sec
+const DT         = 1/60;   // simulation timestep
+const ROLL_DUR   = 1.8;    // seconds per barrel roll
+const WP_INNER   = 0.30;   // interior waypoint safe zone
+const WP_OUTER   = 0.70;
+
+// ─────────────────────────────────────────────────────────────
+//  COLOURS & RNG
+// ─────────────────────────────────────────────────────────────
+const COL   = {blue:'#4488ff',red:'#ff4444',yellow:'#ffdd00',white:'#eeeeee',green:'#33cc66'};
+const NAMES = ['blue','red','yellow','white','green'];
+const SIDES = ['L','R','T','B'];
+
+let _s=1;
+function seed(v){_s=(v>>>0)||1;}
+function rand(){_s^=_s<<13;_s^=_s>>17;_s^=_s<<5;return(_s>>>0)/4294967296;}
+function rF(a,b){return a+rand()*(b-a);}
+function rInt(a,b){return Math.floor(rand()*(b-a+1))+a;}
+function rPick(a){return a[Math.floor(rand()*a.length)];}
+function shuffle(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;}
+function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
+
+// ─────────────────────────────────────────────────────────────
+//  GEOMETRY HELPERS
+// ─────────────────────────────────────────────────────────────
+// Canvas: x→right, y→DOWN.  Angles: 0=right, π/2=down, π=left, -π/2=up.
+
+function wA(a){while(a>Math.PI)a-=2*Math.PI;while(a<-Math.PI)a+=2*Math.PI;return a;}
+
+// Heading pointing INTO the scene from each side (perpendicular inward)
+function hIn(s){return s==='L'?0:s==='R'?Math.PI:s==='T'?Math.PI/2:-Math.PI/2;}
+// Heading pointing OUT of the scene through each side (perpendicular outward)
+function hOut(s){return s==='L'?Math.PI:s==='R'?0:s==='T'?-Math.PI/2:Math.PI/2;}
+// Point on an edge at fractional position along that edge
+function ePt(s,f){return s==='L'?{x:0,y:f}:s==='R'?{x:1,y:f}:s==='T'?{x:f,y:0}:{x:f,y:1};}
+function sName(s){return s==='L'?'left':s==='R'?'right':s==='T'?'top':'bottom';}
+function oppS(s){return s==='L'?'R':s==='R'?'L':s==='T'?'B':'T';}
+
+// ─────────────────────────────────────────────────────────────
+//  FLIGHT PATH  — steering simulation
+//
+//  Design:
+//  • Plane is pre-simulated at 60fps before the scene plays.
+//    Result stored as compact array of {x,y,h} frames.
+//  • During playback we just index into the frame array — 
+//    zero chance of gaps, null positions, or disappearance.
+//  • exitT = actual number of frames / 60  (exact, not estimated).
+//
+//  Waypoint list for each plane:
+//    [interior WPs...] → axisSnap → lead1 → lead2 → exitEdge
+//
+//  axisSnap: a point on the perpendicular approach axis of the
+//    exit edge, so the plane is forced onto that axis before
+//    the lead-in corridor, guaranteeing near-perpendicular exit.
+//
+//  Stuck guard: if a waypoint hasn't been reached in 5s, skip it.
+// ─────────────────────────────────────────────────────────────
+function buildPath(enSide, exSide, enFrac, exFrac, interiorWPs){
+  // Build the full waypoint list
+  const isH = exSide==='L'||exSide==='R';
+  // Axis-snap WP: on the perpendicular line leading to the exit point
+  const axSnap = {
+    x: isH ? (exSide==='R'?0.62:0.38) : clamp(exFrac,WP_INNER,WP_OUTER),
+    y: isH ? clamp(exFrac,WP_INNER,WP_OUTER) : (exSide==='B'?0.62:0.38)
+  };
+  const exitDir = hIn(exSide); // inward direction of exit side
+  const ep = ePt(exSide,exFrac);
+  const lead1 = {x:ep.x+Math.cos(exitDir)*0.28, y:ep.y+Math.sin(exitDir)*0.28};
+  const lead2 = {x:ep.x+Math.cos(exitDir)*0.11, y:ep.y+Math.sin(exitDir)*0.11};
+  const allWPs = [...interiorWPs, axSnap, lead1, lead2, ep];
+
+  // Simulate
+  const sp = ePt(enSide,enFrac);
+  let x=sp.x, y=sp.y, h=hIn(enSide);
+  const frames = [{x,y,h}];
+  let wpIdx=0, stuck=0;
+
+  while(wpIdx<allWPs.length && frames.length<7200){ // max 120s
+    const t=allWPs[wpIdx];
+    const dx=t.x-x, dy=t.y-y, d=Math.sqrt(dx*dx+dy*dy);
+    if(d<0.014){wpIdx++;stuck=0;continue;}
+    stuck++;
+    if(stuck>300){wpIdx++;stuck=0;continue;} // 5s stuck guard
+    const th=Math.atan2(dy,dx), diff=wA(th-h);
+    h=wA(h+Math.max(-TURN_RATE*DT,Math.min(TURN_RATE*DT,diff)));
+    x+=Math.cos(h)*SPEED*DT;
+    y+=Math.sin(h)*SPEED*DT;
+    frames.push({x,y,h});
+  }
+  return frames;
+}
+
+// ─────────────────────────────────────────────────────────────
+//  PLANE CLASS
+// ─────────────────────────────────────────────────────────────
+class Plane {
+  constructor(def){
+    this.id        = def.id;
+    this.color     = COL[def.colorName];
+    this.colorName = def.colorName;
+    this.enterSide = def.enterSide;
+    this.exitSide  = def.exitSide;
+    this.entryT    = def.entryT;   // seconds
+    this.frames    = def.frames;   // pre-simulated [{x,y,h}]
+    this.exitT     = def.entryT + (def.frames.length-1)*DT;
+    this.rollTimes = def.rollTimes; // [t_offset_from_entryT]
+    this.rollCount = def.rollTimes.length;
+    this.turnCount = def.turnCount;
+    this.trail     = [];
+  }
+
+  // Frame index for elapsed time
+  frameAt(elapsed){
+    const off = elapsed - this.entryT;
+    if(off < 0) return null;
+    const idx = Math.round(off/DT);
+    if(idx >= this.frames.length) return null;
+    return this.frames[idx];
+  }
+
+  // Roll scale: cos wave over ROLL_DUR; returns null if not rolling
+  rollScale(elapsed){
+    const off = elapsed - this.entryT;
+    for(const rt of this.rollTimes){
+      if(off >= rt && off < rt+ROLL_DUR){
+        return Math.cos((off-rt)/ROLL_DUR * Math.PI*2);
+      }
+    }
+    return null;
+  }
+
+  tick(elapsed){
+    const f = this.frameAt(elapsed);
+    if(f){
+      this.trail.push({x:f.x,y:f.y,t:elapsed});
+      while(this.trail.length>1 && elapsed-this.trail[0].t>2.8) this.trail.shift();
+    }
+    return f;
+  }
+
+  draw(elapsed){
+    const f = this.frameAt(elapsed);
+    if(!f) return;
+    const px=f.x*SZ, py=f.y*SZ;
+    const S = SZ*0.090;  // large, visible size (+50%)
+
+    // Trail
+    if(this.trail.length>1){
+      ctx.save();
+      ctx.lineWidth=Math.max(2,SZ*0.004);
+      for(let i=1;i<this.trail.length;i++){
+        const age=elapsed-this.trail[i].t;
+        ctx.globalAlpha=Math.max(0,0.55*(1-age/2.8));
+        ctx.strokeStyle=this.color;
+        ctx.beginPath();
+        ctx.moveTo(this.trail[i-1].x*SZ,this.trail[i-1].y*SZ);
+        ctx.lineTo(this.trail[i].x*SZ,this.trail[i].y*SZ);
+        ctx.stroke();
+      }
+      ctx.globalAlpha=1;
+      ctx.restore();
+    }
+
+    // Glow
+    ctx.save();
+    const g=ctx.createRadialGradient(px,py,0,px,py,S*2);
+    g.addColorStop(0,this.color+'40');g.addColorStop(1,'transparent');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(px,py,S*2,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+
+    // Body
+    // f.h: 0=right, π/2=down.  Shape nose at local (0,-S) = top = -Y.
+    // To point nose in heading direction: rotate by (f.h + π/2).
+    //   f.h=0(right) → rot π/2 → local -Y points right ✓
+    //   f.h=π/2(down) → rot π → local -Y points down ✓
+    //   f.h=π(left) → rot 3π/2 → local -Y points left ✓
+    //   f.h=-π/2(up) → rot 0 → local -Y points up ✓
+    const rs  = this.rollScale(elapsed);
+    const scl = rs !== null ? rs : 1;
+    const absS = Math.abs(scl);
+
+    ctx.save();
+    ctx.translate(px,py);
+    ctx.rotate(f.h + Math.PI/2);
+    ctx.scale(scl, 1);
+    drawBody(ctx, S, this.color, absS);
+    ctx.restore();
+
+  }
+}
+
+// Top-down delta-wing silhouette.  Nose at (0,-S), tail at (0,+S).
+function drawBody(ctx, S, col, absRoll){
+  const w = 0.18 + absRoll*0.82;
+  ctx.fillStyle=col;
+  ctx.strokeStyle='rgba(255,255,255,0.45)';
+  ctx.lineWidth=0.9;
+  // Fuselage
+  ctx.beginPath();ctx.ellipse(0,0,S*0.20,S*1.32,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+  // Swept delta wings
+  ctx.beginPath();
+  ctx.moveTo(0,         -S*0.08);   // leading edge root
+  ctx.lineTo(-S*1.10*w,  S*0.65);  // left tip
+  ctx.lineTo(-S*0.26*w,  S*0.98);  // left trailing
+  ctx.lineTo(0,           S*0.75);  // tail notch
+  ctx.lineTo( S*0.26*w,  S*0.98);  // right trailing
+  ctx.lineTo( S*1.10*w,  S*0.65);  // right tip
+  ctx.closePath();ctx.fill();ctx.stroke();
+  // Canopy
+  ctx.fillStyle=`rgba(140,210,255,${0.15+absRoll*0.25})`;
+  ctx.beginPath();ctx.ellipse(0,-S*0.38,S*0.09*(0.2+absRoll*0.8),S*0.22,0,0,Math.PI*2);ctx.fill();
+}
+
+// ─────────────────────────────────────────────────────────────
+//  SCENARIO GENERATOR
+// ─────────────────────────────────────────────────────────────
+function generateScenario(stageNum){
+  const d = stageNum/9; // 0..1
+
+  // Plane count: 2 at stage 0, up to 5 at stage 9
+  const numPlanes = Math.min(5, 2+Math.floor(stageNum*0.38));
+
+  const colours = shuffle(NAMES).slice(0,numPlanes);
+  const sidePot = shuffle([...SIDES,...SIDES,...SIDES]);
+  const planes  = [];
+
+  // All entry times within first 10s, staggered
+  // All exit windows start no earlier than (sceneDur - 10)
+  // We don't know sceneDur yet — we'll compute it after presimulation.
+  // Strategy: assign entryT first, then build path, scene = maxExitT+1.5
+
+  let maxExitT = 0;
+
+  colours.forEach((cName,idx)=>{
+    const enSide = sidePot[idx%sidePot.length];
+    // Lower difficulty: exit opposite side. Higher: any side.
+    const exCands = d>0.5 ? SIDES : SIDES.filter(s=>s!==enSide);
+    const exSide  = rPick(exCands.length?exCands:SIDES);
+
+    const enFrac = rF(0.2,0.8);
+    const exFrac = rF(0.2,0.8);
+
+    // Entry time: spread across first 10s
+    const entryT = rF(0.5+idx*1.2, Math.min(9.5, 1.2+idx*2.4));
+
+    // Interior waypoints — scale complexity with difficulty
+    const numWPs = rInt(Math.max(1,Math.floor(d*2)), 2+Math.floor(d*4));
+    const intWPs = [];
+    for(let i=0;i<numWPs;i++){
+      intWPs.push({x:rF(WP_INNER,WP_OUTER), y:rF(WP_INNER,WP_OUTER)});
+    }
+
+    // Pre-simulate the full path
+    const frames = buildPath(enSide, exSide, enFrac, exFrac, intWPs);
+    const exitT  = entryT + (frames.length-1)*DT;
+    maxExitT = Math.max(maxExitT, exitT);
+
+    // Barrel rolls: active from stage 2 onward, more frequent at higher stages
+    const numRolls = stageNum<1 ? 0 : rInt(1, 1+Math.floor(d*4));
+    const rollTimes=[];
+    const fDur = (frames.length-1)*DT;
+    for(let i=0;i<numRolls;i++){
+      rollTimes.push(rF(fDur*0.20, fDur*0.78-ROLL_DUR));
+    }
+
+    // Count turns: sample heading every 0.5s, count changes >40°
+    let turnCount=0, prevH=hIn(enSide), tSample=0;
+    for(let fi=0;fi<frames.length;fi++){
+      tSample+=DT;
+      if(tSample>=0.5){
+        const dh=Math.abs(wA(frames[fi].h-prevH));
+        if(dh>0.7)turnCount++;
+        prevH=frames[fi].h;tSample=0;
+      }
+    }
+
+    planes.push(new Plane({
+      id: cName.charAt(0).toUpperCase()+cName.slice(1),
+      colorName:cName, enterSide:enSide, exitSide:exSide,
+      entryT, frames, rollTimes, turnCount
+    }));
+  });
+
+  const sceneDur = maxExitT + 1.8;
+  const questions = makeQuestions(planes, stageNum);
+  return {planes, sceneDur, questions};
+}
+
+// ─────────────────────────────────────────────────────────────
+//  QUESTION GENERATOR
+// ─────────────────────────────────────────────────────────────
+let usedQ=new Set();
+
+function makeQuestions(planes, stageNum){
+  usedQ=new Set();
+  const qs=[];
+  const pool=shuffle([
+    ()=>qEnSide(planes),    ()=>qExSide(planes),
+    ()=>qEnFirst(planes),   ()=>qEnLast(planes),
+    ()=>qExFirst(planes),   ()=>qExLast(planes),
+    ()=>qSameDir(planes),   ()=>qOppDir(planes),
+    ()=>qEnFrom(planes,'L'),()=>qEnFrom(planes,'R'),
+    ()=>qEnFrom(planes,'T'),()=>qEnFrom(planes,'B'),
+    ()=>qExThru(planes,'L'),()=>qExThru(planes,'R'),
+    ()=>qExThru(planes,'T'),()=>qExThru(planes,'B'),
+    ()=>qMostTurns(planes), ()=>qFewestTurns(planes),
+    ()=>qMostRolls(planes), ()=>qRollCount(planes),
+    ()=>qDidRoll(planes),   ()=>qNoRoll(planes),
+    ()=>qHowManyEn(planes,'L'),()=>qHowManyEn(planes,'R'),
+    ()=>qHowManyEn(planes,'T'),()=>qHowManyEn(planes,'B'),
+    ()=>qSimult(planes),
+  ]);
+  for(const fn of pool){
+    if(qs.length>=3)break;
+    try{const q=fn();if(q&&!usedQ.has(q.type)){usedQ.add(q.type);qs.push(q);}}catch(_){}
+  }
+  // Pad if needed
+  for(const fn of[()=>qEnSide(planes),()=>qExSide(planes),()=>qSameDir(planes)]){
+    if(qs.length>=3)break;try{const q=fn();if(q)qs.push(q);}catch(_){}
+  }
+  return qs;
+}
+
+function mk(correct,others){
+  const pool=[...new Set([correct,...shuffle(others)])];
+  let o=shuffle(pool).slice(0,4);
+  if(!o.includes(correct))o[0]=correct;
+  o=shuffle(o);
+  return{opts:o,ans:o.indexOf(correct)};
+}
+
+function qEnSide(P){const p=rPick(P);const c=`The ${sName(p.enterSide)} side`;const{opts,ans}=mk(c,SIDES.map(s=>`The ${sName(s)} side`).filter(x=>x!==c));return{type:`eS${p.id}`,text:`Which side did ${p.id} enter from?`,options:opts,answer:ans};}
+function qExSide(P){const p=rPick(P);const c=`The ${sName(p.exitSide)} side`;const{opts,ans}=mk(c,SIDES.map(s=>`The ${sName(s)} side`).filter(x=>x!==c));return{type:`xS${p.id}`,text:`Which side did ${p.id} exit from?`,options:opts,answer:ans};}
+function qEnFirst(P){if(P.length<2)return null;const s=[...P].sort((a,b)=>a.entryT-b.entryT);if(Math.abs(s[0].entryT-s[1].entryT)<0.5)return null;const{opts,ans}=mk(s[0].id,P.filter(p=>p!==s[0]).map(p=>p.id));return{type:'eF',text:'Which aircraft entered first?',options:opts,answer:ans};}
+function qEnLast(P){if(P.length<2)return null;const s=[...P].sort((a,b)=>b.entryT-a.entryT);if(Math.abs(s[0].entryT-s[1].entryT)<0.5)return null;const{opts,ans}=mk(s[0].id,P.filter(p=>p!==s[0]).map(p=>p.id));return{type:'eL',text:'Which aircraft entered last?',options:opts,answer:ans};}
+function qExFirst(P){if(P.length<2)return null;const s=[...P].sort((a,b)=>a.exitT-b.exitT);if(Math.abs(s[0].exitT-s[1].exitT)<0.5)return null;const{opts,ans}=mk(s[0].id,P.filter(p=>p!==s[0]).map(p=>p.id));return{type:'xF',text:'Which aircraft exited first?',options:opts,answer:ans};}
+function qExLast(P){if(P.length<2)return null;const s=[...P].sort((a,b)=>b.exitT-a.exitT);if(Math.abs(s[0].exitT-s[1].exitT)<0.5)return null;const{opts,ans}=mk(s[0].id,P.filter(p=>p!==s[0]).map(p=>p.id));return{type:'xL',text:'Which aircraft was last to exit?',options:opts,answer:ans};}
+function qSameDir(P){const same=P.filter(p=>p.enterSide===p.exitSide);const c=same.length?same[0].id:'None';const{opts,ans}=mk(c,[...P.filter(p=>same.length?p!==same[0]:true).map(p=>p.id),'None']);return{type:'sD',text:'Which aircraft exited from the same side it entered?',options:opts,answer:ans};}
+function qOppDir(P){const cr=P.filter(p=>p.enterSide===oppS(p.exitSide));const c=cr.length?cr[0].id:'None';const{opts,ans}=mk(c,[...P.filter(p=>cr.length?p!==cr[0]:true).map(p=>p.id),'None']);return{type:'oD',text:'Which aircraft exited from the exact opposite side to where it entered?',options:opts,answer:ans};}
+function qEnFrom(P,side){const m=P.filter(p=>p.enterSide===side);if(!m.length&&P.length<3)return null;const c=m.length?m[0].id:'None';const{opts,ans}=mk(c,[...P.filter(p=>p.enterSide!==side).map(p=>p.id),'None']);return{type:`eFrom${side}`,text:`Which aircraft entered from the ${sName(side)}?`,options:opts,answer:ans};}
+function qExThru(P,side){const m=P.filter(p=>p.exitSide===side);if(!m.length&&P.length<3)return null;const c=m.length?m[0].id:'None';const{opts,ans}=mk(c,[...P.filter(p=>p.exitSide!==side).map(p=>p.id),'None']);return{type:`xThru${side}`,text:`Which aircraft exited from the ${sName(side)}?`,options:opts,answer:ans};}
+function qMostTurns(P){if(P.length<2)return null;const s=[...P].sort((a,b)=>b.turnCount-a.turnCount);if(s[0].turnCount===s[1].turnCount)return null;const{opts,ans}=mk(s[0].id,P.filter(p=>p!==s[0]).map(p=>p.id));return{type:'mT',text:'Which aircraft made the most direction changes?',options:opts,answer:ans};}
+function qFewestTurns(P){if(P.length<2)return null;const s=[...P].sort((a,b)=>a.turnCount-b.turnCount);if(s[0].turnCount===s[1].turnCount)return null;const{opts,ans}=mk(s[0].id,P.filter(p=>p!==s[0]).map(p=>p.id));return{type:'fT',text:'Which aircraft made the fewest direction changes?',options:opts,answer:ans};}
+function qMostRolls(P){const s=[...P].sort((a,b)=>b.rollCount-a.rollCount);if(s[0].rollCount===0)return null;if(P.length>1&&s[0].rollCount===s[1].rollCount)return null;const{opts,ans}=mk(s[0].id,P.filter(p=>p!==s[0]).map(p=>p.id));return{type:'mR',text:'Which aircraft performed the most barrel rolls?',options:opts,answer:ans};}
+function qRollCount(P){const lp=P.filter(p=>p.rollCount>0);if(!lp.length)return null;const p=rPick(lp);const c=String(p.rollCount);const{opts,ans}=mk(c,['0','1','2','3','4'].filter(x=>x!==c).slice(0,3));return{type:`rC${p.id}`,text:`How many barrel rolls did ${p.id} perform?`,options:opts,answer:ans};}
+function qDidRoll(P){const lp=P.filter(p=>p.rollCount>0),np=P.filter(p=>p.rollCount===0);if(!lp.length||!np.length)return null;const p=rPick(lp);const{opts,ans}=mk(p.id,[...np.map(x=>x.id),'None of them']);return{type:'dR',text:'Which aircraft performed at least one barrel roll?',options:opts,answer:ans};}
+function qNoRoll(P){const np=P.filter(p=>p.rollCount===0),lp=P.filter(p=>p.rollCount>0);if(!np.length||!lp.length)return null;const p=rPick(np);return{type:`nR${p.id}`,text:`Did ${p.id} perform a barrel roll?`,options:['Yes — it rolled','No — it did not roll','It rolled once','Cannot tell'],answer:1};}
+function qHowManyEn(P,side){const c=String(P.filter(p=>p.enterSide===side).length);const{opts,ans}=mk(c,['0','1','2','3','4'].filter(x=>x!==c).slice(0,3));return{type:`hMe${side}`,text:`How many aircraft entered from the ${sName(side)}?`,options:opts,answer:ans};}
+function qSimult(P){if(P.length<3)return null;for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++)if(Math.abs(P[i].entryT-P[j].entryT)<1.2){const t=P[i],p=P[j];const{opts,ans}=mk(p.id,[...P.filter(x=>x!==t&&x!==p).map(x=>x.id),'None of the others']);return{type:'sim',text:`Which aircraft entered at roughly the same time as ${t.id}?`,options:opts,answer:ans};}return null;}
+
+// ─────────────────────────────────────────────────────────────
+//  RADAR GROUND
+// ─────────────────────────────────────────────────────────────
+function drawGround(){
+  const g=ctx.createRadialGradient(SZ/2,SZ/2,0,SZ/2,SZ/2,SZ*0.72);
+  g.addColorStop(0,'#091a0d');g.addColorStop(0.55,'#060f08');g.addColorStop(1,'#030805');
+  ctx.fillStyle=g;ctx.fillRect(0,0,SZ,SZ);
+  ctx.save();
+  ctx.strokeStyle='rgba(0,200,60,0.08)';ctx.lineWidth=1;
+  for(let r=SZ*0.14;r<SZ*0.75;r+=SZ*0.14){ctx.beginPath();ctx.arc(SZ/2,SZ/2,r,0,Math.PI*2);ctx.stroke();}
+  ctx.strokeStyle='rgba(0,200,60,0.06)';
+  ctx.beginPath();ctx.moveTo(SZ/2,0);ctx.lineTo(SZ/2,SZ);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(0,SZ/2);ctx.lineTo(SZ,SZ/2);ctx.stroke();
+  ctx.strokeStyle='rgba(0,200,60,0.035)';ctx.lineWidth=0.5;
+  for(let v=0;v<SZ;v+=SZ/8){ctx.beginPath();ctx.moveTo(v,0);ctx.lineTo(v,SZ);ctx.stroke();ctx.beginPath();ctx.moveTo(0,v);ctx.lineTo(SZ,v);ctx.stroke();}
+  ctx.restore();
+}
+
+// ─────────────────────────────────────────────────────────────
+//  ENGINE
+// ─────────────────────────────────────────────────────────────
+let stage=0, score=0, totalQ=0, qAns=0;
+let raf=null, t0=null, sceneDur=0;
+let planes=[], curQs=[];
+let allScenes=[];
+
+function animate(ts){
+  if(!t0)t0=ts;
+  const el=(ts-t0)/1000;
+  sizeCanvas();
+  ctx.clearRect(0,0,SZ,SZ);
+  drawGround();
+  // Shuffle draw order each frame so no plane is consistently on top
+  const drawOrder = [...planes].sort(()=>Math.random()-0.5);
+  drawOrder.forEach(p=>p.tick(el));
+  drawOrder.forEach(p=>p.draw(el));
+  document.getElementById('tbar').style.width=(Math.max(0,1-el/sceneDur)*100)+'%';
+  if(el<sceneDur){ raf=requestAnimationFrame(animate); }
+  else{ ctx.clearRect(0,0,SZ,SZ);drawGround();showQuestions(); }
+}
+
+function startTest(){
+  seed(Date.now()&0xFFFFFFFF);
+  allScenes=[];
+  for(let i=0;i<10;i++) allScenes.push(generateScenario(i));
+  document.getElementById('intro').style.display='none';
+  document.getElementById('scene').style.display='flex';
+  stage=0;score=0;totalQ=0;
+  playStage();
+}
+
+function playStage(){
+  const sc=allScenes[stage];
+  sceneDur=sc.sceneDur; planes=sc.planes; curQs=sc.questions;
+  planes.forEach(p=>p.trail=[]);
+  document.getElementById('stage-ind').textContent=`STAGE ${stage+1} / 10`;
+  document.getElementById('lbl').textContent='OBSERVING';
+  document.getElementById('qpanel').style.display='none';
+  document.getElementById('rpanel').style.display='none';
+  document.getElementById('nxt').style.display='none';
+  document.getElementById('tbar').style.width='100%';
+  t0=null;
+  if(raf)cancelAnimationFrame(raf);
+  raf=requestAnimationFrame(animate);
+}
+
+function showQuestions(){
+  document.getElementById('lbl').textContent='RECALL';
+  document.getElementById('qpanel').style.display='flex';
+  document.getElementById('qn').textContent=stage+1;
+  const cont=document.getElementById('qc');
+  cont.innerHTML='';qAns=0;
+  curQs.forEach((q,qi)=>{
+    const d=document.createElement('div');d.className='qcard';
+    d.innerHTML=`<span class="qn">Q${qi+1} of 3</span><div class="qtxt">${q.text}</div><div class="opts" id="o${qi}"></div>`;
+    cont.appendChild(d);
+    q.options.forEach((opt,oi)=>{
+      const b=document.createElement('button');b.className='ob';b.textContent=opt;
+      b.onclick=()=>answer(b,oi,q.answer);
+      d.querySelector(`#o${qi}`).appendChild(b);
+    });
+  });
+}
+
+function answer(btn,chosen,correct){
+  btn.closest('.opts').querySelectorAll('.ob').forEach((b,i)=>{b.disabled=true;if(i===correct)b.classList.add('ok');});
+  if(chosen!==correct)btn.classList.add('no');else score++;
+  totalQ++;qAns++;
+  if(qAns===3){
+    const n=document.getElementById('nxt');n.style.display='flex';
+    document.getElementById('sc').innerHTML=`Score: <span>${score} / ${totalQ}</span>`;
+    const nb=document.getElementById('nb');
+    if(stage>=9){nb.textContent='VIEW RESULTS';nb.onclick=showResults;}
+    else{nb.textContent='NEXT STAGE';nb.onclick=nextStage;}
+  }
+}
+
+function nextStage(){stage++;if(stage>9)showResults();else playStage();}
+
+function showResults(){
+  document.getElementById('qpanel').style.display='none';
+  document.getElementById('nxt').style.display='none';
+  document.getElementById('rpanel').style.display='flex';
+  const pct=Math.round(score/totalQ*100);
+  document.getElementById('fs').innerHTML=`${score}<span>/${totalQ}</span>`;
+  setTimeout(()=>document.getElementById('pb').style.width=pct+'%',120);
+  const c=['Keep practising — focus on one aircraft at a time.',
+    'Developing well — focus on entry and exit sequences.',
+    'Good result — continue building your observation habits.',
+    'Strong performance — above-average tracking ability.',
+    'Outstanding — exceptional working memory capacity.'];
+  document.getElementById('rc').textContent=c[Math.min(4,Math.floor(pct/20))];
+}
+
+function restart(){
+  stage=0;score=0;totalQ=0;
+  document.getElementById('rpanel').style.display='none';
+  seed(Date.now()&0xFFFFFFFF);
+  allScenes=[];
+  for(let i=0;i<10;i++)allScenes.push(generateScenario(i));
+  playStage();
+}
+</script>
+</body>
+</html>
