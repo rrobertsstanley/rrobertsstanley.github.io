@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RTT Trainer — CBAT Practice</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+
+  :root {
+    --hud-green: #00ff88;
+    --hud-dim: #00aa55;
+    --hud-red: #ff3344;
+    --hud-amber: #ffaa00;
+    --hud-blue: #00ccff;
+    --bg: #0a0e0a;
+    --panel: #0d1a0f;
+    --border: #1a3320;
+    --text: #b0ffcc;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  #start-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+    text-align: center;
+    padding: 40px;
+  }
+
+  #start-screen h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(1.8rem, 4vw, 3.2rem);
+    font-weight: 900;
+    color: var(--hud-green);
+    text-shadow: 0 0 30px #00ff8866, 0 0 60px #00ff8833;
+    letter-spacing: 0.08em;
+    line-height: 1.2;
+  }
+
+  #start-screen .subtitle {
+    font-size: 0.95rem;
+    color: var(--hud-dim);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .instructions {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px 32px;
+    max-width: 600px;
+    text-align: left;
+    font-size: 0.85rem;
+    line-height: 1.9;
+    color: #88ccaa;
+  }
+
+  .instructions strong {
+    color: var(--hud-green);
+  }
+
+  .instructions .key {
+    display: inline-block;
+    background: #1a3320;
+    border: 1px solid var(--hud-dim);
+    border-radius: 3px;
+    padding: 1px 7px;
+    font-size: 0.8rem;
+    color: var(--hud-green);
+  }
+
+  .btn-start {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    background: transparent;
+    color: var(--hud-green);
+    border: 2px solid var(--hud-green);
+    padding: 14px 48px;
+    cursor: pointer;
+    text-transform: uppercase;
+    position: relative;
+    transition: all 0.2s;
+    clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+  }
+
+  .btn-start:hover {
+    background: var(--hud-green);
+    color: var(--bg);
+    box-shadow: 0 0 30px #00ff8855;
+  }
+
+  /* ── GAME WRAPPER ── */
+  #game-wrapper {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    width: 100vw;
+    height: 100vh;
+    padding: 8px;
+    gap: 8px;
+  }
+
+  /* ── HUD BAR ── */
+  #hud {
+    width: 100%;
+    max-width: 1100px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .hud-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .hud-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: var(--hud-dim);
+    text-transform: uppercase;
+  }
+
+  .hud-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--hud-green);
+    text-shadow: 0 0 10px #00ff8866;
+  }
+
+  #timer-value { color: var(--hud-amber); text-shadow: 0 0 10px #ffaa0066; }
+  #timer-value.urgent { color: var(--hud-red); animation: blink 0.5s infinite; }
+
+  @keyframes blink { 50% { opacity: 0.3; } }
+
+  /* ── TARGET LIST ── */
+  #target-list-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    background: #0a1a0e;
+    border: 1px solid var(--hud-green);
+    padding: 6px 14px;
+    border-radius: 3px;
+    box-shadow: 0 0 16px #00ff8822;
+    min-width: 340px;
+  }
+
+  #target-slots {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .target-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 10px;
+    border: 1px solid #1a3320;
+    border-radius: 3px;
+    min-width: 90px;
+    background: #060d08;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+  }
+
+  .target-slot.active {
+  }
+
+  .target-slot.empty {
+    opacity: 0.25;
+    border-style: dashed;
+  }
+
+  .slot-label {
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    color: var(--hud-dim);
+    text-transform: uppercase;
+  }
+
+  .slot-label.active-label {
+    color: var(--hud-amber);
+  }
+
+  .slot-icon-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .slot-name {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: var(--hud-amber);
+    white-space: nowrap;
+  }
+
+  .slot-pips {
+    display: flex;
+    gap: 4px;
+  }
+
+  .slot-pip {
+    width: 8px; height: 8px;
+    border: 1px solid var(--hud-green);
+    border-radius: 50%;
+    background: transparent;
+    transition: background 0.15s;
+  }
+
+  .slot-pip.filled {
+    background: var(--hud-green);
+    box-shadow: 0 0 5px var(--hud-green);
+  }
+
+  /* snap counter pips (keep for compat) */
+  #snap-pips { display: flex; gap: 5px; }
+  .pip {
+    width: 10px; height: 10px;
+    border: 1px solid var(--hud-green);
+    border-radius: 50%;
+    background: transparent;
+    transition: background 0.15s;
+  }
+  .pip.filled { background: var(--hud-green); box-shadow: 0 0 6px var(--hud-green); }
+
+  /* ── GAME ARENA ── */
+  #arena-container {
+    position: relative;
+    width: 100%;
+    max-width: 1100px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  #arena {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background: #060d08;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+
+  /* scanlines */
+  #arena::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  /* left/right visible zones */
+  #zone-left, #zone-right {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 10%;
+    background: #060d08;
+    z-index: 1;
+  }
+  #zone-left { left: 0; border-right: 1px solid #1a3320; }
+  #zone-right { right: 0; border-left: 1px solid #1a3320; }
+
+  /* center blackout — drawn by canvas */
+  #fog-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  /* zone labels */
+  .zone-label {
+    position: absolute;
+    bottom: 8px;
+    font-size: 0.55rem;
+    letter-spacing: 0.18em;
+    color: #1a3320;
+    text-transform: uppercase;
+    z-index: 5;
+  }
+  #zone-left .zone-label { right: 8px; }
+  #zone-right .zone-label { left: 8px; }
+
+  /* grid lines in visible zones */
+  .grid-overlay {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,100,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,100,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* objects */
+  .obj {
+    position: absolute;
+    z-index: 10;
+    transform: translate(-50%, -50%);
+    transition: none;
+  }
+
+  /* tracking window */
+  #tracker {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border: 2px solid var(--hud-green);
+    z-index: 50;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    box-shadow: 0 0 12px #00ff8844, inset 0 0 12px #00ff8811;
+  }
+
+  /* crosshair lines */
+  #tracker::before, #tracker::after {
+    content: '';
+    position: absolute;
+    background: rgba(0,255,136,0.4);
+  }
+  #tracker::before { left: 50%; top: 4px; bottom: 4px; width: 1px; transform: translateX(-50%); }
+  #tracker::after { top: 50%; left: 4px; right: 4px; height: 1px; transform: translateY(-50%); }
+
+  /* corner ticks */
+  .tracker-corner {
+    position: absolute;
+    width: 10px; height: 10px;
+    border-color: var(--hud-green);
+    border-style: solid;
+    border-width: 0;
+  }
+  .tc-tl { top: -2px; left: -2px; border-top-width: 2px; border-left-width: 2px; }
+  .tc-tr { top: -2px; right: -2px; border-top-width: 2px; border-right-width: 2px; }
+  .tc-bl { bottom: -2px; left: -2px; border-bottom-width: 2px; border-left-width: 2px; }
+  .tc-br { bottom: -2px; right: -2px; border-bottom-width: 2px; border-right-width: 2px; }
+
+  /* flash on snap */
+  #tracker.snap-flash {
+    border-color: #fff;
+    box-shadow: 0 0 30px #ffffff88;
+  }
+
+  /* penalty flash */
+  #tracker.snap-penalty {
+    border-color: var(--hud-red);
+    box-shadow: 0 0 30px #ff334488;
+  }
+
+  /* photo flash */
+  #flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: white;
+    opacity: 0;
+    z-index: 90;
+    pointer-events: none;
+    transition: opacity 0.05s;
+  }
+
+  /* feedback popups */
+  .feedback {
+    position: absolute;
+    font-family: 'Orbitron', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    pointer-events: none;
+    z-index: 80;
+    animation: floatUp 0.9s forwards;
+    text-shadow: 0 0 10px currentColor;
+  }
+  @keyframes floatUp {
+    0% { opacity: 1; transform: translate(-50%, -50%); }
+    100% { opacity: 0; transform: translate(-50%, -130%); }
+  }
+
+  /* end screen */
+  #end-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    text-align: center;
+    padding: 40px;
+  }
+
+  #end-screen h2 {
+    font-family: 'Orbitron', monospace;
+    font-size: 2rem;
+    color: var(--hud-green);
+    text-shadow: 0 0 20px #00ff8866;
+  }
+
+  .score-breakdown {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 24px 40px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 300px;
+  }
+
+  .score-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 40px;
+    font-size: 0.9rem;
+  }
+
+  .score-row.score-sub {
+    font-size: 0.75rem;
+    opacity: 0.75;
+    margin-top: -6px;
+  }
+
+  .score-row .val {
+    font-family: 'Orbitron', monospace;
+    color: var(--hud-green);
+  }
+
+  .score-row .val.dim  { color: var(--hud-dim); }
+  .score-row .val.amber { color: var(--hud-amber); }
+  .score-row .val.red  { color: var(--hud-red); }
+
+  .score-total {
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+    font-family: 'Orbitron', monospace;
+    font-size: 1.4rem;
+    color: var(--hud-amber);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* joystick indicator (debug) */
+  #joy-indicator {
+    position: fixed;
+    bottom: 12px;
+    right: 12px;
+    width: 60px;
+    height: 60px;
+    border: 1px solid #1a3320;
+    border-radius: 50%;
+    z-index: 200;
+    display: none;
+  }
+  #joy-dot {
+    position: absolute;
+    width: 10px; height: 10px;
+    background: var(--hud-green);
+    border-radius: 50%;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    transition: none;
+  }
+</style>
+</head>
+<body>
+
+<!-- START SCREEN -->
+<div id="start-screen">
+  <h1>RTT TRAINER</h1>
+  <div class="subtitle">Rapid Tracking Test — CBAT Practice System</div>
+  <div class="instructions">
+    <p><strong>OBJECTIVE:</strong> Track the named shape and press <span class="key">SPACE</span> or joystick trigger 3 times to capture it. Each hit scores points.</p>
+    <br>
+    <p><strong>CONTROLS:</strong></p>
+    <p>Move tracker — <span class="key">↑</span><span class="key">↓</span><span class="key">←</span><span class="key">→</span> arrow keys or joystick</p>
+    <p>Snap image — <span class="key">SPACE</span> or joystick trigger</p>
+    <br>
+    <p><strong>ZONES:</strong> Objects are visible in the left and right 20% of the screen. The centre 60% is blacked out — predict their path and track them through.</p>
+    <br>
+    <p><strong>DIFFICULTY:</strong> Objects start slow and accelerate over 3 minutes. Distractors will appear — ignore them and focus on the objective shape.</p>
+    <br>
+    <p><strong>SCORING:</strong> +100 per snap · +500 combo bonus for 3-snap capture · −250 for incorrect snap · No penalty for missed shapes</p>
+  </div>
+  <button class="btn-start" onclick="startGame()">INITIATE SESSION</button>
+</div>
+
+<!-- GAME -->
+<div id="game-wrapper">
+  <div id="hud">
+    <div class="hud-block">
+      <div class="hud-label">Score</div>
+      <div class="hud-value" id="score-value">&nbsp;0</div>
+    </div>
+    <div id="target-list-panel">
+      <div class="obj-label" style="letter-spacing:0.18em;">TARGET LIST</div>
+      <div id="target-slots">
+        <div class="target-slot" id="tslot-0"></div>
+        <div class="target-slot" id="tslot-1"></div>
+        <div class="target-slot" id="tslot-2"></div>
+      </div>
+    </div>
+    <div class="hud-block">
+      <div class="hud-label">Hits</div>
+      <div class="hud-value" style="color:var(--hud-green)" id="hits-val">0</div>
+    </div>
+    <div class="hud-block">
+      <div class="hud-label">Missed</div>
+      <div class="hud-value" style="color:var(--hud-amber)" id="missed-val">0</div>
+    </div>
+    <div class="hud-block">
+      <div class="hud-label">Bad Snaps</div>
+      <div class="hud-value" style="color:var(--hud-red)" id="badsnap-val">0</div>
+    </div>
+    <div class="hud-block">
+      <div class="hud-label">Time</div>
+      <div class="hud-value" id="timer-value">3:00</div>
+    </div>
+  </div>
+
+  <div id="arena-container">
+    <div id="arena">
+      <div id="zone-left">
+        <div class="grid-overlay"></div>
+        <div class="zone-label">VISIBLE</div>
+      </div>
+      <div id="zone-right">
+        <div class="grid-overlay"></div>
+        <div class="zone-label">VISIBLE</div>
+      </div>
+      <canvas id="fog-canvas"></canvas>
+      <div id="tracker">
+        <div class="tracker-corner tc-tl"></div>
+        <div class="tracker-corner tc-tr"></div>
+        <div class="tracker-corner tc-bl"></div>
+        <div class="tracker-corner tc-br"></div>
+      </div>
+      <div id="flash-overlay"></div>
+    </div>
+  </div>
+</div>
+
+<!-- END SCREEN -->
+<div id="end-screen">
+  <h2>SESSION COMPLETE</h2>
+  <div class="score-breakdown">
+    <div class="score-row">
+      <span>Targets Captured (3-snap)</span>
+      <span class="val" id="end-captured">0</span>
+    </div>
+    <div class="score-row score-sub">
+      <span>&nbsp;&nbsp;× Snap points (2 × +100)</span>
+      <span class="val dim" id="end-snap-pts">0</span>
+    </div>
+    <div class="score-row score-sub">
+      <span>&nbsp;&nbsp;× Combo bonus (× +300)</span>
+      <span class="val dim" id="end-combo-pts">0</span>
+    </div>
+    <div class="score-row">
+      <span>Partial Captures</span>
+      <span class="val" id="end-partial">0</span>
+    </div>
+    <div class="score-row score-sub">
+      <span>&nbsp;&nbsp;× Snap points (partial)</span>
+      <span class="val dim" id="end-partial-pts">0</span>
+    </div>
+    <div class="score-row">
+      <span>Targets Missed (off-screen)</span>
+      <span class="val amber" id="end-missed">0</span>
+    </div>
+    <div class="score-row">
+      <span>Bad Snaps (penalty)</span>
+      <span class="val red" id="end-badsnaps">0</span>
+    </div>
+    <div class="score-row score-sub">
+      <span>&nbsp;&nbsp;× Penalty (× −250)</span>
+      <span class="val red" id="end-penalty-pts">0</span>
+    </div>
+    <div class="score-row">
+      <span>Accuracy</span>
+      <span class="val" id="end-acc">—</span>
+    </div>
+    <div class="score-total">
+      <span>TOTAL SCORE&nbsp;</span>
+      <span id="end-total">0</span>
+    </div>
+  </div>
+  <button class="btn-start" onclick="restartGame()">FLY AGAIN</button>
+</div>
+
+<div id="joy-indicator"><div id="joy-dot"></div></div>
+
+<script>
+// ─── CONFIG ──────────────────────────────────────────────────────────────────
+const GAME_DURATION = 180; // seconds
+const ARENA_W_PCT = { left: 0.10, center: 0.80, right: 0.10 };
+const TRACKER_SPEED_KB = 320; // px/sec keyboard
+const TRACKER_SPEED_JOY = 480; // px/sec joystick (50% faster than keyboard)
+const SNAP_RADIUS = 55; // px from centre tracker to centre object
+
+const SHAPES = ['circle','square','triangle','diamond','pentagon'];
+const COLORS = ['red','cyan','orange','lime','magenta','yellow'];
+
+// difficulty ramp: over 180s objects go from 12s to 7s crossing time
+function crossTime(t) {
+  // t = elapsed seconds 0..180
+  const pct = Math.min(t / GAME_DURATION, 1);
+  return 12 - pct * 5; // 12s -> 7s
+}
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let state = {};
+let animId = null;
+let lastTs = null;
+let gamepad = null;
+let gamepadPollId = null;
+
+function initialState() {
+  return {
+    running: false,
+    elapsed: 0,
+    score: 0,
+    hits: 0,
+    missedShapes: 0,  // targets that passed off-screen uncaptured
+    badSnaps: 0,      // incorrect snap attempts
+    partialSnapTotal: 0, // running total of snaps on non-completed targets
+    fullCaptures: 0,
+    partialCaptures: 0,
+    // tracker
+    tx: 0, ty: 0,
+    // keyboard
+    keys: {},
+    // joystick axes
+    joyX: 0, joyY: 0,
+    // objects on screen
+    objects: [],
+    nextObjId: 0,
+    // target queue
+    targetQueue: [],
+    nextTargetId: 0,
+    // spawn timer
+    spawnTimer: 0,
+    nextSpawnInterval: 0,
+    // snap cooldown
+    snapCooldown: 0,
+  };
+}
+
+// ─── DOM ─────────────────────────────────────────────────────────────────────
+const startScreen  = document.getElementById('start-screen');
+const gameWrapper  = document.getElementById('game-wrapper');
+const endScreen    = document.getElementById('end-screen');
+const arena        = document.getElementById('arena');
+const tracker      = document.getElementById('tracker');
+const flashOverlay = document.getElementById('flash-overlay');
+const scoreVal     = document.getElementById('score-value');
+const timerVal     = document.getElementById('timer-value');
+const hitsVal      = document.getElementById('hits-val');
+const missedVal    = document.getElementById('missed-val');
+const badsnapVal   = document.getElementById('badsnap-val');
+const joyIndicator = document.getElementById('joy-indicator');
+const joyDot       = document.getElementById('joy-dot');
+
+const fogCanvas   = document.getElementById('fog-canvas');
+const fogCtx      = fogCanvas.getContext('2d');
+
+let arenaRect = { width: 0, height: 0 };
+
+// ─── FOG PATCHES ─────────────────────────────────────────────────────────────
+// Each patch is a soft blob in the blackout zone that fades in/out independently
+let fogPatches = [];
+
+function initFogPatches() {
+  fogPatches = [];
+  // Start with 5 patches; more added as difficulty rises
+  for (let i = 0; i < 6; i++) addFogPatch(true);
+}
+
+function addFogPatch(immediate) {
+  const aW = arenaRect.width || 900;
+  const aH = arenaRect.height || 500;
+  const leftBound  = aW * 0.10;
+  const rightBound = aW * 0.90;
+  const centerW    = rightBound - leftBound;
+  fogPatches.push({
+    // position within the center zone
+    cx: leftBound + Math.random() * centerW,
+    cy: aH * (0.05 + Math.random() * 0.90),
+    rx: centerW * (0.12 + Math.random() * 0.18),  // ellipse x radius
+    ry: aH      * (0.10 + Math.random() * 0.20),  // ellipse y radius
+    // opacity animation
+    phase:    immediate ? Math.random() * Math.PI * 2 : 0,
+    speed:    0.25 + Math.random() * 0.35,   // radians/sec
+    minAlpha: 0.0,
+    maxAlpha: 0.55 + Math.random() * 0.35,
+    // slow drift
+    driftX: (Math.random() - 0.5) * 18,
+    driftY: (Math.random() - 0.5) * 10,
+    baseX: 0, baseY: 0,
+    life: 0,
+    lifespan: 8 + Math.random() * 12, // seconds before respawn
+  });
+  fogPatches[fogPatches.length-1].baseX = fogPatches[fogPatches.length-1].cx;
+  fogPatches[fogPatches.length-1].baseY = fogPatches[fogPatches.length-1].cy;
+}
+
+// Persistent scale factor so it smoothly adjusts frame-to-frame rather than snapping
+let fogHoleScale = 1.0;
+
+function updateFog(dt, elapsed) {
+  const aW = arenaRect.width;
+  const aH = arenaRect.height;
+  if (!aW || !aH) return;
+
+  const pct = Math.min(elapsed / GAME_DURATION, 1);
+  const leftBound  = aW * 0.10;
+  const rightBound = aW * 0.90;
+  const centerW    = rightBound - leftBound;
+
+  // base darkness — fully opaque so destination-out holes are the only transparency
+  const baseDark = 1.0;
+
+  // advance patch state
+  fogPatches.forEach(p => {
+    p.life  += dt;
+    p.phase += dt * p.speed;
+    p.cx = p.baseX + Math.sin(p.phase * 0.7) * p.driftX;
+    p.cy = p.baseY + Math.cos(p.phase * 0.5) * p.driftY;
+    // respawn
+    if (p.life > p.lifespan) {
+      p.baseX = leftBound + Math.random() * centerW;
+      p.baseY = aH * (0.05 + Math.random() * 0.90);
+      p.cx = p.baseX; p.cy = p.baseY;
+      p.rx = centerW * (0.10 + Math.random() * 0.15);
+      p.ry = aH      * (0.08 + Math.random() * 0.18);
+      p.speed    = 0.20 + Math.random() * 0.30;
+      p.maxAlpha = 0.50 + Math.random() * 0.40;
+      p.life = 0;
+      p.lifespan = 8 + Math.random() * 12;
+      p.driftX = (Math.random() - 0.5) * 18;
+      p.driftY = (Math.random() - 0.5) * 10;
+    }
+  });
+
+  // add more patches as difficulty rises
+  const targetCount = 5 + Math.round(pct * 4);
+  while (fogPatches.length < targetCount) addFogPatch(false);
+
+  // ── Draw loop with binary-search scale to hit exactly ≤30% revealed ─────────
+  // We draw to an offscreen canvas at reduced resolution for cheap pixel sampling,
+  // then use that to tune fogHoleScale, then draw final at full res.
+
+  const SAMPLE_SCALE = 0.12; // 12% of full res — fast enough, accurate enough
+  const sW = Math.max(1, Math.round(centerW * SAMPLE_SCALE));
+  const sH = Math.max(1, Math.round(aH * SAMPLE_SCALE));
+
+  // reuse offscreen canvas
+  if (!updateFog._offscreen) {
+    updateFog._offscreen = document.createElement('canvas');
+    updateFog._offCtx    = updateFog._offscreen.getContext('2d');
+  }
+  const oc  = updateFog._offscreen;
+  const oct = updateFog._offCtx;
+  oc.width  = sW;
+  oc.height = sH;
+
+  function drawHoles(ctx, scaleX, scaleY, holeAlphaScale) {
+    ctx.globalCompositeOperation = 'destination-out';
+    fogPatches.forEach(p => {
+      const rawAlpha = p.minAlpha + (p.maxAlpha - p.minAlpha) * (0.5 + 0.5 * Math.sin(p.phase));
+      const alpha = Math.min(1, rawAlpha * holeAlphaScale);
+      const clampedCx = Math.max(leftBound, Math.min(rightBound, p.cx));
+      // map to canvas coords
+      const cx = (clampedCx - leftBound) * scaleX;
+      const cy = p.cy * scaleY;
+      const rx = p.rx * scaleX;
+      const ry = p.ry * scaleY;
+      const r  = Math.max(rx, ry, 1);
+
+      const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+      grad.addColorStop(0,   `rgba(0,0,0,${alpha})`);
+      grad.addColorStop(0.5, `rgba(0,0,0,${(alpha * 0.55).toFixed(3)})`);
+      grad.addColorStop(1,   'rgba(0,0,0,0)');
+
+      ctx.save();
+      ctx.scale(1, ry / Math.max(rx, 1));
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(cx, cy * (rx / Math.max(ry, 1)), rx, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  function measureRevealedFraction(holeAlphaScale) {
+    oct.clearRect(0, 0, sW, sH);
+    oct.fillStyle = `rgba(2,4,4,1)`;
+    oct.fillRect(0, 0, sW, sH);
+    drawHoles(oct, sW / centerW, sH / aH, holeAlphaScale);
+    const data = oct.getImageData(0, 0, sW, sH).data;
+    let transparent = 0;
+    const total = sW * sH;
+    // stride by 4 pixels for speed (every other row+col)
+    for (let i = 3; i < data.length; i += 16) {
+      if (data[i] < 180) transparent++; // alpha < ~70% = "revealed"
+    }
+    const sampled = Math.floor(data.length / 16);
+    return transparent / sampled;
+  }
+
+  // Binary search for the largest holeAlphaScale that keeps revealed ≤ 30%
+  const MAX_REVEALED = 0.30;
+  let lo = 0, hi = 1.5, bestScale = 0;
+  for (let iter = 0; iter < 7; iter++) {
+    const mid = (lo + hi) / 2;
+    const revealed = measureRevealedFraction(mid);
+    if (revealed <= MAX_REVEALED) {
+      bestScale = mid;
+      lo = mid;
+    } else {
+      hi = mid;
+    }
+  }
+
+  // Smooth the scale so it doesn't jump harshly frame to frame
+  const smoothRate = 3.0; // how fast it chases the target
+  fogHoleScale += (bestScale - fogHoleScale) * Math.min(1, smoothRate * dt);
+
+  // ── Final full-resolution draw ────────────────────────────────────────────
+  fogCanvas.width  = aW;
+  fogCanvas.height = aH;
+
+  // solid blackout base for centre zone
+  fogCtx.clearRect(0, 0, aW, aH);
+  fogCtx.fillStyle = `rgba(2,4,4,${baseDark})`;
+  fogCtx.fillRect(leftBound, 0, centerW, aH);
+
+  // feathered edges
+  const feather = aW * 0.035;
+  const gradL = fogCtx.createLinearGradient(leftBound - feather, 0, leftBound + feather * 0.4, 0);
+  gradL.addColorStop(0, 'rgba(2,4,4,0)');
+  gradL.addColorStop(1, `rgba(2,4,4,${baseDark})`);
+  fogCtx.fillStyle = gradL;
+  fogCtx.fillRect(leftBound - feather, 0, feather * 1.4, aH);
+
+  const gradR = fogCtx.createLinearGradient(rightBound - feather * 0.4, 0, rightBound + feather, 0);
+  gradR.addColorStop(0, `rgba(2,4,4,${baseDark})`);
+  gradR.addColorStop(1, 'rgba(2,4,4,0)');
+  fogCtx.fillStyle = gradR;
+  fogCtx.fillRect(rightBound - feather * 0.4, 0, feather * 1.4, aH);
+
+  // clip final hole drawing to centre zone
+  fogCtx.save();
+  fogCtx.beginPath();
+  fogCtx.rect(leftBound, 0, centerW, aH);
+  fogCtx.clip();
+  drawHoles(fogCtx, 1, 1, fogHoleScale);
+  fogCtx.restore();
+}
+
+function refreshArenaRect() {
+  const r = arena.getBoundingClientRect();
+  arenaRect.width  = r.width;
+  arenaRect.height = r.height;
+}
+
+// ─── START / END ─────────────────────────────────────────────────────────────
+function startGame() {
+  startScreen.style.display = 'none';
+  endScreen.style.display = 'none';
+  gameWrapper.style.display = 'flex';
+  refreshArenaRect();
+
+  state = initialState();
+  state.tx = arenaRect.width * 0.5;
+  state.ty = arenaRect.height * 0.5;
+  state.running = true;
+
+  // clear old objects from DOM
+  document.querySelectorAll('.obj').forEach(e => e.remove());
+
+  initFogPatches();
+  initTargetQueue();
+  scheduleNextSpawn();
+
+  lastTs = null;
+  animId = requestAnimationFrame(loop);
+
+  // gamepad polling
+  window.addEventListener('gamepadconnected', onGamepadConnected);
+  window.addEventListener('gamepaddisconnected', onGamepadDisconnected);
+  scanGamepad();
+}
+
+function restartGame() {
+  endScreen.style.display = 'none';
+  startGame();
+}
+
+function endGame() {
+  state.running = false;
+  cancelAnimationFrame(animId);
+
+  // tally leftover partial captures and their snaps
+  let partialSnapTotal = 0;
+  state.objects.forEach(o => {
+    if (o.isObjective && o.snaps > 0 && o.snaps < 3) {
+      state.partialCaptures++;
+      partialSnapTotal += o.snaps;
+    }
+  });
+
+  // score breakdown components
+  const capturedSnapPts  = state.fullCaptures * 200;      // 2 × +100 per full capture
+  const comboPts         = state.fullCaptures * 300;      // +300 combo per full capture
+  const partialPts       = state.partialSnapTotal + partialSnapTotal; // +100 per partial snap
+  const penaltyPts       = state.badSnaps * 250;
+
+  const total = state.fullCaptures + state.partialCaptures;
+  const acc = total === 0 ? '—' : Math.round(state.fullCaptures / total * 100) + '%';
+
+  document.getElementById('end-captured').textContent    = state.fullCaptures;
+  document.getElementById('end-snap-pts').textContent    = '+' + capturedSnapPts;
+  document.getElementById('end-combo-pts').textContent   = '+' + comboPts;
+  document.getElementById('end-partial').textContent     = state.partialCaptures;
+  document.getElementById('end-partial-pts').textContent = '+' + partialPts;
+  document.getElementById('end-missed').textContent      = state.missedShapes;
+  document.getElementById('end-badsnaps').textContent    = state.badSnaps;
+  document.getElementById('end-penalty-pts').textContent = penaltyPts > 0 ? '−' + penaltyPts : '0';
+  document.getElementById('end-acc').textContent         = acc;
+  document.getElementById('end-total').textContent       = state.score;
+
+  document.querySelectorAll('.obj').forEach(e => e.remove());
+  gameWrapper.style.display = 'none';
+  endScreen.style.display = 'flex';
+}
+
+// ─── TARGET QUEUE ─────────────────────────────────────────────────────────────
+// queue: array of up to 3 { id, shape, color, snaps, onScreen }
+// onScreen: id of the live object currently tracking this slot (or null)
+
+function genUniqueTarget(existingTargets) {
+  // pick a shape+color combo not already in the queue
+  let shape, color, tries = 0;
+  do {
+    shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+    color = COLORS[Math.floor(Math.random() * COLORS.length)];
+    tries++;
+  } while (tries < 30 && existingTargets.some(t => t.shape === shape && t.color === color));
+  return { id: state.nextTargetId++, shape, color, snaps: 0, onScreen: null };
+}
+
+function initTargetQueue() {
+  state.targetQueue = [];
+  state.nextTargetId = 0;
+  for (let i = 0; i < 3; i++) {
+    state.targetQueue.push(genUniqueTarget(state.targetQueue));
+  }
+  renderTargetList();
+}
+
+function renderTargetList() {
+  for (let i = 0; i < 3; i++) {
+    const slot = document.getElementById(`tslot-${i}`);
+    const t = state.targetQueue[i];
+    if (!t) {
+      slot.className = 'target-slot empty';
+      slot.innerHTML = '<div class="slot-label">—</div>';
+      continue;
+    }
+    const isActive = t.onScreen !== null;
+    slot.className = 'target-slot' + (isActive ? ' active' : '');
+    slot.innerHTML = `
+      <div class="slot-icon-row">
+        <svg viewBox="0 0 20 20" width="20" height="20">${shapeSVG(t.shape, colorHex(t.color), 20)}</svg>
+        <span class="slot-name">${t.color.toUpperCase()}<br>${t.shape.toUpperCase()}</span>
+      </div>
+      <div class="slot-pips">
+        ${[0,1,2].map(p => `<div class="slot-pip${p < t.snaps ? ' filled' : ''}"></div>`).join('')}
+      </div>`;
+  }
+}
+
+// called from spawnObject to get the next target slot to spawn (if any)
+function getNextQueuedTarget() {
+  // find slots not yet on screen, whose shape doesn't clash with active on-screen objectives
+  const activeShapes = state.objects
+    .filter(o => o.isObjective && !o.done)
+    .map(o => o.shape);
+  const activeOnScreen = state.targetQueue.filter(t => t.onScreen !== null).length;
+  if (activeOnScreen >= 2) return null; // already 2 active
+  return state.targetQueue.find(t =>
+    t.onScreen === null && !activeShapes.includes(t.shape)
+  ) || null;
+}
+
+// mark a queue slot as having its object on screen
+function markTargetOnScreen(targetId, objId) {
+  const t = state.targetQueue.find(t => t.id === targetId);
+  if (t) { t.onScreen = objId; renderTargetList(); }
+}
+
+// called when an objective object exits or is captured
+function resolveTarget(targetId, captured) {
+  const idx = state.targetQueue.findIndex(t => t.id === targetId);
+  if (idx === -1) return;
+  // remove from queue
+  state.targetQueue.splice(idx, 1);
+  // add a fresh replacement at the back (keep queue at 3)
+  const fresh = genUniqueTarget(state.targetQueue);
+  state.targetQueue.push(fresh);
+  renderTargetList();
+}
+
+// update pips for a target slot mid-game
+function updateTargetSnaps(targetId, snaps) {
+  const t = state.targetQueue.find(t => t.id === targetId);
+  if (t) { t.snaps = snaps; renderTargetList(); }
+}
+
+// ─── SHAPES ──────────────────────────────────────────────────────────────────
+function colorHex(name) {
+  const map = {
+    red:'#ff3344', cyan:'#00eeff', orange:'#ff8800',
+    lime:'#88ff00', magenta:'#ff00cc', yellow:'#ffee00'
+  };
+  return map[name] || '#ffffff';
+}
+
+function shapeSVG(shape, color, size, stroke='none') {
+  const h = size, w = size, c = size/2;
+  switch(shape) {
+    case 'circle':
+      return `<circle cx="${c}" cy="${c}" r="${c*0.82}" fill="${color}" stroke="${stroke}" stroke-width="2"/>`;
+    case 'square':
+      const m = size*0.1;
+      return `<rect x="${m}" y="${m}" width="${size-m*2}" height="${size-m*2}" fill="${color}" stroke="${stroke}" stroke-width="2"/>`;
+    case 'triangle':
+      return `<polygon points="${c},${size*0.08} ${size*0.92},${size*0.92} ${size*0.08},${size*0.92}" fill="${color}" stroke="${stroke}" stroke-width="2"/>`;
+    case 'diamond':
+      return `<polygon points="${c},${size*0.05} ${size*0.95},${c} ${c},${size*0.95} ${size*0.05},${c}" fill="${color}" stroke="${stroke}" stroke-width="2"/>`;
+    case 'pentagon': {
+      const pts = [];
+      for(let i=0;i<5;i++){
+        const a = (i*72-90)*Math.PI/180;
+        pts.push(`${c+c*0.88*Math.cos(a)},${c+c*0.88*Math.sin(a)}`);
+      }
+      return `<polygon points="${pts.join(' ')}" fill="${color}" stroke="${stroke}" stroke-width="2"/>`;
+    }
+    default: return '';
+  }
+}
+
+function createObjectEl(o) {
+  const el = document.createElementNS ? document.createElement('div') : document.createElement('div');
+  el.className = 'obj';
+  el.id = 'obj_' + o.id;
+  const sz = o.size;
+  const svg = `<svg viewBox="0 0 ${sz} ${sz}" width="${sz}" height="${sz}" xmlns="http://www.w3.org/2000/svg">${shapeSVG(o.shape, colorHex(o.color), sz, 'rgba(0,0,0,0.3)')}</svg>`;
+  el.innerHTML = svg;
+  arena.appendChild(el);
+  return el;
+}
+
+// ─── SPAWNING ─────────────────────────────────────────────────────────────────
+function scheduleNextSpawn() {
+  // spawn every 1.0-2.0 seconds initially, tightening with difficulty
+  const pct = Math.min(state.elapsed / GAME_DURATION, 1);
+  state.nextSpawnInterval = 2.0 - pct * 0.8 + Math.random() * 0.5;
+  state.spawnTimer = 0;
+}
+
+function spawnObject() {
+  const aW = arenaRect.width;
+  const aH = arenaRect.height;
+
+  // try to get a queued target to spawn
+  const target = getNextQueuedTarget();
+  const isObjective = target !== null;
+
+  let shape, color, targetId;
+  if (isObjective) {
+    shape = target.shape;
+    color = target.color;
+    targetId = target.id;
+  } else {
+    // distractor — pick a shape/color not matching any active objective shape
+    const activeShapes = state.objects.filter(o => o.isObjective && !o.done).map(o => o.shape);
+    let tries = 0;
+    do {
+      shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+      color = COLORS[Math.floor(Math.random() * COLORS.length)];
+      tries++;
+    } while (tries < 20 && activeShapes.includes(shape));
+    targetId = null;
+  }
+
+  const baseCross = crossTime(state.elapsed);
+  const duration  = baseCross * (0.70 + Math.random() * 0.60);
+  const size = 26 + Math.random() * 16;
+
+  const fromLeft = Math.random() < 0.5;
+  const startX = fromLeft ? -size : aW + size;
+  const endX   = fromLeft ? aW + size : -size;
+  const startY = aH * (0.08 + Math.random() * 0.84);
+
+  const A = (Math.random() - 0.5) * aH * 1.0;
+  const B = 0.2 + Math.random() * 0.6;
+  const C = (Math.random() - 0.5) * aH * 0.9;
+  const D = 0.1 + Math.random() * 0.8;
+  const coeffs = { A, B, C, D };
+
+  const jitter = {
+    ampX: 0.8 + Math.random() * 1.2,
+    ampY: 1.0 + Math.random() * 2.0,
+    freqX: 0.20 + Math.random() * 0.30,
+    freqY: 0.15 + Math.random() * 0.25,
+    phaseX: Math.random() * Math.PI * 2,
+    phaseY: Math.random() * Math.PI * 2,
+  };
+
+  const id = state.nextObjId++;
+  const obj = {
+    id, shape, color, size,
+    startX, endX, startY,
+    duration,
+    elapsed: 0,
+    done: false,
+    isObjective,
+    targetId,   // links back to queue slot
+    snaps: 0,
+    el: null,
+    coeffs, fromLeft, jitter
+  };
+  obj.el = createObjectEl(obj);
+  state.objects.push(obj);
+
+  if (isObjective) markTargetOnScreen(targetId, id);
+}
+
+function objPosition(o, t) {
+  const aH = arenaRect.height;
+  const x = o.startX + (o.endX - o.startX) * t;
+  const { A, B, C, D } = o.coeffs;
+  const y = o.startY
+    + A * Math.pow(t - (B||0.5), 2)
+    + (C ? C * Math.pow(t - (D||0.5), 3) : 0);
+
+  // per-object jitter overlay (small high-frequency oscillation)
+  const j = o.jitter;
+  const time = o.elapsed;
+  const jx = j ? j.ampX * Math.sin(time * j.freqX * Math.PI * 2 + j.phaseX) : 0;
+  const jy = j ? j.ampY * Math.sin(time * j.freqY * Math.PI * 2 + j.phaseY) : 0;
+
+  return {
+    x: x + jx,
+    y: Math.max(o.size, Math.min(aH - o.size, y + jy))
+  };
+}
+
+// ─── MAIN LOOP ────────────────────────────────────────────────────────────────
+function loop(ts) {
+  if (!state.running) return;
+  if (!lastTs) lastTs = ts;
+  const dt = Math.min((ts - lastTs) / 1000, 0.05);
+  lastTs = ts;
+
+  refreshArenaRect();
+  state.elapsed = Math.min(state.elapsed + dt, GAME_DURATION);
+
+  // timer HUD
+  const rem = GAME_DURATION - state.elapsed;
+  const m = Math.floor(rem / 60);
+  const s = Math.floor(rem % 60);
+  timerVal.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+  timerVal.classList.toggle('urgent', rem <= 30);
+
+  if (state.elapsed >= GAME_DURATION) { endGame(); return; }
+
+  if (state.snapCooldown > 0) state.snapCooldown -= dt;
+
+  // tracker movement
+  pollGamepad();
+  moveTracker(dt);
+
+  // spawn
+  state.spawnTimer += dt;
+  if (state.spawnTimer >= state.nextSpawnInterval) {
+    // cap total objects — 50% more than before
+    const maxObjs = 3 + Math.round(Math.min(state.elapsed / GAME_DURATION, 1) * 5);
+    if (state.objects.filter(o=>!o.done).length < maxObjs) {
+      spawnObject();
+    }
+    scheduleNextSpawn();
+  }
+
+  // update fog canvas
+  updateFog(dt, state.elapsed);
+
+  // update objects
+  state.objects.forEach(o => {
+    if (o.done) return;
+    o.elapsed += dt;
+    const t = o.elapsed / o.duration;
+    if (t > 1) {
+      // object exited
+      if (o.isObjective) {
+        if (o.snaps === 0) {
+          state.missedShapes++;
+          missedVal.textContent = state.missedShapes;
+          showFeedback(arenaRect.width * 0.5, arenaRect.height * 0.5, 'MISSED', '#ff8800');
+        } else if (o.snaps < 3) {
+          state.missedShapes++;
+          state.partialSnapTotal += o.snaps;
+          missedVal.textContent = state.missedShapes;
+        }
+        resolveTarget(o.targetId, false);
+      }
+      o.done = true;
+      o.el.remove();
+      return;
+    }
+    const pos = objPosition(o, t);
+    o.x = pos.x; o.y = pos.y;
+    o.el.style.left = pos.x + 'px';
+    o.el.style.top  = pos.y + 'px';
+
+    // visibility: in blackout zone, objects show through fog "holes"
+    const leftBound  = arenaRect.width * 0.10;
+    const rightBound = arenaRect.width * 0.90;
+    const inBlackout = pos.x > leftBound && pos.x < rightBound;
+    if (!inBlackout) {
+      o.el.style.opacity = '1';
+    } else {
+      // sample fog canvas at object centre: pixel alpha tells us how opaque the blackout is
+      // (destination-out means high canvas alpha = hole cut = object visible)
+      const px = Math.round(pos.x);
+      const py = Math.round(pos.y);
+      let fogAlpha = 1; // default fully hidden
+      try {
+        const d = fogCtx.getImageData(px, py, 1, 1).data;
+        // d[3] is the remaining blackout alpha (0=hole/visible, 255=fully black)
+        fogAlpha = d[3] / 255;
+      } catch(e) {}
+      // tracker window always reveals object
+      const trackerDist = Math.sqrt((state.tx - pos.x)**2 + (state.ty - pos.y)**2);
+      const trackerReveal = Math.max(0, 1 - trackerDist / 50);
+      const visibility = Math.max(trackerReveal, 1 - fogAlpha);
+      o.el.style.opacity = visibility.toFixed(3);
+    }
+  });
+
+  // clean done
+  state.objects = state.objects.filter(o => !o.done);
+
+  // update tracker DOM
+  tracker.style.left = state.tx + 'px';
+  tracker.style.top  = state.ty + 'px';
+
+  // show cooldown state on tracker border
+  tracker.style.opacity = state.snapCooldown > 0 ? '0.45' : '1';
+
+  scoreVal.textContent = '\u00a0' + state.score;
+  hitsVal.textContent  = state.hits;
+  missedVal.textContent  = state.missedShapes;
+  badsnapVal.textContent = state.badSnaps;
+
+  animId = requestAnimationFrame(loop);
+}
+
+// ─── TRACKER MOVEMENT ────────────────────────────────────────────────────────
+function moveTracker(dt) {
+  const aW = arenaRect.width;
+  const aH = arenaRect.height;
+
+  // keyboard contribution at fixed speed
+  let kbDx = 0, kbDy = 0;
+  if (state.keys['ArrowLeft'])  kbDx -= 1;
+  if (state.keys['ArrowRight']) kbDx += 1;
+  if (state.keys['ArrowUp'])    kbDy -= 1;
+  if (state.keys['ArrowDown'])  kbDy += 1;
+  if (kbDx !== 0 && kbDy !== 0) { kbDx *= 0.707; kbDy *= 0.707; }
+
+  // joystick: proportional to axis, 50% faster max than keyboard
+  let jX = state.joyX, jY = state.joyY;
+  const deadzone = 0.08;
+  if (Math.abs(jX) < deadzone) jX = 0;
+  if (Math.abs(jY) < deadzone) jY = 0;
+
+  // apply independently so joystick speed doesn't get clamped by keyboard normalisation
+  state.tx += kbDx * TRACKER_SPEED_KB  * dt;
+  state.tx += jX   * TRACKER_SPEED_JOY * dt;
+  state.ty += kbDy * TRACKER_SPEED_KB  * dt;
+  state.ty += jY   * TRACKER_SPEED_JOY * dt;
+
+  state.tx = Math.max(0, Math.min(aW, state.tx));
+  state.ty = Math.max(0, Math.min(aH, state.ty));
+}
+
+// ─── SNAP ─────────────────────────────────────────────────────────────────────
+function attemptSnap() {
+  if (!state.running) return;
+  if (state.snapCooldown > 0) return;
+
+  const objObjs = state.objects.filter(o => o.isObjective && !o.done);
+
+  if (!objObjs.length) {
+    applyPenalty();
+    return;
+  }
+
+  // find the closest objective within snap radius
+  let nearest = null, nearestDist = Infinity;
+  objObjs.forEach(o => {
+    const dist = Math.sqrt((state.tx - o.x)**2 + (state.ty - o.y)**2);
+    if (dist < nearestDist) { nearestDist = dist; nearest = o; }
+  });
+
+  if (nearestDist <= SNAP_RADIUS) {
+    state.snapCooldown = 0.5;
+    nearest.snaps++;
+    state.hits++;
+
+    const isCombo = nearest.snaps >= 3;
+    const snapScore = isCombo ? 300 : 100;
+    state.score += snapScore;
+
+    updateTargetSnaps(nearest.targetId, nearest.snaps);
+
+    doFlash('#00ff8833');
+    tracker.classList.add('snap-flash');
+    setTimeout(() => tracker.classList.remove('snap-flash'), 120);
+    showFeedback(state.tx, state.ty, isCombo ? '+300 COMBO!' : '+100', isCombo ? '#ffee00' : '#00ff88');
+
+    if (isCombo) {
+      state.fullCaptures++;
+      nearest.done = true;
+      nearest.el.remove();
+      state.objects = state.objects.filter(ob => ob !== nearest);
+      resolveTarget(nearest.targetId, true);
+    }
+  } else {
+    state.snapCooldown = 0.5;
+    applyPenalty();
+  }
+}
+
+function applyPenalty() {
+  const penalty = 250;
+  state.score = Math.max(0, state.score - penalty);
+  state.badSnaps++;
+  doFlash('#ff334422');
+  tracker.classList.add('snap-penalty');
+  setTimeout(() => tracker.classList.remove('snap-penalty'), 200);
+  showFeedback(state.tx, state.ty, `-${penalty}`, '#ff3344');
+  badsnapVal.textContent = state.badSnaps;
+}
+
+function doFlash(color = '#ffffff33') {
+  flashOverlay.style.background = color;
+  flashOverlay.style.opacity = '1';
+  setTimeout(() => flashOverlay.style.opacity = '0', 80);
+}
+
+function showFeedback(x, y, text, color) {
+  const el = document.createElement('div');
+  el.className = 'feedback';
+  el.textContent = text;
+  el.style.color = color;
+  el.style.left = x + 'px';
+  el.style.top  = y + 'px';
+  arena.appendChild(el);
+  setTimeout(() => el.remove(), 900);
+}
+
+// ─── GAMEPAD ──────────────────────────────────────────────────────────────────
+function onGamepadConnected(e) {
+  gamepad = e.gamepad;
+  joyIndicator.style.display = 'block';
+}
+function onGamepadDisconnected() {
+  gamepad = null;
+  joyIndicator.style.display = 'none';
+}
+function scanGamepad() {
+  // check if already connected on page load
+  const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+  for (const p of pads) {
+    if (p) { gamepad = p; joyIndicator.style.display = 'block'; break; }
+  }
+}
+
+let prevTrigger = false;
+function pollGamepad() {
+  if (!gamepad) return;
+  const pads = navigator.getGamepads();
+  const gp = pads[gamepad.index];
+  if (!gp) return;
+
+  // axes 0,1 = left stick
+  state.joyX = gp.axes[0] || 0;
+  state.joyY = gp.axes[1] || 0;
+
+  // debug dot
+  joyDot.style.left = (25 + state.joyX * 22) + 'px';
+  joyDot.style.top  = (25 + state.joyY * 22) + 'px';
+
+  // trigger: button 0 (A / Cross) or axes[2]/axes[5] for analog triggers
+  // Try button 5 (R1) and button 7 (R2/RT) and button 0
+  const triggerPressed = gp.buttons[0]?.pressed || gp.buttons[5]?.pressed || gp.buttons[7]?.pressed;
+  if (triggerPressed && !prevTrigger) {
+    attemptSnap();
+  }
+  prevTrigger = triggerPressed;
+}
+
+// ─── KEYBOARD ────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  state.keys[e.code] = true;
+  if (e.code === 'Space') { e.preventDefault(); attemptSnap(); }
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault();
+});
+document.addEventListener('keyup', e => { state.keys[e.code] = false; });
+
+window.addEventListener('resize', () => {
+  refreshArenaRect();
+  if (state.running) {
+    state.tx = Math.min(state.tx, arenaRect.width);
+    state.ty = Math.min(state.ty, arenaRect.height);
+  }
+});
+</script>
+</body>
+</html>

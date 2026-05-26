@@ -573,89 +573,128 @@ function togglePause(){
 function resumeGame(){if(G.paused)togglePause();}
 
 // --- QUESTION GENERATION ---
-// 3 questions per round.
-// At least 2 snippets must show ≥1 ground object (farm, truck, or troops).
-// Optional chart replaces the 3rd question ~33% of the time.
+// All 3 questions always test a ground object. Chart replaces one ~33% of rounds.
 function genQuestions(rd, useChart){
-  // Anchor two snippets on a ground-object cell so they reliably show objects
-  const objSnip1 = makeSnippet(rd, true,  0);
-  const objSnip2 = makeSnippet(rd, true,  0);
-  const flexQ    = useChart ? makeChart(rd) : makeSnippet(rd, false, 0);
-  return shuf([objSnip1, objSnip2, flexQ]);
+  const q1 = makeSnippet(rd, 0);
+  const q2 = makeSnippet(rd, 0);
+  const q3 = useChart ? makeChart(rd) : makeSnippet(rd, 0);
+  return shuf([q1, q2, q3]);
 }
 
-// All ground-object cell arrays available for anchoring / testing
 function allGroundCells(rd){ return [...rd.farmCells,...rd.truckCells,...rd.troopCells]; }
 
-// SNIPPET
-// requireObj=true  → snippet must contain ≥1 farm/truck/troop cell + ≥1 mountain cell
-// requireObj=false → anchor on mountain, ≥1 any game element OK
-function makeSnippet(rd, requireObj=false, attempt=0){
-  if(attempt>60) return makeSnippet(rd, false, 0);
-  const isCorrect=Math.random()<.5;
-  const size=rnd(3,5);
-  const mtnArr=[...rd.mountain.cells];
-  const groundAll=allGroundCells(rd);
-  let sr, sc;
+// Count mountain cells visible in a given window
+function mtnCountInWindow(rd, sr, sc, size){
+  let n=0;
+  for(let r=sr;r<sr+size;r++)
+    for(let c=sc;c<sc+size;c++)
+      if(rd.mountain.cells.has(CID(r,c))) n++;
+  return n;
+}
 
-  if(requireObj && groundAll.length){
-    // Try to anchor on a ground cell AND include ≥1 mountain cell
-    for(let t=0;t<80;t++){
-      const anch=RC(pick(groundAll));
-      const tr=Math.max(0,Math.min(anch.r-rnd(0,size-1),GRID-size));
-      const tc=Math.max(0,Math.min(anch.c-rnd(0,size-1),GRID-size));
-      const hasObj=groundAll.some(ci=>{const{r,c}=RC(ci);return r>=tr&&r<tr+size&&c>=tc&&c<tc+size;});
-      const hasMtn=mtnArr.some(mi=>{const{r,c}=RC(mi);return r>=tr&&r<tr+size&&c>=tc&&c<tc+size;});
-      if(hasObj&&hasMtn){sr=tr;sc=tc;break;}
-    }
-    // Fallback: just anchor on ground cell, no mountain requirement
-    if(sr===undefined){
-      for(let t=0;t<40;t++){
-        const anch=RC(pick(groundAll));
-        const tr=Math.max(0,Math.min(anch.r-rnd(0,size-1),GRID-size));
-        const tc=Math.max(0,Math.min(anch.c-rnd(0,size-1),GRID-size));
-        if(groundAll.some(ci=>{const{r,c}=RC(ci);return r>=tr&&r<tr+size&&c>=tc&&c<tc+size;})){sr=tr;sc=tc;break;}
-      }
-    }
-  }
-  // Anchor on mountain (always used for non-requireObj; also fallback)
-  if(sr===undefined){
-    for(let t=0;t<40;t++){
-      const anch=RC(pick(mtnArr));
-      const tr=Math.max(0,Math.min(anch.r-rnd(0,size-1),GRID-size));
-      const tc=Math.max(0,Math.min(anch.c-rnd(0,size-1),GRID-size));
-      if(mtnArr.some(mi=>{const{r,c}=RC(mi);return r>=tr&&r<tr+size&&c>=tc&&c<tc+size;})){sr=tr;sc=tc;break;}
-    }
-  }
-  if(sr===undefined) return makeSnippet(rd, requireObj, attempt+1);
-
-  // Decide what to move if incorrect
-  let useFarm=rd.farmCells, useTruck=rd.truckCells, useTroops=rd.troopCells, useTrees=rd.treeCells;
-  let movedWhat=null;
-  if(!isCorrect){
-    // Prefer moving a ground object for object-anchored questions; trees also possible
-    const choices=requireObj
-      ?['farm','truck','troops','farm','truck','troops','trees']  // 3:1 bias toward ground
-      :['farm','truck','troops','trees'];
-    const choice=pick(choices);
-    const srcMap={farm:rd.farmCells,truck:rd.truckCells,troops:rd.troopCells,trees:rd.treeCells};
-    const src=srcMap[choice];
-    const dr=rnd(2,5)*(Math.random()<.5?1:-1), dc=rnd(2,5)*(Math.random()<.5?1:-1);
-    const moved=src.map(ci=>{
-      const{r,c}=RC(ci);
-      return CID(Math.max(0,Math.min(8,r+dr)),Math.max(0,Math.min(8,c+dc)));
-    }).filter(ci=>!rd.mountain.cells.has(ci));
-    if(!moved.length) return makeSnippet(rd,requireObj,attempt+1);
-    if(choice==='farm')   useFarm=moved;
-    else if(choice==='truck')  useTruck=moved;
-    else if(choice==='troops') useTroops=moved;
-    else useTrees=moved;
-    movedWhat=choice;
-  }
-
-  const cells=[];
+// Count OTHER ground objects visible in window (excluding testedObj)
+function otherObjsInWindow(rd, sr, sc, size, testedObj, useFarm, useTruck, useTroops){
+  let n=0;
   for(let r=sr;r<sr+size;r++){
     for(let c=sc;c<sc+size;c++){
+      const i=CID(r,c);
+      if(testedObj!=='farm'   && useFarm.includes(i))   n++;
+      if(testedObj!=='truck'  && useTruck.includes(i))  n++;
+      if(testedObj!=='troops' && useTroops.includes(i)) n++;
+    }
+  }
+  return n;
+}
+
+// SNIPPET — always anchored on a ground object.
+// CORRECT:   show the object in its true location with ≥3 mountain cells OR another object visible.
+// INCORRECT: move the object ≥2 squares inside the window. Both the moved position AND
+//            ≥3 mountain cells (or another object) must be visible so the player can orient.
+function makeSnippet(rd, attempt=0){
+  if(attempt>120) {
+    // Hard fallback: generate a guaranteed simple correct snippet around the largest object cluster
+    return makeFallbackSnippet(rd);
+  }
+
+  const isCorrect = Math.random() < 0.5;
+  const size = rnd(3, 5);
+  const mtnArr = [...rd.mountain.cells];
+
+  // Always test one of the three ground objects
+  const testedObj = pick(['farm','truck','troops']);
+  const srcCells = {farm:rd.farmCells, truck:rd.truckCells, troops:rd.troopCells};
+  const anchorCell = srcCells[testedObj][0]; // exactly 1 cell
+  const anchorRC = RC(anchorCell);
+
+  // ── Find a window that contains the anchor cell ──
+  let sr, sc;
+  for(let t=0; t<60; t++){
+    const offR = rnd(0, size-1), offC = rnd(0, size-1);
+    const tr = Math.max(0, Math.min(anchorRC.r - offR, GRID - size));
+    const tc = Math.max(0, Math.min(anchorRC.c - offC, GRID - size));
+    // Anchor cell must be inside
+    if(anchorRC.r>=tr && anchorRC.r<tr+size && anchorRC.c>=tc && anchorRC.c<tc+size){
+      sr=tr; sc=tc; break;
+    }
+  }
+  if(sr===undefined) return makeSnippet(rd, attempt+1);
+
+  // ── Set up object positions (move if incorrect) ──
+  let useFarm   = rd.farmCells;
+  let useTruck  = rd.truckCells;
+  let useTroops = rd.troopCells;
+  let useTrees  = rd.treeCells;
+  let movedWhat = null;
+
+  if(!isCorrect){
+    // Find free cells inside window ≥2 away in r or c from original
+    const origR = anchorRC.r, origC = anchorRC.c;
+    let freeCells = [];
+    for(let r=sr; r<sr+size; r++){
+      for(let c=sc; c<sc+size; c++){
+        const i = CID(r,c);
+        if(!rd.mountain.cells.has(i) && i!==anchorCell
+           && (Math.abs(r-origR)>=2 || Math.abs(c-origC)>=2)) freeCells.push(i);
+      }
+    }
+    // Fallback: any free non-mountain cell inside window
+    if(!freeCells.length){
+      for(let r=sr; r<sr+size; r++)
+        for(let c=sc; c<sc+size; c++){
+          const i=CID(r,c);
+          if(!rd.mountain.cells.has(i) && i!==anchorCell) freeCells.push(i);
+        }
+    }
+    if(!freeCells.length) return makeSnippet(rd, attempt+1);
+
+    const newCell = pick(freeCells);
+    if(testedObj==='farm')        useFarm=[newCell];
+    else if(testedObj==='truck')  useTruck=[newCell];
+    else                           useTroops=[newCell];
+    movedWhat = testedObj;
+  }
+
+  // ── Reference context check ──
+  // There must be EITHER ≥3 mountain cells visible OR ≥1 other ground object visible.
+  // This ensures the player can always orient themselves spatially.
+  const mtnVisible  = mtnCountInWindow(rd, sr, sc, size);
+  const otherVisible = otherObjsInWindow(rd, sr, sc, size, testedObj, useFarm, useTruck, useTroops);
+  const hasContext = mtnVisible >= 3 || otherVisible >= 1;
+  if(!hasContext) return makeSnippet(rd, attempt+1);
+
+  // ── For incorrect: the tested object (at new position) must be visible ──
+  // For correct: tested object at original position must be visible (already guaranteed by window choice)
+  const testedIcon = {farm:'🏠', truck:'🚛', troops:'👤'}[testedObj];
+  const activeCells = testedObj==='farm'?useFarm : testedObj==='truck'?useTruck : useTroops;
+  const objInWindow = activeCells.some(ci=>{
+    const{r,c}=RC(ci); return r>=sr&&r<sr+size&&c>=sc&&c<sc+size;
+  });
+  if(!objInWindow) return makeSnippet(rd, attempt+1);
+
+  // ── Build cell display data ──
+  const cells=[];
+  for(let r=sr; r<sr+size; r++){
+    for(let c=sc; c<sc+size; c++){
       const i=CID(r,c);
       let icon=null;
       if(useFarm.includes(i))   icon='🏠';
@@ -663,27 +702,55 @@ function makeSnippet(rd, requireObj=false, attempt=0){
       if(useTroops.includes(i)) icon='👤';
       if(useTrees.includes(i))  icon='🌲';
       cells.push({r,c,
-        isMtn:rd.mountain.cells.has(i), isPeak:rd.mountain.peaks.has(i), icon,
+        isMtn:  rd.mountain.cells.has(i),
+        isPeak: rd.mountain.peaks.has(i),
+        icon,
+        hasAc: rd.aircraftPath.dots.some(d=>d.gr===r&&d.gc===c),
+        hasH:  rd.heliPath.dots.some(d=>d.gr===r&&d.gc===c)
+      });
+    }
+  }
+
+  const names = {farm:'farm', truck:'truck', troops:'troop formation'};
+  return {
+    type:'snippet', isCorrect, size, sr, sc, cells,
+    aircraftPath: rd.aircraftPath, heliPath: rd.heliPath,
+    questionText: `Does this ${size}\u00d7${size} snippet accurately reflect the memorised scene?`,
+    correctAnswer: isCorrect?'ACCURATE':'INACCURATE',
+    explanation: isCorrect
+      ? 'All elements match the memorised positions.'
+      : `The ${names[movedWhat]} has been moved to the wrong position.`
+  };
+}
+
+// Hard fallback: build a correct 5x5 snippet around the mountain centre
+// with all objects placed inside — guaranteed to always have context
+function makeFallbackSnippet(rd){
+  const mtnArr=[...rd.mountain.cells];
+  const anchor=RC(pick(mtnArr));
+  const size=5;
+  const sr=Math.max(0,Math.min(anchor.r-2,GRID-size));
+  const sc=Math.max(0,Math.min(anchor.c-2,GRID-size));
+  const cells=[];
+  for(let r=sr;r<sr+size;r++){
+    for(let c=sc;c<sc+size;c++){
+      const i=CID(r,c);
+      let icon=null;
+      if(rd.farmCells.includes(i))   icon='🏠';
+      if(rd.truckCells.includes(i))  icon='🚛';
+      if(rd.troopCells.includes(i))  icon='👤';
+      if(rd.treeCells.includes(i))   icon='🌲';
+      cells.push({r,c,isMtn:rd.mountain.cells.has(i),isPeak:rd.mountain.peaks.has(i),icon,
         hasAc:rd.aircraftPath.dots.some(d=>d.gr===r&&d.gc===c),
         hasH: rd.heliPath.dots.some(d=>d.gr===r&&d.gc===c)});
     }
   }
-
-  // Validation
-  const hasGroundInSnippet=cells.some(cd=>cd.icon&&cd.icon!=='🌲');
-  const hasAnyEl=cells.some(cd=>cd.icon||cd.hasAc||cd.hasH);
-  if(requireObj&&!hasGroundInSnippet) return makeSnippet(rd,requireObj,attempt+1);
-  if(!hasAnyEl) return makeSnippet(rd,requireObj,attempt+1);
-
-  const names={farm:'farm',truck:'truck',troops:'troop formation',trees:'tree'};
   return {
-    type:'snippet', isCorrect, size, sr, sc, cells,
+    type:'snippet', isCorrect:true, size, sr, sc, cells,
     aircraftPath:rd.aircraftPath, heliPath:rd.heliPath,
-    questionText:`Does this ${size}×${size} snippet accurately reflect the memorised scene?`,
-    correctAnswer:isCorrect?'ACCURATE':'INACCURATE',
-    explanation:isCorrect
-      ?'All elements match the memorised positions.'
-      :`The ${movedWhat?names[movedWhat]:'element'} position has been altered.`
+    questionText:`Does this ${size}\u00d7${size} snippet accurately reflect the memorised scene?`,
+    correctAnswer:'ACCURATE',
+    explanation:'All elements match the memorised positions.'
   };
 }
 

@@ -142,8 +142,8 @@
 <div class="overlay" id="start-overlay">
   <h1>C L A N</h1>
   <h2>Colours · Letters · Arithmetic · Numbers</h2>
-  <p><b>COLOURS:</b> Press <b>R</b> or <b>/</b> (Red) &nbsp; <b>Y</b> or <b>*</b> (Yellow) &nbsp; <b>G</b> or <b>-</b> (Green) when diamonds reach their zone.</p>
-  <p style="margin-top:4px"><b>LETTERS:</b> Memorise the top-centre sequence. When options appear press <b>A/N</b> (TL) &nbsp;<b>B/M</b> (TR) &nbsp;<b>C/,</b> (BL) &nbsp;<b>D/.</b> (BR).</p>
+  <p><b>COLOURS:</b> Press <b>U</b> (Red) &nbsp; <b>I</b> (Yellow) &nbsp; <b>O</b> (Green) when diamonds reach their zone. Also R/Y/G.</p>
+  <p style="margin-top:4px"><b>LETTERS:</b> Memorise the top-centre sequence. When options appear press <b>J</b> (TL) &nbsp;<b>K</b> (TR) &nbsp;<b>M</b> (BL) &nbsp;<b>,</b> (BR). Also A/B/C/D.</p>
   <p style="margin-top:4px"><b>MATHS:</b> Type your answer and press <b>Enter</b>.</p>
   <p style="margin-top:6px; color:#ffff88">5 minutes · all tasks simultaneous · difficulty ramps over time.</p>
   <button class="overlay-btn" id="start-btn">START TEST</button>
@@ -214,10 +214,10 @@
     <span id="score-live">Score: 0</span>
     <button id="pause-btn">⏸ PAUSE</button>
   </div>
-  <div class="letter-corner" id="corner-TL"><span id="txt-TL"></span><span class="corner-label">A</span></div>
-  <div class="letter-corner" id="corner-TR"><span id="txt-TR"></span><span class="corner-label">B</span></div>
-  <div class="letter-corner" id="corner-BL"><span id="txt-BL"></span><span class="corner-label">C</span></div>
-  <div class="letter-corner" id="corner-BR"><span id="txt-BR"></span><span class="corner-label">D</span></div>
+  <div class="letter-corner" id="corner-TL"><span id="txt-TL"></span><span class="corner-label">J</span></div>
+  <div class="letter-corner" id="corner-TR"><span id="txt-TR"></span><span class="corner-label">K</span></div>
+  <div class="letter-corner" id="corner-BL"><span id="txt-BL"></span><span class="corner-label">M</span></div>
+  <div class="letter-corner" id="corner-BR"><span id="txt-BR"></span><span class="corner-label">,</span></div>
   <div id="memory-box"><span id="memory-text"></span></div>
   <div id="colour-area">
     <div id="zones">
@@ -234,9 +234,9 @@
     <div id="maths-feedback"></div>
   </div>
   <div id="key-hints">
-    <span>R or /=Red &nbsp; Y or *=Yellow &nbsp; G or -=Green</span>
+    <span>U=Red &nbsp; I=Yellow &nbsp; O=Green</span>
     <span>|</span>
-    <span>A/N=TL &nbsp; B/M=TR &nbsp; C/,=BL &nbsp; D/.=BR</span>
+    <span>J=TL &nbsp; K=TR &nbsp; M=BL &nbsp; ,=BR</span>
     <span>|</span>
     <span>Numbers+Enter=Maths</span>
   </div>
@@ -597,9 +597,9 @@ function resetSliders(){ SLIDER_MAP.forEach(({id,val,key,fmt})=>{ document.getEl
 document.addEventListener('keydown',e=>{
   if(!gameRunning||paused) return;
   const key=e.key.toLowerCase();
-  const ck={'r':'r','y':'y','g':'g','b':'b','/':'r','*':'y','-':'g'};
+  const ck={'u':'r','i':'y','o':'g','r':'r','y':'y','g':'g'};
   if(ck[key]!==undefined){e.preventDefault();handleColourKey(ck[key]);return;}
-  const lk={'a':'a','b':'b','c':'c','d':'d','n':'a','m':'b',',':'c','.':'d'};
+  const lk={'j':'a','k':'b','m':'c',',':'d','a':'a','b':'b','c':'c','d':'d'};
   if(lk[key]!==undefined){e.preventDefault();handleLetterKey(lk[key]);return;}
   if(key==='enter'){e.preventDefault();submitMath();return;}
   if(key==='backspace'){e.preventDefault();handleMathDigit('backspace');return;}
