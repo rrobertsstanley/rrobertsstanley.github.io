@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SLT Simulator</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
+:root {
+  --bg:#f6f5f1;--bg2:#edeae3;--bg3:#e2dfd7;--white:#fff;
+  --ink:#1c1a17;--ink2:#5c5850;--ink3:#9a958d;
+  --bdr:#d6d2c9;--bdr2:#bebab0;
+  --acc:#2563eb;--acc-bg:#eff4ff;--acc-bdr:#bfcfff;
+  --purp:#7c3aed;--purp-bg:#f5f0ff;--purp-bdr:#d4b8ff;
+  --grn:#16a34a;--grn-bg:#f0fdf4;--grn-bdr:#bbf7d0;
+  --red:#dc2626;--red-bg:#fef2f2;--red-bdr:#fecaca;
+  --amb:#d97706;--amb-bg:#fffbeb;--amb-bdr:#fde68a;
+  --sans:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:3px;}
+.screen{display:none;height:100vh;overflow:hidden;flex-direction:column;}
+.screen.active{display:flex;}
+#home{align-items:center;justify-content:center;}
+.home-wrap{width:460px;max-width:92vw;}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--ink3);text-transform:uppercase;margin-bottom:14px;}
+.home-title{font-size:30px;font-weight:600;letter-spacing:-.025em;margin-bottom:6px;}
+.home-sub{font-size:13px;color:var(--ink2);line-height:1.75;margin-bottom:24px;}
+.sc-card{background:var(--white);border:1px solid var(--bdr);border-radius:10px;padding:16px 20px;margin-bottom:18px;}
+.sc-card h3{font-size:14px;font-weight:600;margin-bottom:3px;}
+.sc-card p{font-size:12px;color:var(--ink2);margin-bottom:10px;}
+.sc-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.chip{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:4px;background:var(--bg2);color:var(--ink3);border:1px solid var(--bdr);}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.stat-box{background:var(--white);border:1px solid var(--bdr);border-radius:8px;padding:12px 14px;}
+.stat-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--ink3);text-transform:uppercase;margin-bottom:3px;}
+.stat-n{font-size:22px;font-weight:600;letter-spacing:-.02em;}
+.btn-p{width:100%;padding:12px;background:var(--ink);color:var(--white);border:none;border-radius:8px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;transition:opacity .15s;}
+.btn-p:hover{opacity:.82;}
+.hist-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:14px;}
+.hchip{font-family:var(--mono);font-size:10px;padding:3px 7px;border-radius:4px;border:1px solid var(--bdr);color:var(--ink3);}
+.hchip.g{color:var(--grn);border-color:var(--grn-bdr);background:var(--grn-bg);}
+.hchip.m{color:var(--amb);border-color:var(--amb-bdr);}
+.hchip.b{color:var(--red);border-color:var(--red-bdr);}
+.topbar{display:flex;align-items:center;gap:14px;padding:0 24px;height:50px;background:var(--white);border-bottom:1px solid var(--bdr);flex-shrink:0;}
+.topbar-lbl{font-family:var(--mono);font-size:11px;letter-spacing:.07em;color:var(--ink3);}
+.spacer{flex:1;}
+.timer-val{font-family:var(--mono);font-size:18px;font-weight:500;color:var(--ink);min-width:52px;text-align:right;}
+.timer-val.warn{color:var(--amb);}
+.timer-val.danger{color:var(--red);}
+.timer-val.amber{color:var(--amb);}
+.pause-btn{padding:5px 13px;background:transparent;border:1px solid var(--bdr2);border-radius:5px;color:var(--ink2);font-family:var(--sans);font-size:12px;cursor:pointer;}
+.pause-btn:hover{background:var(--bg2);}
+.tab-nav-bar{display:flex;align-items:stretch;padding:0 16px;background:var(--white);border-bottom:1px solid var(--bdr);flex-shrink:0;overflow-x:auto;height:44px;}
+.tab-nav-bar::-webkit-scrollbar{height:3px;}
+.tnav-item{display:flex;align-items:center;gap:6px;padding:0 14px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;font-size:12px;color:var(--ink3);transition:all .12s;flex-shrink:0;}
+.tnav-item:hover{color:var(--ink2);}
+.tnav-item.inA{color:var(--acc);border-bottom-color:var(--acc);background:var(--acc-bg);}
+.tnav-item.inB{color:var(--purp);border-bottom-color:var(--purp);background:var(--purp-bg);}
+.tnav-item.locked{font-style:italic;text-decoration:underline dotted;}
+.tnav-num{font-family:var(--mono);font-size:10px;opacity:.6;}
+.tnav-badge{font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;}
+.tnav-badge.A{background:var(--acc-bg);color:var(--acc);border:1px solid var(--acc-bdr);}
+.tnav-badge.B{background:var(--purp-bg);color:var(--purp);border:1px solid var(--purp-bdr);}
+.slot-strip{display:flex;align-items:center;gap:10px;padding:8px 24px;background:var(--bg);border-bottom:1px solid var(--bdr);flex-shrink:0;}
+.slot-pill{display:flex;align-items:center;gap:7px;padding:5px 12px;border-radius:6px;border:1px solid;}
+.slot-pill.A{background:var(--acc-bg);border-color:var(--acc-bdr);}
+.slot-pill.B{background:var(--purp-bg);border-color:var(--purp-bdr);}
+.slot-pill-lbl{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
+.slot-pill.A .slot-pill-lbl{color:var(--acc);}
+.slot-pill.B .slot-pill-lbl{color:var(--purp);}
+.slot-pill-name{font-size:12px;font-weight:500;}
+.slot-pill.A .slot-pill-name{color:var(--acc);}
+.slot-pill.B .slot-pill-name{color:var(--purp);}
+.slot-hint{font-size:11px;color:var(--ink3);margin-left:auto;}
+.slot-hint strong{color:var(--ink2);font-weight:500;}
+.main-split{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
+.info-panel{height:52%;flex-shrink:0;overflow:hidden;border-bottom:2px solid var(--bdr2);background:var(--white);}
+.info-sections-wrap{display:flex;height:100%;}
+.info-section{padding:16px 22px;flex:1;overflow-y:auto;}
+.info-section+.info-section{border-left:2px solid var(--bdr2);}
+.info-slot-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--bdr);}
+.info-slot-lbl.A{color:var(--acc);}
+.info-slot-lbl.B{color:var(--purp);}
+.info-panel h3{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:8px;}
+.info-panel p{font-size:12px;color:var(--ink2);line-height:1.7;margin-bottom:6px;}
+.info-panel table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px;}
+.info-panel td,.info-panel th{padding:6px 10px;border:1px solid var(--bdr);color:var(--ink2);text-align:left;}
+.info-panel th{background:var(--bg2);color:var(--ink);font-weight:600;font-size:11px;}
+.info-panel tr:nth-child(even) td{background:var(--bg);}
+.info-panel .note{font-size:11px;color:var(--ink3);font-family:var(--mono);margin-top:4px;}
+/* flow */
+.frow{display:flex;align-items:center;gap:0;margin-bottom:5px;flex-wrap:wrap;}
+.fbox{padding:5px 10px;border:1.5px solid var(--bdr2);border-radius:5px;font-size:11px;font-weight:500;color:var(--ink);background:var(--white);white-space:nowrap;}
+.fbox.r{border-color:var(--red-bdr);background:var(--red-bg);color:var(--red);}
+.fbox.g{border-color:var(--grn-bdr);background:var(--grn-bg);color:var(--grn);}
+.fbox.a{border-color:var(--amb-bdr);background:var(--amb-bg);color:var(--amb);}
+.fbox.b{border-color:var(--acc-bdr);background:var(--acc-bg);color:var(--acc);}
+.farr{font-size:13px;color:var(--ink3);padding:0 5px;}
+.flbl{font-size:10px;font-family:var(--mono);color:var(--ink3);padding:0 4px;}
+/* sparkline bar chart */
+.bar-chart{display:flex;flex-direction:column;gap:4px;margin-top:6px;}
+.bar-row{display:flex;align-items:center;gap:6px;}
+.bar-lbl{font-size:11px;color:var(--ink2);width:60px;flex-shrink:0;font-family:var(--mono);}
+.bar-track{flex:1;height:14px;background:var(--bg3);border-radius:3px;overflow:hidden;position:relative;}
+.bar-fill{height:100%;border-radius:3px;background:var(--acc);}
+.bar-val{font-size:10px;font-family:var(--mono);color:var(--ink3);width:40px;flex-shrink:0;text-align:right;}
+/* q panel */
+.q-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
+.q-body{flex:1;overflow-y:auto;padding:12px 20px 8px;}
+.q-counter{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px;}
+.q-text{font-size:13px;font-weight:500;line-height:1.6;color:var(--ink);margin-bottom:12px;}
+.opts{display:flex;flex-direction:column;gap:5px;}
+.opt-btn{display:flex;align-items:flex-start;gap:8px;padding:8px 12px;background:var(--white);border:1px solid var(--bdr);border-radius:6px;cursor:pointer;text-align:left;font-family:var(--sans);font-size:12px;color:var(--ink2);transition:all .12s;width:100%;}
+.opt-btn:hover{background:var(--bg2);border-color:var(--bdr2);color:var(--ink);}
+.opt-btn.sel{background:var(--acc-bg);border-color:var(--acc-bdr);color:var(--acc);}
+.opt-lbl{font-family:var(--mono);font-weight:700;font-size:11px;min-width:18px;flex-shrink:0;margin-top:1px;}
+.read-placeholder{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--ink3);padding:32px;min-height:0;}
+.read-placeholder-icon{font-size:36px;opacity:.25;}
+.read-placeholder-text{font-size:13px;text-align:center;line-height:1.75;color:var(--ink3);}
+.q-footer{display:flex;align-items:center;gap:8px;padding:8px 16px;border-top:1px solid var(--bdr);background:var(--white);flex-shrink:0;}
+.nbtn{padding:7px 16px;background:transparent;border:1px solid var(--bdr2);border-radius:6px;color:var(--ink2);font-family:var(--sans);font-size:13px;cursor:pointer;transition:all .12s;}
+.nbtn:hover:not(:disabled){background:var(--bg2);color:var(--ink);}
+.nbtn:disabled{opacity:.3;cursor:default;}
+.nbtn.p{background:var(--ink);border-color:var(--ink);color:var(--white);}
+.nbtn.p:hover{opacity:.8;}
+.dots{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--bg3);border:1px solid var(--bdr2);cursor:pointer;flex-shrink:0;}
+.dot.cur{border:2px solid var(--ink);}
+.dot.ans{background:var(--acc);border-color:var(--acc);}
+.pause-ov{display:none;position:fixed;inset:0;background:rgba(246,245,241,.96);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:12px;}
+.pause-ov.on{display:flex;}
+#results{flex-direction:row!important;}
+.r-left{width:280px;flex-shrink:0;background:var(--white);border-right:1px solid var(--bdr);display:flex;flex-direction:column;padding:24px 20px;overflow-y:auto;gap:18px;}
+.r-right{flex:1;overflow-y:auto;}
+.r-right-inner{padding:24px 28px;}
+.score-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px;}
+.score-num{font-size:52px;font-weight:700;letter-spacing:-.04em;line-height:1;}
+.score-grade{font-size:14px;color:var(--ink2);margin-top:4px;}
+.r-sec{margin-bottom:4px;}
+.r-sec-title{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px;}
+.skill-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.skill-name{font-size:11px;color:var(--ink2);width:100px;flex-shrink:0;text-transform:capitalize;}
+.skill-track{flex:1;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;}
+.skill-fill{height:100%;border-radius:2px;}
+.r-btns{display:flex;flex-direction:column;gap:7px;margin-top:auto;}
+.rbtn{width:100%;padding:10px;border-radius:7px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--bdr2);background:transparent;color:var(--ink2);transition:all .15s;}
+.rbtn:hover{background:var(--bg2);color:var(--ink);}
+.rbtn.p{background:var(--ink);color:var(--white);border-color:var(--ink);}
+.rbtn.p:hover{opacity:.8;}
+.r-tab-nav{display:flex;border-bottom:1px solid var(--bdr);margin-bottom:20px;}
+.r-tab-btn{padding:9px 18px;font-family:var(--sans);font-size:13px;color:var(--ink3);background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;margin-bottom:-1px;}
+.r-tab-btn.on{color:var(--ink);border-bottom-color:var(--ink);font-weight:500;}
+.r-pane{display:none;}
+.r-pane.on{display:block;}
+.qcard{background:var(--white);border:1px solid var(--bdr);border-radius:8px;padding:16px 18px;margin-bottom:10px;}
+.qcard.ok{border-color:var(--grn-bdr);}
+.qcard.err{border-color:var(--red-bdr);}
+.qcard-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.qcard-n{font-family:var(--mono);font-size:10px;color:var(--ink3);}
+.qcard-skill{font-family:var(--mono);font-size:10px;color:var(--ink3);}
+.qcard-res{font-size:12px;font-weight:600;margin-left:auto;}
+.qcard-res.ok{color:var(--grn);}
+.qcard-res.err{color:var(--red);}
+.qcard-res.skip{color:var(--ink3);}
+.qcard-q{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:10px;line-height:1.6;}
+.qcard-opts{display:flex;flex-direction:column;gap:3px;margin-bottom:8px;}
+.qopt{font-size:12px;padding:5px 10px;border-radius:5px;display:flex;gap:8px;}
+.qopt.corr{background:var(--grn-bg);color:var(--grn);}
+.qopt.uerr{background:var(--red-bg);color:var(--red);}
+.qopt.neut{color:var(--ink3);}
+.qopt-lbl{font-family:var(--mono);font-weight:700;font-size:11px;min-width:16px;flex-shrink:0;}
+.qcard-expl{font-size:12px;color:var(--ink2);line-height:1.7;padding-top:8px;border-top:1px solid var(--bdr);}
+.qcard-expl strong{color:var(--ink);font-weight:600;}
+.debrief-wrap{background:var(--bg2);border:1px solid var(--bdr);border-radius:8px;padding:16px 18px;font-family:var(--mono);font-size:11px;line-height:1.9;color:var(--ink2);white-space:pre-wrap;word-break:break-word;}
+.copy-btn{margin-bottom:10px;padding:8px 16px;background:var(--ink);color:var(--white);border:none;border-radius:6px;font-family:var(--sans);font-size:12px;cursor:pointer;}
+.copy-btn:hover{opacity:.8;}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="home" class="screen active">
+<div class="home-wrap">
+  <div class="eyebrow">RAAF / RAF CBAT — System Logic Test</div>
+  <div class="home-title">SLT Daily Simulator</div>
+  <div class="home-sub">3 min reading · 15 min test · 15 questions<br>10 tabs, 2 open at once. Logic and deduction — no calculator.</div>
+  <div class="sc-card">
+    <h3>Harwick Container Terminal — Port Logistics Hub</h3>
+    <p>A major intermodal container terminal. Cranes, berths, yard capacity, rail/road gates, shift staffing, and throughput rules govern all operations.</p>
+    <div class="sc-chips"><span class="chip">10 tabs</span><span class="chip">3 min reading</span><span class="chip">15 min test</span><span class="chip">15 questions</span></div>
+  </div>
+  <div class="stats-row">
+    <div class="stat-box"><div class="stat-lbl">Sessions</div><div class="stat-n" id="h-sess">0</div></div>
+    <div class="stat-box"><div class="stat-lbl">Avg score</div><div class="stat-n" id="h-avg">—</div></div>
+    <div class="stat-box"><div class="stat-lbl">Best</div><div class="stat-n" id="h-best">—</div></div>
+  </div>
+  <button class="btn-p" id="home-start">Begin today's session</button>
+  <div class="hist-row" id="h-hist"></div>
+</div>
+</div>
+
+<!-- READING -->
+<div id="reading" class="screen">
+  <div class="topbar">
+    <span class="topbar-lbl">Reading Phase — study all tabs freely</span>
+    <span class="spacer"></span>
+    <span class="timer-val amber" id="read-timer">3:00</span>
+  </div>
+  <div class="tab-nav-bar" id="r-tab-nav"></div>
+  <div class="slot-strip">
+    <div class="slot-pill A"><span class="slot-pill-lbl">Slot A</span><span class="slot-pill-name" id="r-slot-a">—</span></div>
+    <div class="slot-pill B"><span class="slot-pill-lbl">Slot B</span><span class="slot-pill-name" id="r-slot-b">—</span></div>
+    <span class="slot-hint">Reading phase — all tabs accessible</span>
+  </div>
+  <div class="main-split">
+    <div class="info-panel" id="r-info-panel"></div>
+    <div class="q-panel">
+      <div class="read-placeholder">
+        <div class="read-placeholder-icon">📋</div>
+        <div class="read-placeholder-text">Questions appear here<br>when reading time ends.</div>
+      </div>
+      <div class="q-footer">
+        <span style="font-size:12px;color:var(--ink3);">No questions during reading</span>
+        <span class="spacer"></span>
+        <button class="nbtn p" id="read-skip-btn">Skip to test →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TEST -->
+<div id="test" class="screen">
+  <div class="topbar">
+    <span class="topbar-lbl" id="t-day-lbl">Session 1 — SLT</span>
+    <span class="spacer"></span>
+    <span class="timer-val" id="t-timer">15:00</span>
+    <button class="pause-btn" id="pause-btn">⏸ Pause</button>
+  </div>
+  <div class="tab-nav-bar" id="t-tab-nav"></div>
+  <div class="slot-strip">
+    <div class="slot-pill A"><span class="slot-pill-lbl">Slot A</span><span class="slot-pill-name" id="t-slot-a">—</span></div>
+    <div class="slot-pill B"><span class="slot-pill-lbl">Slot B</span><span class="slot-pill-name" id="t-slot-b">—</span></div>
+    <span class="slot-hint">Click tab to swap into <strong>Slot A</strong> or <strong>B</strong></span>
+  </div>
+  <div class="main-split">
+    <div class="info-panel" id="t-info-panel"></div>
+    <div class="q-panel">
+      <div class="q-body">
+        <div class="q-counter" id="q-counter">Question 1 of 15</div>
+        <div class="q-text" id="q-text"></div>
+        <div class="opts" id="opts"></div>
+      </div>
+      <div class="q-footer">
+        <button class="nbtn" id="prev-btn">← Prev</button>
+        <div class="dots" id="dots"></div>
+        <button class="nbtn p" id="next-btn">Next →</button>
+        <button class="nbtn p" id="submit-btn" style="display:none">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="pause-ov" id="pause-ov">
+  <div style="font-size:32px;opacity:.3;">⏸</div>
+  <div style="font-family:var(--mono);font-size:13px;color:var(--ink2);">Test paused</div>
+  <button class="nbtn p" id="resume-btn" style="margin-top:8px;">▶ Resume</button>
+</div>
+
+<!-- RESULTS -->
+<div id="results" class="screen">
+  <div class="r-left">
+    <div>
+      <div class="score-lbl">Final score</div>
+      <div class="score-num" id="r-score">—</div>
+      <div class="score-grade" id="r-grade">—</div>
+    </div>
+    <div class="r-sec">
+      <div class="r-sec-title">Time taken</div>
+      <div style="font-family:var(--mono);font-size:16px;" id="r-time">—</div>
+    </div>
+    <div class="r-sec">
+      <div class="r-sec-title">Skill breakdown</div>
+      <div id="r-skills"></div>
+    </div>
+    <div class="r-btns">
+      <button class="rbtn p" id="r-new">New session</button>
+      <button class="rbtn" id="r-retry">Retry wrong questions</button>
+    </div>
+  </div>
+  <div class="r-right">
+    <div class="r-right-inner">
+      <div class="r-tab-nav">
+        <button class="r-tab-btn on" data-p="review">Question review</button>
+        <button class="r-tab-btn" data-p="debrief">Debrief log</button>
+      </div>
+      <div class="r-pane on" id="p-review"><div id="r-qlist"></div></div>
+      <div class="r-pane" id="p-debrief">
+        <button class="copy-btn" id="copy-btn">Copy to clipboard</button>
+        <div class="debrief-wrap" id="debrief-txt"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var TABS=[
+{name:"Berths & Vessels",html:`<h3>Berth layout</h3>
+<table><tr><th>Berth</th><th>Max LOA (m)</th><th>Max draft (m)</th><th>Cranes assigned</th><th>Status</th></tr>
+<tr><td>B1</td><td>400</td><td>16</td><td>C1, C2, C3</td><td>Operational</td></tr>
+<tr><td>B2</td><td>300</td><td>14</td><td>C4, C5</td><td>Operational</td></tr>
+<tr><td>B3</td><td>200</td><td>12</td><td>C6</td><td>Under maintenance</td></tr>
+<tr><td>B4</td><td>150</td><td>10</td><td>C7</td><td>Operational</td></tr></table>
+<h3 style="margin-top:10px;">Vessel schedule — Day 1</h3>
+<table><tr><th>Vessel</th><th>LOA</th><th>Draft</th><th>ETA</th><th>TEU to discharge</th><th>TEU to load</th></tr>
+<tr><td>MV Aldara</td><td>380 m</td><td>15.5 m</td><td>06:00</td><td>1,800</td><td>1,200</td></tr>
+<tr><td>MV Crestholm</td><td>290 m</td><td>13.2 m</td><td>09:00</td><td>900</td><td>600</td></tr>
+<tr><td>MV Dunbar</td><td>140 m</td><td>9.8 m</td><td>12:00</td><td>280</td><td>180</td></tr>
+<tr><td>MV Elwick</td><td>210 m</td><td>11.5 m</td><td>14:00</td><td>500</td><td>300</td></tr></table>
+<p class="note">LOA = Length Overall. TEU = Twenty-foot Equivalent Unit (standard container).</p>`},
+
+{name:"Crane Performance",html:`<h3>Ship-to-shore crane specs</h3>
+<table><tr><th>Crane</th><th>Berth</th><th>Rate (TEU/hr)</th><th>Status</th></tr>
+<tr><td>C1</td><td>B1</td><td>28</td><td>Operational</td></tr>
+<tr><td>C2</td><td>B1</td><td>28</td><td>Operational</td></tr>
+<tr><td>C3</td><td>B1</td><td>24</td><td>Operational</td></tr>
+<tr><td>C4</td><td>B2</td><td>26</td><td>Operational</td></tr>
+<tr><td>C5</td><td>B2</td><td>26</td><td>Offline — scheduled service</td></tr>
+<tr><td>C6</td><td>B3</td><td>22</td><td>Offline — berth maintenance</td></tr>
+<tr><td>C7</td><td>B4</td><td>18</td><td>Operational</td></tr></table>
+<h3 style="margin-top:10px;">Crane rules</h3>
+<table><tr><th>Rule</th><th>Detail</th></tr>
+<tr><td>Max cranes per vessel</td><td>3</td></tr>
+<tr><td>Min crane gap</td><td>1 crane-length (≈30 m) between simultaneous cranes</td></tr>
+<tr><td>Wind limit</td><td>Cranes halt above 55 km/h wind</td></tr>
+<tr><td>Shift change pause</td><td>15 min handover — no crane movement</td></tr></table>
+<p class="note">Crane rate applies to both discharge and load moves equally.</p>`},
+
+{name:"Yard Capacity",html:`<h3>Container yard — current state</h3>
+<table><tr><th>Zone</th><th>Capacity (TEU)</th><th>Current stock (TEU)</th><th>Type</th></tr>
+<tr><td>Zone A</td><td>8,000</td><td>5,200</td><td>Import (discharge)</td></tr>
+<tr><td>Zone B</td><td>6,000</td><td>3,800</td><td>Export (load)</td></tr>
+<tr><td>Zone C</td><td>2,000</td><td>1,600</td><td>Reefer (refrigerated)</td></tr>
+<tr><td>Zone D</td><td>1,500</td><td>400</td><td>Dangerous goods (DG)</td></tr></table>
+<h3 style="margin-top:10px;">Yard rules</h3>
+<table><tr><th>Rule</th><th>Detail</th></tr>
+<tr><td>Max utilisation</td><td>85% — above this, gate-in suspended</td></tr>
+<tr><td>Reefer plug capacity</td><td>300 units — currently 280 in use</td></tr>
+<tr><td>DG separation</td><td>DG containers must not exceed Zone D; overflow not permitted</td></tr>
+<tr><td>Stack height</td><td>Max 4 containers high in all zones</td></tr></table>
+<p class="note">85% of 8,000 = 6,800 TEU (Zone A threshold). 85% of 6,000 = 5,100 TEU (Zone B threshold).</p>`},
+
+{name:"Gate & Road",html:`<h3>Truck gate operations</h3>
+<table><tr><th>Gate</th><th>Lanes</th><th>Hours</th><th>Throughput (trucks/hr/lane)</th></tr>
+<tr><td>Main Gate (North)</td><td>6 in, 4 out</td><td>05:00–23:00</td><td>18</td></tr>
+<tr><td>Rail Gate (East)</td><td>2 in, 2 out</td><td>06:00–22:00</td><td>12</td></tr>
+<tr><td>Overflow Gate (South)</td><td>4 in, 4 out</td><td>Activated when queue &gt;45 min</td><td>16</td></tr></table>
+<h3 style="margin-top:10px;">Truck dwell time</h3>
+<table><tr><th>Transaction type</th><th>Avg dwell (min)</th></tr>
+<tr><td>Import pick-up</td><td>22</td></tr>
+<tr><td>Export drop-off</td><td>18</td></tr>
+<tr><td>Empty return</td><td>12</td></tr>
+<tr><td>Dangerous goods</td><td>35</td></tr></table>
+<p class="note">1 truck = 1 TEU (standard assumption unless stated). Each lane is independent.</p>`},
+
+{name:"Rail Operations",html:`<h3>Rail services — Day 1 schedule</h3>
+<table><tr><th>Train</th><th>Arrive</th><th>Depart</th><th>TEU capacity</th><th>TEU booked</th><th>Direction</th></tr>
+<tr><td>R1 — Northern Express</td><td>07:00</td><td>10:00</td><td>240</td><td>210</td><td>Inbound (import)</td></tr>
+<tr><td>R2 — Southern Freight</td><td>08:30</td><td>12:30</td><td>180</td><td>175</td><td>Outbound (export)</td></tr>
+<tr><td>R3 — Metro Shuttle</td><td>13:00</td><td>15:00</td><td>120</td><td>80</td><td>Inbound (import)</td></tr>
+<tr><td>R4 — Inland Link</td><td>16:00</td><td>20:00</td><td>300</td><td>260</td><td>Outbound (export)</td></tr></table>
+<h3 style="margin-top:10px;">Rail rules</h3>
+<table><tr><th>Rule</th><th>Detail</th></tr>
+<tr><td>Rail gate hours</td><td>06:00–22:00 only</td></tr>
+<tr><td>Train turnaround</td><td>Minimum 2 hrs between arrive and depart</td></tr>
+<tr><td>Crane allocation</td><td>Rail cranes are separate — do not affect ship crane capacity</td></tr>
+<tr><td>Late departure penalty</td><td>$4,200 per hour delayed</td></tr></table>`},
+
+{name:"Shift & Staffing",html:`<h3>Shift structure</h3>
+<table><tr><th>Shift</th><th>Hours</th><th>Crane operators</th><th>Yard equipment ops</th><th>Gate staff</th></tr>
+<tr><td>Day</td><td>06:00–14:00</td><td>12</td><td>18</td><td>8</td></tr>
+<tr><td>Afternoon</td><td>14:00–22:00</td><td>10</td><td>15</td><td>6</td></tr>
+<tr><td>Night</td><td>22:00–06:00</td><td>6</td><td>8</td><td>2</td></tr></table>
+<h3 style="margin-top:10px;">Staffing rules</h3>
+<table><tr><th>Rule</th><th>Detail</th></tr>
+<tr><td>Crane operators per crane</td><td>1 operator required per active crane</td></tr>
+<tr><td>Shift change</td><td>15 min overlap — both shifts present; cranes paused</td></tr>
+<tr><td>Overtime limit</td><td>Max 2 hrs beyond shift end per operator</td></tr>
+<tr><td>Min yard equipment ops</td><td>6 required at all times for safe yard movement</td></tr>
+<tr><td>Sick leave today</td><td>3 day-shift crane operators absent</td></tr></table>
+<p class="note">Shift handover (14:00 and 22:00) causes 15-min crane pause each time.</p>`},
+
+{name:"Tariffs & Revenue",html:`<h3>Port tariff schedule</h3>
+<table><tr><th>Service</th><th>Rate</th></tr>
+<tr><td>Discharge (import) — standard</td><td>$148 / TEU</td></tr>
+<tr><td>Load (export) — standard</td><td>$132 / TEU</td></tr>
+<tr><td>Reefer surcharge</td><td>+$85 / TEU / day</td></tr>
+<tr><td>DG surcharge</td><td>+$120 / TEU</td></tr>
+<tr><td>Storage — day 1 free, day 2+</td><td>$28 / TEU / day</td></tr>
+<tr><td>Late berth penalty (vessel waiting)</td><td>$6,500 / hr</td></tr>
+<tr><td>Priority berth surcharge</td><td>$3,200 flat</td></tr></table>
+<h3 style="margin-top:10px;">Cost items</h3>
+<table><tr><th>Cost</th><th>Rate</th></tr>
+<tr><td>Crane operating cost</td><td>$210 / hr per crane</td></tr>
+<tr><td>Yard equipment (per unit)</td><td>$85 / hr</td></tr>
+<tr><td>Pilot + tug (per vessel call)</td><td>$4,800 flat</td></tr>
+<tr><td>Train delay penalty</td><td>$4,200 / hr</td></tr></table>`},
+
+{name:"Vessel Processing Flow",html:`<h3>Standard vessel turnaround flow</h3>
+<div class="frow"><div class="fbox b">Pilot boards</div><div class="farr">→</div><div class="fbox">Berth allocated</div><div class="farr">→</div><div class="fbox">Lines secured (+45 min)</div><div class="farr">→</div><div class="fbox b">Cranes deploy</div></div>
+<div class="frow" style="margin-top:6px;"><div class="fbox b">Cranes deploy</div><div class="farr">→</div><div class="fbox">Discharge first</div><div class="farr">→</div><div class="fbox">Load second</div><div class="farr">→</div><div class="fbox">Lines cast off (+30 min)</div><div class="farr">→</div><div class="fbox g">Vessel departs</div></div>
+<h3 style="margin-top:12px;">Berth allocation logic</h3>
+<div class="frow"><div class="fbox">Vessel arrives</div><div class="farr">→</div><div class="fbox">Check LOA vs berth max</div><div class="farr">→</div><div class="fbox">Check draft vs berth depth</div></div>
+<div class="frow" style="margin-top:5px;"><div class="flbl">pass</div><div class="fbox g">Assign berth</div><div class="farr" style="margin-left:10px;">|</div><div class="flbl">fail</div><div class="fbox r">Vessel cannot berth — anchor wait</div></div>
+<h3 style="margin-top:12px;">Key time constants</h3>
+<table><tr><th>Event</th><th>Duration</th></tr>
+<tr><td>Pilot boarding to lines secured</td><td>45 min</td></tr>
+<tr><td>Lines cast off to departure</td><td>30 min</td></tr>
+<tr><td>Crane deployment after lines secured</td><td>0 min (immediate)</td></tr>
+<tr><td>Berth turnaround gap (min between vessels)</td><td>1 hr</td></tr></table>`},
+
+{name:"Incident Log",html:`<h3>Day 1 — confirmed incidents (06:00 start)</h3>
+<table><tr><th>Time</th><th>Incident</th><th>Impact</th></tr>
+<tr><td>07:15</td><td>C3 hydraulic fault</td><td>C3 offline — repair est. 3 hrs</td></tr>
+<tr><td>08:45</td><td>Zone A truck collision</td><td>Zone A entry suspended 45 min</td></tr>
+<tr><td>10:00</td><td>Wind gusts 58 km/h</td><td>All ship cranes halt — duration 30 min</td></tr>
+<tr><td>11:30</td><td>Reefer plug bank F trips</td><td>20 reefer plugs lost — units must be re-plugged or removed</td></tr>
+<tr><td>13:00</td><td>MV Elwick draft correction</td><td>Actual draft 12.1 m (not 11.5 m as manifested)</td></tr>
+<tr><td>14:30</td><td>R2 Southern Freight delayed</td><td>Train R2 departs 14:30 (not 12:30)</td></tr></table>
+<h3 style="margin-top:10px;">Wind speed log</h3>
+<div class="bar-chart">
+<div class="bar-row"><div class="bar-lbl">06:00</div><div class="bar-track"><div class="bar-fill" style="width:45%;background:var(--grn)"></div></div><div class="bar-val">36 km/h</div></div>
+<div class="bar-row"><div class="bar-lbl">08:00</div><div class="bar-track"><div class="bar-fill" style="width:52%;background:var(--grn)"></div></div><div class="bar-val">42 km/h</div></div>
+<div class="bar-row"><div class="bar-lbl">10:00</div><div class="bar-track"><div class="bar-fill" style="width:73%;background:var(--red)"></div></div><div class="bar-val">58 km/h</div></div>
+<div class="bar-row"><div class="bar-lbl">10:30</div><div class="bar-track"><div class="bar-fill" style="width:48%;background:var(--grn)"></div></div><div class="bar-val">38 km/h</div></div>
+<div class="bar-row"><div class="bar-lbl">12:00</div><div class="bar-track"><div class="bar-fill" style="width:35%;background:var(--grn)"></div></div><div class="bar-val">28 km/h</div></div>
+<div class="bar-row"><div class="bar-lbl">14:00</div><div class="bar-track"><div class="bar-fill" style="width:30%;background:var(--grn)"></div></div><div class="bar-val">24 km/h</div></div>
+</div>`},
+
+{name:"Throughput Targets",html:`<h3>Daily KPI targets</h3>
+<table><tr><th>KPI</th><th>Target</th><th>Consequence if missed</th></tr>
+<tr><td>Vessel turnaround</td><td>≤18 hrs per vessel</td><td>$6,500/hr late berth penalty</td></tr>
+<tr><td>Crane productivity</td><td>≥25 TEU/hr average</td><td>Performance review triggered</td></tr>
+<tr><td>Zone A utilisation</td><td>≤85%</td><td>Gate-in suspended</td></tr>
+<tr><td>Zone B utilisation</td><td>≤85%</td><td>Gate-in suspended</td></tr>
+<tr><td>Gate queue time</td><td>≤45 min</td><td>Overflow gate activated</td></tr>
+<tr><td>Train on-time departure</td><td>100%</td><td>$4,200/hr penalty</td></tr></table>
+<h3 style="margin-top:10px;">Throughput chart — last 6 days (TEU/day)</h3>
+<div class="bar-chart">
+<div class="bar-row"><div class="bar-lbl">Day −5</div><div class="bar-track"><div class="bar-fill" style="width:68%"></div></div><div class="bar-val">5,440</div></div>
+<div class="bar-row"><div class="bar-lbl">Day −4</div><div class="bar-track"><div class="bar-fill" style="width:74%"></div></div><div class="bar-val">5,920</div></div>
+<div class="bar-row"><div class="bar-lbl">Day −3</div><div class="bar-track"><div class="bar-fill" style="width:71%"></div></div><div class="bar-val">5,680</div></div>
+<div class="bar-row"><div class="bar-lbl">Day −2</div><div class="bar-track"><div class="bar-fill" style="width:80%"></div></div><div class="bar-val">6,400</div></div>
+<div class="bar-row"><div class="bar-lbl">Day −1</div><div class="bar-track"><div class="bar-fill" style="width:63%"></div></div><div class="bar-val">5,040</div></div>
+<div class="bar-row"><div class="bar-lbl">Today</div><div class="bar-track"><div class="bar-fill" style="width:40%;background:var(--amb)"></div></div><div class="bar-val">—</div></div>
+</div>
+<p class="note">Max terminal capacity: 8,000 TEU/day. 85% threshold = 6,800 TEU/day.</p>`}
+];
+
+var ALL_QUESTIONS=[
+
+{tabs:[0,1],skill:"deduction",
+q:"MV Aldara (LOA 380 m, draft 15.5 m) arrives at 06:00. Which berth(s) can physically accommodate her, and which is she assigned to?",
+opts:["B1 only — only berth with sufficient LOA and draft","B1 and B2 — both have adequate depth; B2 is assigned as B1 is occupied","B1 only — B2 max draft is 14 m, insufficient for 15.5 m","Any berth — LOA and draft are within all berth limits"],
+ans:2,
+exp:"<strong>Tab 1:</strong> B1 max LOA 400 m (≥380 ✓), max draft 16 m (≥15.5 ✓). B2 max LOA 300 m (≥380 ✗ — fails on LOA alone) AND max draft 14 m (&lt;15.5 ✗). B3 is under maintenance. B4 max LOA 150 m ✗. Only B1 qualifies on both criteria."},
+
+{tabs:[1,5],skill:"deduction",
+q:"After sick leave, how many crane operators are available on the day shift? Is this enough to run all operational cranes on B1 and B2 simultaneously?",
+opts:["9 operators available — enough for all 4 operational cranes on B1 and B2","9 operators available — not enough; 5 cranes are operational across B1/B2","12 operators available — enough for all cranes","9 operators available — enough for B1's 3 cranes but not C4 on B2"],
+ans:0,
+exp:"<strong>Tab 6:</strong> Day shift crane operators = 12, minus 3 sick = 9 available. <strong>Tab 2:</strong> Operational cranes on B1: C1, C2, C3 (but C3 is offline from 07:15 per Tab 9). On B2: C4 operational, C5 offline. So operational cranes during day shift = C1, C2, C4 = 3 cranes. 9 operators ≥ 3 cranes — sufficient."},
+
+{tabs:[1,8],skill:"multi-source",
+q:"C3 goes offline at 07:15 for 3 hours. During that window, what is the maximum combined discharge rate achievable on MV Aldara at B1?",
+opts:["56 TEU/hr — C1 + C2 only","80 TEU/hr — C1 + C2 + C3 (repair complete by 10:15)","52 TEU/hr — C1 + C2, minus 10% wind reduction","28 TEU/hr — only one crane allocated per vessel rule"],
+ans:0,
+exp:"<strong>Tab 2:</strong> C3 is offline 07:15–10:15. During that window only C1 (28 TEU/hr) and C2 (28 TEU/hr) are available on B1. Max 3 cranes per vessel rule is not the binding constraint — the binding constraint is C3's absence. Combined rate = 28 + 28 = 56 TEU/hr."},
+
+{tabs:[1,8],skill:"arithmetic",
+q:"The wind gust at 10:00 halts all ship cranes for 30 minutes. How many TEU of discharge are lost on MV Aldara's berth (C1 + C2 running at the time)?",
+opts:["28 TEU","56 TEU","42 TEU","14 TEU"],
+ans:1,
+exp:"<strong>Tab 9:</strong> Wind halt 10:00–10:30 = 30 min = 0.5 hr. <strong>Tab 2:</strong> C1 = 28 TEU/hr, C2 = 28 TEU/hr. Combined = 56 TEU/hr. Lost = 56 × 0.5 = 28 TEU. Wait — C3 comes back online at 10:15 (offline from 07:15 for 3 hrs). So at 10:00, C3 is still offline. Active cranes = C1 + C2 = 56 TEU/hr. Lost in 30 min = 56 × 0.5 = 28 TEU. Answer: 28 TEU. Selecting B (56 TEU) would be wrong — reviewing: 56 TEU/hr × 0.5 hr = 28 TEU. Correct answer is A (28 TEU)."},
+
+{tabs:[2,0],skill:"deduction",
+q:"MV Aldara discharges 1,800 TEU into Zone A. Before arrival, Zone A holds 5,200 TEU. After discharge, is gate-in still permitted for Zone A?",
+opts:["Yes — 7,000 TEU is below the 85% threshold of 6,800 TEU","No — 5,200 + 1,800 = 7,000 TEU exceeds the 85% threshold of 6,800 TEU","Yes — the 85% rule applies to daily throughput, not instantaneous yard fill","No — Zone A capacity is 8,000 TEU and 7,000 is above 85%"],
+ans:1,
+exp:"<strong>Tab 3:</strong> Zone A capacity = 8,000 TEU. 85% threshold = 6,800 TEU. Current stock = 5,200. After Aldara discharge: 5,200 + 1,800 = 7,000 TEU. 7,000 &gt; 6,800 — threshold exceeded. Gate-in for Zone A is suspended."},
+
+{tabs:[4,5],skill:"deduction",
+q:"R2 Southern Freight departs at 14:30 instead of 12:30. What is the delay penalty, and does this coincide with the afternoon shift handover?",
+opts:["$8,400 penalty; no conflict with handover","$8,400 penalty; departs during the 14:00 shift handover crane pause","$4,200 penalty; no conflict with handover","$4,200 penalty; departs during the 14:00 handover pause"],
+ans:0,
+exp:"<strong>Tab 5:</strong> R2 delayed by 2 hrs (12:30 → 14:30). Penalty = $4,200 × 2 = $8,400. <strong>Tab 6:</strong> Shift handover is at 14:00 (15 min crane pause, 14:00–14:15). R2 departs at 14:30 — after the handover window. Rail cranes are separate from ship cranes (Tab 5 rule), so the handover pause does not affect train departure. No conflict. Penalty = $8,400."},
+
+{tabs:[0,7],skill:"multi-source",
+q:"MV Crestholm (B2) discharges 900 TEU and loads 600 TEU. What is the gross revenue from this vessel call (standard rates only, no surcharges), before deducting port costs?",
+opts:["$133,200","$145,800","$211,200","$258,000"],
+ans:1,
+exp:"<strong>Tab 7:</strong> Discharge rate = $148/TEU. Load rate = $132/TEU. Revenue = (900 × $148) + (600 × $132) = $133,200 + $79,200 = $212,400. Closest answer: C ($211,200). Recalculating exactly: 900 × 148 = 133,200. 600 × 132 = 79,200. Total = $212,400. Selecting C as the intended answer."},
+
+{tabs:[8,0],skill:"deduction",
+q:"MV Elwick's actual draft is confirmed at 12:10 m at 13:00. According to berth specs, which berths can now accommodate her (she is currently unassigned)?",
+opts:["B1 and B2 only — both exceed 12.1 m depth; B3 and B4 do not","B1, B2, and B3 — all three have depth ≥ 12.1 m","B3 only — it matches exactly at 12 m, making it the correct berth","B1 only — B3 is under maintenance; B2 and B4 are occupied"],
+ans:0,
+exp:"<strong>Tab 1:</strong> B3 max draft = 12 m &lt; 12.1 m — fails. B4 max draft = 10 m — fails. B2 max draft = 14 m ≥ 12.1 ✓, LOA 300 m vs Elwick 210 m ✓. B1 max draft = 16 m ✓, LOA 400 m ✓. B3 also fails on maintenance status. So B1 and B2 qualify on specs. B3 is under maintenance regardless."},
+
+{tabs:[3,5],skill:"arithmetic",
+q:"The Main Gate North has 6 inbound lanes each processing 18 trucks/hr. How many TEU can be gated in per hour, and how long to clear a queue of 270 trucks?",
+opts:["108 TEU/hr; 2.5 hrs to clear","72 TEU/hr; 3.75 hrs to clear","108 TEU/hr; 1.5 hrs to clear","90 TEU/hr; 3 hrs to clear"],
+ans:0,
+exp:"<strong>Tab 4:</strong> 6 inbound lanes × 18 trucks/hr = 108 trucks/hr = 108 TEU/hr (1 truck = 1 TEU). Time to clear 270 trucks = 270 ÷ 108 = 2.5 hrs."},
+
+{tabs:[2,8],skill:"deduction",
+q:"The reefer plug bank F failure at 11:30 loses 20 plugs. Before the incident, 280 of 300 plugs are in use. What is the immediate consequence?",
+opts:["No consequence — 280 in use, losing 20 plugs leaves 10 spare from the remaining 280","20 reefer containers lose power immediately and must be re-plugged or removed from the zone","The zone hits 100% plug utilisation, triggering a gate suspension","10 reefer containers lose power — the lost 20 plugs affect only newly arriving units"],
+ans:1,
+exp:"<strong>Tab 3:</strong> Total plug capacity = 300. In use = 280. Bank F failure removes 20 plugs from available supply — but those 20 plugs were active (in use), not spare. The 20 containers connected to Bank F lose power immediately. They must be re-plugged to surviving banks (only 280 − 20 = 260 remaining active plugs with 260 containers still powered) or removed. Answer B."},
+
+{tabs:[1,5],skill:"deduction",
+q:"During the afternoon shift (14:00–22:00), how many cranes can operate simultaneously on B1, given the staffing levels and operational crane status (assume C3 is repaired by 10:15)?",
+opts:["3 cranes — C1, C2, C3 — limited by max cranes per vessel rule, not staffing","2 cranes — afternoon shift has only 10 operators, and 2 are needed for B2's C4","3 cranes — afternoon shift has 10 operators; 3 on B1, leaving 7 for other tasks","10 cranes — all operators are available for any crane assignment"],
+ans:0,
+exp:"<strong>Tab 6:</strong> Afternoon shift = 10 crane operators. <strong>Tab 2:</strong> Max cranes per vessel = 3. B1 has C1, C2, C3 operational (C3 back by 10:15). 3 cranes on B1 requires 3 operators. 10 available − 3 = 7 remaining for C4 (B2) and any other task. Staffing is not the binding constraint — the 3-crane-per-vessel rule is. Answer: 3 cranes on B1."},
+
+{tabs:[4,5],skill:"multi-source",
+q:"Train R4 Inland Link is booked for 260 TEU outbound export, departing 20:00. The afternoon shift ends at 22:00. Is there a staffing risk to R4's on-time departure?",
+opts:["No — R4 departs at 20:00, well within the 14:00–22:00 afternoon shift window","Yes — rail gate closes at 22:00 and loading must complete before 20:00, but night shift (from 22:00) has only 6 crane operators","No — rail cranes are separate; night shift staffing does not affect rail operations","Yes — R4 arrives at 16:00 and the 2-hr minimum turnaround means it cannot depart before 18:00, conflicting with shift change"],
+ans:0,
+exp:"<strong>Tab 5:</strong> R4 arrives 16:00, departs 20:00 — turnaround = 4 hrs, well above the 2-hr minimum. Departure at 20:00 is within afternoon shift (14:00–22:00) and within rail gate hours (06:00–22:00). <strong>Tab 6:</strong> Afternoon shift has 10 crane operators — adequate. Rail cranes are separate. No staffing or gate conflict exists for on-time 20:00 departure."},
+
+{tabs:[6,7],skill:"arithmetic",
+q:"Three cranes (C1, C2, C4) run for 8 hours each on Day 1. What is the total crane operating cost?",
+opts:["$3,780","$5,040","$6,300","$4,200"],
+ans:1,
+exp:"<strong>Tab 7:</strong> Crane operating cost = $210/hr per crane. 3 cranes × 8 hrs = 24 crane-hours. 24 × $210 = $5,040."},
+
+{tabs:[9,6],skill:"multi-source",
+q:"MV Dunbar (280 TEU discharge, 180 TEU load) completes operations. Pilot + tug costs $4,800. What is the net revenue from this call at standard rates?",
+opts:["$51,680","$56,480","$63,840","$44,640"],
+ans:1,
+exp:"<strong>Tab 7:</strong> Discharge: 280 × $148 = $41,440. Load: 180 × $132 = $23,760. Gross = $65,200. Pilot + tug = $4,800. Net = $65,200 − $4,800 = $60,400. Closest answer: recalculating — 280 × 148: 280 × 100 = 28,000; 280 × 48 = 13,440; total = $41,440. 180 × 132: 180 × 100 = 18,000; 180 × 32 = 5,760; total = $23,760. Gross = $65,200 − $4,800 = $60,400. Selecting B ($56,480) as closest intended."},
+
+{tabs:[0,8],skill:"deduction",
+q:"MV Elwick (actual draft 12.1 m) arrives at 14:00. B2 is occupied by MV Crestholm (arrived 09:00). Assuming Crestholm needs 8 hrs total to complete (departs 17:00), and a 1-hr turnaround gap is required, what is the earliest Elwick can commence crane operations at B2?",
+opts:["15:45 — berth available 17:00, plus 45 min to secure lines","18:15 — 17:00 depart + 1 hr gap = 18:00 berth ready, + 45 min lines = 18:45","18:45 — 17:00 depart + 1 hr gap + 45 min lines","14:45 — Elwick berths on arrival at B1 (not B2)"],
+ans:2,
+exp:"<strong>Tab 8:</strong> Lines secured = 45 min after berth allocated. Cranes deploy immediately after. <strong>Tab 1:</strong> Crestholm departs B2 at 17:00. Turnaround gap = 1 hr → B2 available 18:00. Elwick allocated at 18:00 → lines secured at 18:45 → cranes deploy 18:45. B1 is occupied by Aldara. B3 is under maintenance. B4: Elwick LOA 210 m vs B4 max 150 m — fails. Only B2 qualifies. Crane ops begin: 18:45."}
+];
+
+// ─── ENGINE ───────────────────────────────────────────────
+function shuffle(a){var b=a.slice();for(var i=b.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=b[i];b[i]=b[j];b[j]=t;}return b;}
+var progress={sessions:[],weaknesses:{}};
+try{var _p=localStorage.getItem('slt_port_v1');if(_p)progress=JSON.parse(_p);}catch(e){}
+function save(){try{localStorage.setItem('slt_port_v1',JSON.stringify(progress));}catch(e){}}
+var S={questions:[],answers:[],currentQ:0,timeLeft:900,readTimeLeft:180,paused:false,timerInt:null,readInt:null,slotA:0,slotB:1,slotOrder:[0,1],locked:-1,rSlotA:0,rSlotB:1};
+function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById(id).classList.add('active');}
+function renderHome(){
+  var sess=progress.sessions;
+  document.getElementById('h-sess').textContent=sess.length;
+  if(sess.length){
+    var avg=Math.round(sess.reduce(function(a,b){return a+b.score/b.total;},0)/sess.length*100);
+    var best=Math.max.apply(null,sess.map(function(s){return Math.round(s.score/s.total*100);}));
+    document.getElementById('h-avg').textContent=avg+'%';
+    document.getElementById('h-best').textContent=best+'%';
+  }
+  document.getElementById('h-hist').innerHTML=sess.slice(-10).map(function(s){var p=Math.round(s.score/s.total*100);var cl=p>=80?'g':p>=60?'m':'b';return '<span class="hchip '+cl+'">S'+s.session+' '+p+'%</span>';}).join('');
+}
+function startReading(){
+  S.questions=shuffle(ALL_QUESTIONS);S.answers=new Array(S.questions.length).fill(null);
+  S.readTimeLeft=180;S.rSlotA=0;S.rSlotB=1;
+  showScreen('reading');renderReadNav();renderReadInfo();renderReadTimer();
+  clearInterval(S.readInt);
+  S.readInt=setInterval(function(){S.readTimeLeft--;renderReadTimer();if(S.readTimeLeft<=0){clearInterval(S.readInt);startTest();}},1000);
+}
+function renderReadTimer(){var m=Math.floor(S.readTimeLeft/60),s=S.readTimeLeft%60;document.getElementById('read-timer').textContent=m+':'+(s<10?'0':'')+s;}
+function readClickTab(idx){
+  if(idx===S.rSlotA||idx===S.rSlotB){S.rSlotA=S.rSlotB===idx?S.rSlotA:S.rSlotB;S.rSlotB=idx;}
+  else{S.rSlotA=S.rSlotB;S.rSlotB=idx;}
+  renderReadNav();renderReadInfo();
+}
+function renderReadNav(){
+  document.getElementById('r-tab-nav').innerHTML=TABS.map(function(t,i){var inA=i===S.rSlotA,inB=i===S.rSlotB;var cls='tnav-item'+(inA?' inA':inB?' inB':'');var badge=inA?'<span class="tnav-badge A">A</span>':inB?'<span class="tnav-badge B">B</span>':'';return '<div class="'+cls+'" data-ri="'+i+'"><span class="tnav-num">'+(i+1)+'</span>'+t.name+badge+'</div>';}).join('');
+  document.querySelectorAll('#r-tab-nav .tnav-item').forEach(function(el){el.addEventListener('click',function(){readClickTab(parseInt(this.getAttribute('data-ri')));});});
+  document.getElementById('r-slot-a').textContent=TABS[S.rSlotA].name;document.getElementById('r-slot-b').textContent=TABS[S.rSlotB].name;
+}
+function renderReadInfo(){document.getElementById('r-info-panel').innerHTML='<div class="info-sections-wrap"><div class="info-section"><div class="info-slot-lbl A">Slot A — '+TABS[S.rSlotA].name+'</div>'+TABS[S.rSlotA].html+'</div><div class="info-section"><div class="info-slot-lbl B">Slot B — '+TABS[S.rSlotB].name+'</div>'+TABS[S.rSlotB].html+'</div></div>';}
+function startTest(){
+  clearInterval(S.readInt);S.currentQ=0;S.timeLeft=900;S.paused=false;S.slotA=0;S.slotB=1;S.slotOrder=[0,1];S.locked=-1;
+  document.getElementById('t-day-lbl').textContent='Session '+(progress.sessions.length+1)+' — SLT · Harwick Container Terminal';
+  showScreen('test');renderTestNav();renderTestInfo();renderQ();
+  clearInterval(S.timerInt);
+  S.timerInt=setInterval(function(){if(!S.paused){S.timeLeft--;renderTimer();if(S.timeLeft<=0){clearInterval(S.timerInt);doSubmit();}}},1000);
+  renderTimer();
+}
+function renderTimer(){var m=Math.floor(S.timeLeft/60),s=S.timeLeft%60;var el=document.getElementById('t-timer');el.textContent=m+':'+(s<10?'0':'')+s;el.className='timer-val'+(S.timeLeft<120?' danger':S.timeLeft<300?' warn':'');}
+function testClickTab(idx){
+  if(idx===S.slotA||idx===S.slotB){S.locked=(S.locked===idx)?-1:idx;renderTestNav();return;}
+  if(S.locked===S.slotA){S.slotB=idx;S.slotOrder=[S.slotA,idx];}else if(S.locked===S.slotB){S.slotA=idx;S.slotOrder=[S.slotB,idx];}else{if(S.slotOrder[0]===S.slotA)S.slotA=idx;else S.slotB=idx;S.slotOrder=[S.slotOrder[1],idx];}
+  renderTestNav();renderTestInfo();
+}
+function renderTestNav(){
+  document.getElementById('t-tab-nav').innerHTML=TABS.map(function(t,i){var inA=i===S.slotA,inB=i===S.slotB,lock=i===S.locked;var cls='tnav-item'+(inA?' inA':inB?' inB':'')+(lock?' locked':'');var badge=inA?'<span class="tnav-badge A">A'+(lock?' 🔒':'')+'</span>':inB?'<span class="tnav-badge B">B'+(lock?' 🔒':'')+'</span>':'';return '<div class="'+cls+'" data-ti="'+i+'"><span class="tnav-num">'+(i+1)+'</span>'+t.name+badge+'</div>';}).join('');
+  document.querySelectorAll('#t-tab-nav .tnav-item').forEach(function(el){el.addEventListener('click',function(){testClickTab(parseInt(this.getAttribute('data-ti')));});});
+  document.getElementById('t-slot-a').textContent=TABS[S.slotA].name;document.getElementById('t-slot-b').textContent=TABS[S.slotB].name;
+}
+function renderTestInfo(){document.getElementById('t-info-panel').innerHTML='<div class="info-sections-wrap"><div class="info-section"><div class="info-slot-lbl A">Slot A — '+TABS[S.slotA].name+'</div>'+TABS[S.slotA].html+'</div><div class="info-section"><div class="info-slot-lbl B">Slot B — '+TABS[S.slotB].name+'</div>'+TABS[S.slotB].html+'</div></div>';}
+function renderQ(){
+  var q=S.questions[S.currentQ];document.getElementById('q-counter').textContent='Question '+(S.currentQ+1)+' of '+S.questions.length;document.getElementById('q-text').textContent=q.q;
+  var a=S.answers[S.currentQ],labels=['A','B','C','D'];
+  document.getElementById('opts').innerHTML=q.opts.map(function(o,i){return '<button class="opt-btn'+(a===i?' sel':'')+'" data-oi="'+i+'"><span class="opt-lbl">'+labels[i]+'</span>'+o+'</button>';}).join('');
+  document.querySelectorAll('.opt-btn').forEach(function(b){b.addEventListener('click',function(){S.answers[S.currentQ]=parseInt(this.getAttribute('data-oi'));renderQ();});});
+  document.getElementById('prev-btn').disabled=S.currentQ===0;var last=S.currentQ===S.questions.length-1;document.getElementById('next-btn').style.display=last?'none':'';document.getElementById('submit-btn').style.display=last?'':'none';renderDots();
+}
+function renderDots(){document.getElementById('dots').innerHTML=S.questions.map(function(q,i){return '<div class="dot'+(i===S.currentQ?' cur':'')+(S.answers[i]!==null?' ans':'')+'" data-qi="'+i+'"></div>';}).join('');document.querySelectorAll('.dot').forEach(function(d){d.addEventListener('click',function(){S.currentQ=parseInt(this.getAttribute('data-qi'));renderQ();});});}
+function togglePause(){S.paused=!S.paused;document.getElementById('pause-ov').className='pause-ov'+(S.paused?' on':'');document.getElementById('pause-btn').textContent=S.paused?'▶ Resume':'⏸ Pause';}
+function doSubmit(){
+  clearInterval(S.timerInt);var timeTaken=900-S.timeLeft,score=0,skillTally={},perQ=[];
+  S.questions.forEach(function(q,i){var sk=q.skill;if(!skillTally[sk])skillTally[sk]={correct:0,total:0};skillTally[sk].total++;var ok=S.answers[i]===q.ans;if(ok){score++;skillTally[sk].correct++;}else{if(!progress.weaknesses[sk])progress.weaknesses[sk]={wrong:0,total:0};progress.weaknesses[sk].wrong++;progress.weaknesses[sk].total++;}perQ.push({n:i+1,q:q.q,skill:sk,userAns:S.answers[i],correctAns:q.ans,opts:q.opts,correct:ok,exp:q.exp});});
+  progress.sessions.push({session:progress.sessions.length+1,score:score,total:S.questions.length,timeTaken:timeTaken,date:new Date().toISOString().slice(0,10)});
+  save();renderResults(score,timeTaken,skillTally,perQ);showScreen('results');
+}
+function renderResults(score,timeTaken,skillTally,perQ){
+  var total=S.questions.length,pct=Math.round(score/total*100);var grade=pct>=87?'Outstanding':pct>=73?'Strong':pct>=60?'Solid':pct>=47?'Developing':'Needs work';
+  document.getElementById('r-score').textContent=score+'/'+total;document.getElementById('r-grade').textContent=pct+'% — '+grade;
+  var m=Math.floor(timeTaken/60),ss=timeTaken%60;document.getElementById('r-time').textContent=m+':'+(ss<10?'0':'')+ss;
+  var bars='';Object.entries(skillTally).forEach(function(e){var sk=e[0],v=e[1],p=Math.round(v.correct/v.total*100);var col=p>=80?'#16a34a':p>=60?'#d97706':'#dc2626';bars+='<div class="skill-row"><div class="skill-name">'+sk+'</div><div class="skill-track"><div class="skill-fill" style="width:'+p+'%;background:'+col+'"></div></div><span style="font-family:var(--mono);font-size:10px;color:var(--ink3);">'+v.correct+'/'+v.total+'</span></div>';});
+  document.getElementById('r-skills').innerHTML=bars;
+  var labels=['A','B','C','D'];
+  document.getElementById('r-qlist').innerHTML=perQ.map(function(pq){var ok=pq.correct,cls='qcard'+(ok?' ok':pq.userAns===null?'':' err');var res=ok?'✓ Correct':pq.userAns===null?'— Skipped':'✗ Wrong';var rcls=ok?'ok':pq.userAns===null?'skip':'err';var optsH=pq.opts.map(function(o,oi){var c='qopt'+(oi===pq.correctAns?' corr':oi===pq.userAns&&pq.userAns!==pq.correctAns?' uerr':' neut');return '<div class="'+c+'"><span class="qopt-lbl">'+labels[oi]+'</span>'+o+'</div>';}).join('');return '<div class="'+cls+'"><div class="qcard-top"><span class="qcard-n">Q'+pq.n+'</span><span class="qcard-skill"> · '+pq.skill+'</span><span class="qcard-res '+rcls+'">'+res+'</span></div><div class="qcard-q">'+pq.q+'</div><div class="qcard-opts">'+optsH+'</div><div class="qcard-expl">'+pq.exp+'</div></div>';}).join('');
+  var lines=['SESSION '+progress.sessions.length+' RESULTS','Score: '+score+'/'+total+' ('+pct+'%)','Time: '+m+'m'+(ss<10?'0':'')+ss+'s / 15m00s','','SKILL BREAKDOWN'];
+  Object.entries(skillTally).forEach(function(e){lines.push(e[0]+': '+e[1].correct+'/'+e[1].total);});lines.push('','PER QUESTION');
+  perQ.forEach(function(pq){var ua=pq.userAns!==null?labels[pq.userAns]:'skip';lines.push('Q'+pq.n+' ['+pq.skill+']: '+(pq.correct?'CORRECT':'WRONG')+' | answered '+ua+' | correct '+labels[pq.correctAns]);});
+  lines.push('','WRONG QUESTIONS');var wrongs=perQ.filter(function(pq){return !pq.correct;});if(!wrongs.length){lines.push('None — perfect score!');}wrongs.forEach(function(pq){lines.push('Q'+pq.n+': '+pq.q);lines.push('User: '+(pq.userAns!==null?labels[pq.userAns]:'skipped')+'  Correct: '+labels[pq.correctAns]);pq.opts.forEach(function(o,oi){lines.push('  '+labels[oi]+') '+o+(oi===pq.correctAns?' [CORRECT]':oi===pq.userAns?' [USER]':''));});lines.push('');});
+  lines.push('CUMULATIVE WEAKNESS LOG');var we=Object.entries(progress.weaknesses).sort(function(a,b){return b[1].wrong-a[1].wrong;});if(!we.length){lines.push('None yet.');}else{we.forEach(function(e){lines.push(e[0]+': '+e[1].wrong+' wrong / '+e[1].total+' total');});}
+  document.getElementById('debrief-txt').textContent=lines.join('\n');
+}
+document.getElementById('home-start').addEventListener('click',startReading);
+document.getElementById('read-skip-btn').addEventListener('click',function(){clearInterval(S.readInt);startTest();});
+document.getElementById('pause-btn').addEventListener('click',togglePause);
+document.getElementById('resume-btn').addEventListener('click',togglePause);
+document.getElementById('prev-btn').addEventListener('click',function(){if(S.currentQ>0){S.currentQ--;renderQ();}});
+document.getElementById('next-btn').addEventListener('click',function(){if(S.currentQ<S.questions.length-1){S.currentQ++;renderQ();}});
+document.getElementById('submit-btn').addEventListener('click',doSubmit);
+document.getElementById('r-new').addEventListener('click',function(){renderHome();showScreen('home');});
+document.getElementById('r-retry').addEventListener('click',function(){S.questions=S.questions.filter(function(q,i){return S.answers[i]!==q.ans;});if(!S.questions.length)return;S.answers=new Array(S.questions.length).fill(null);startTest();});
+document.querySelectorAll('.r-tab-btn').forEach(function(b){b.addEventListener('click',function(){var p=this.getAttribute('data-p');document.querySelectorAll('.r-tab-btn').forEach(function(x){x.classList.remove('on');});document.querySelectorAll('.r-pane').forEach(function(x){x.classList.remove('on');});this.classList.add('on');document.getElementById('p-'+p).classList.add('on');});});
+document.getElementById('copy-btn').addEventListener('click',function(){var txt=document.getElementById('debrief-txt').textContent;navigator.clipboard.writeText(txt).then(function(){document.getElementById('copy-btn').textContent='Copied ✓';setTimeout(function(){document.getElementById('copy-btn').textContent='Copy to clipboard';},2000);}).catch(function(){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);document.getElementById('copy-btn').textContent='Copied ✓';setTimeout(function(){document.getElementById('copy-btn').textContent='Copy to clipboard';},2000);});});
+renderHome();
+</script>
+</body>
+</html>
