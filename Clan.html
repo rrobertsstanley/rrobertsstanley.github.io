@@ -143,7 +143,7 @@
   <h1>C L A N</h1>
   <h2>Colours · Letters · Arithmetic · Numbers</h2>
   <p><b>COLOURS:</b> Press <b>U</b> (Red) &nbsp; <b>I</b> (Yellow) &nbsp; <b>O</b> (Green) when diamonds reach their zone. Also R/Y/G.</p>
-  <p style="margin-top:4px"><b>LETTERS:</b> Memorise the top-centre sequence. When options appear press <b>J</b> (TL) &nbsp;<b>K</b> (TR) &nbsp;<b>M</b> (BL) &nbsp;<b>,</b> (BR). Also A/B/C/D.</p>
+  <p style="margin-top:4px"><b>LETTERS:</b> Memorise the top-centre sequence. When options appear press <b>T</b> (TL) &nbsp;<b>Y</b> (TR) &nbsp;<b>G</b> (BL) &nbsp;<b>H</b> (BR). Also A/B/C/D.</p>
   <p style="margin-top:4px"><b>MATHS:</b> Type your answer and press <b>Enter</b>.</p>
   <p style="margin-top:6px; color:#ffff88">5 minutes · all tasks simultaneous · difficulty ramps over time.</p>
   <button class="overlay-btn" id="start-btn">START TEST</button>
@@ -236,7 +236,7 @@
   <div id="key-hints">
     <span>U=Red &nbsp; I=Yellow &nbsp; O=Green</span>
     <span>|</span>
-    <span>J=TL &nbsp; K=TR &nbsp; M=BL &nbsp; ,=BR</span>
+    <span>T=TL &nbsp; Y=TR &nbsp; G=BL &nbsp; H=BR</span>
     <span>|</span>
     <span>Numbers+Enter=Maths</span>
   </div>
@@ -599,7 +599,7 @@ document.addEventListener('keydown',e=>{
   const key=e.key.toLowerCase();
   const ck={'u':'r','i':'y','o':'g','r':'r','y':'y','g':'g'};
   if(ck[key]!==undefined){e.preventDefault();handleColourKey(ck[key]);return;}
-  const lk={'j':'a','k':'b','m':'c',',':'d','a':'a','b':'b','c':'c','d':'d'};
+  const lk={'a':'a','b':'b','c':'c','d':'d','t':'a','y':'b','g':'c','h':'d'};
   if(lk[key]!==undefined){e.preventDefault();handleLetterKey(lk[key]);return;}
   if(key==='enter'){e.preventDefault();submitMath();return;}
   if(key==='backspace'){e.preventDefault();handleMathDigit('backspace');return;}
