@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VLT Simulator — Moorefield National Park</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap');
+:root{
+  --bg:#f6f5f1;--bg2:#edeae3;--bg3:#d8d4cb;--white:#fff;
+  --ink:#1c1a17;--ink2:#5c5850;--ink3:#9a958d;
+  --bdr:#d6d2c9;--bdr2:#bebab0;
+  --acc:#2563eb;--acc-bg:#eff4ff;--acc-bdr:#bfcfff;
+  --purp:#7c3aed;--purp-bg:#f5f0ff;--purp-bdr:#d4b8ff;
+  --grn:#16a34a;--grn-bg:#f0fdf4;--grn-bdr:#bbf7d0;
+  --red:#dc2626;--red-bg:#fef2f2;--red-bdr:#fecaca;
+  --amb:#d97706;--amb-bg:#fffbeb;--amb-bdr:#fde68a;
+  --sans:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:3px;}
+.screen{display:none;height:100vh;overflow:hidden;flex-direction:column;}.screen.active{display:flex;}
+#home{align-items:center;justify-content:center;}
+.hw{width:440px;max-width:93vw;}
+.ey{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--ink3);text-transform:uppercase;margin-bottom:12px;}
+.ht{font-size:28px;font-weight:600;letter-spacing:-.02em;margin-bottom:5px;}
+.hs{font-size:13px;color:var(--ink2);margin-bottom:22px;}
+.sc-card{background:var(--white);border:1px solid var(--bdr);border-radius:10px;padding:15px 18px;margin-bottom:16px;}
+.sc-card h3{font-size:13px;font-weight:600;margin-bottom:3px;}
+.sc-card p{font-size:12px;color:var(--ink2);margin-bottom:9px;}
+.chips{display:flex;gap:5px;flex-wrap:wrap;}
+.chip{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:3px;background:var(--bg2);color:var(--ink3);border:1px solid var(--bdr);}
+.sr{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.sb{background:var(--white);border:1px solid var(--bdr);border-radius:8px;padding:11px 13px;}
+.sl{font-family:var(--mono);font-size:10px;letter-spacing:.07em;color:var(--ink3);text-transform:uppercase;margin-bottom:2px;}
+.sn{font-size:20px;font-weight:600;}
+.bp{width:100%;padding:11px;background:var(--ink);color:var(--white);border:none;border-radius:8px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;}
+.bp:hover{opacity:.82;}
+.hr{display:flex;gap:5px;flex-wrap:wrap;margin-top:12px;}
+.hc{font-family:var(--mono);font-size:10px;padding:3px 7px;border-radius:4px;border:1px solid var(--bdr);color:var(--ink3);}
+.hc.g{color:var(--grn);border-color:var(--grn-bdr);background:var(--grn-bg);}
+.hc.m{color:var(--amb);border-color:var(--amb-bdr);}
+.hc.b{color:var(--red);border-color:var(--red-bdr);}
+.topbar{display:flex;align-items:center;gap:12px;padding:0 20px;height:48px;background:var(--white);border-bottom:1px solid var(--bdr);flex-shrink:0;}
+.tbl{font-family:var(--mono);font-size:11px;letter-spacing:.07em;color:var(--ink3);}
+.sp{flex:1;}
+.tv{font-family:var(--mono);font-size:17px;font-weight:500;color:var(--ink);min-width:56px;text-align:right;}
+.tv.w{color:var(--amb);}.tv.d{color:var(--red);}.tv.a{color:var(--amb);}
+.tbs{display:flex;gap:6px;}
+.tbb{padding:4px 11px;background:transparent;border:1px solid var(--bdr2);border-radius:5px;color:var(--ink2);font-family:var(--sans);font-size:12px;cursor:pointer;}
+.tbb:hover{background:var(--bg2);}
+.tbb.ext{border-color:var(--amb-bdr);color:var(--amb);}
+.tnb{display:flex;align-items:stretch;padding:0 14px;background:var(--white);border-bottom:1px solid var(--bdr);flex-shrink:0;overflow-x:auto;height:42px;}
+.tnb::-webkit-scrollbar{height:3px;}
+.ti{display:flex;align-items:center;gap:5px;padding:0 12px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;font-size:12px;color:var(--ink3);flex-shrink:0;user-select:none;}
+.ti:hover{color:var(--ink2);}
+.ti.iA{color:var(--acc);border-bottom-color:var(--acc);background:var(--acc-bg);}
+.ti.iB{color:var(--purp);border-bottom-color:var(--purp);background:var(--purp-bg);}
+.ti.locked{outline:2px solid currentColor;outline-offset:-2px;}
+.tn{font-family:var(--mono);font-size:10px;opacity:.55;}
+.tbg{font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px;}
+.tbg.A{background:var(--acc-bg);color:var(--acc);border:1px solid var(--acc-bdr);}
+.tbg.B{background:var(--purp-bg);color:var(--purp);border:1px solid var(--purp-bdr);}
+.ss{display:flex;align-items:center;gap:10px;padding:7px 20px;background:var(--bg);border-bottom:1px solid var(--bdr);flex-shrink:0;}
+.slot{display:flex;align-items:center;gap:6px;padding:4px 11px;border-radius:6px;border:1px solid;}
+.slot.A{background:var(--acc-bg);border-color:var(--acc-bdr);}
+.slot.B{background:var(--purp-bg);border-color:var(--purp-bdr);}
+.slot-lbl{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
+.slot.A .slot-lbl{color:var(--acc);}.slot.B .slot-lbl{color:var(--purp);}
+.slot-name{font-size:12px;font-weight:500;}
+.slot.A .slot-name{color:var(--acc);}.slot.B .slot-name{color:var(--purp);}
+.sh{font-size:11px;color:var(--ink3);margin-left:auto;}
+.ms{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
+.ip{height:52%;flex-shrink:0;overflow:hidden;border-bottom:2px solid var(--bdr2);background:var(--white);}
+.isw{display:flex;height:100%;}
+.is{padding:14px 20px;flex:1;overflow-y:auto;}
+.is+.is{border-left:2px solid var(--bdr2);}
+.isl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid var(--bdr);}
+.isl.A{color:var(--acc);}.isl.B{color:var(--purp);}
+/* Verbal paragraph content */
+.th{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink);background:var(--bg2);padding:3px 8px;border-radius:3px;margin:12px 0 7px;}
+.th:first-child{margin-top:0;}
+.vp{font-size:12.5px;line-height:1.75;color:var(--ink2);margin-bottom:10px;}
+.vp strong{color:var(--ink);font-weight:600;}
+.qp{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
+.qb{flex:1;overflow-y:auto;padding:12px 18px 8px;}
+.qc{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:7px;}
+.qt{font-size:13px;font-weight:500;line-height:1.6;color:var(--ink);margin-bottom:11px;}
+.opts{display:flex;flex-direction:column;gap:5px;}
+.ob{display:flex;align-items:flex-start;gap:8px;padding:8px 12px;background:var(--white);border:1px solid var(--bdr);border-radius:6px;cursor:pointer;text-align:left;font-family:var(--sans);font-size:12px;color:var(--ink2);width:100%;}
+.ob:hover{background:var(--bg2);border-color:var(--bdr2);color:var(--ink);}
+.ob.sel{background:var(--acc-bg);border-color:var(--acc-bdr);color:var(--acc);}
+.ol{font-family:var(--mono);font-weight:700;font-size:11px;min-width:17px;flex-shrink:0;margin-top:1px;}
+.rph{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:28px;}
+.qf{display:flex;align-items:center;gap:8px;padding:8px 14px;border-top:1px solid var(--bdr);background:var(--white);flex-shrink:0;}
+.nb{padding:7px 15px;background:transparent;border:1px solid var(--bdr2);border-radius:6px;color:var(--ink2);font-family:var(--sans);font-size:13px;cursor:pointer;}
+.nb:hover:not(:disabled){background:var(--bg2);color:var(--ink);}
+.nb:disabled{opacity:.3;cursor:default;}
+.nb.p{background:var(--ink);border-color:var(--ink);color:var(--white);}
+.nb.p:hover{opacity:.8;}
+.dots{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--bg3);border:1px solid var(--bdr2);cursor:pointer;}
+.dot.cur{border:2px solid var(--ink);}.dot.ans{background:var(--acc);border-color:var(--acc);}
+.po{display:none;position:fixed;inset:0;background:rgba(246,245,241,.96);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:12px;}
+.po.on{display:flex;}
+.pbs{display:flex;gap:8px;margin-top:4px;}
+#results{flex-direction:row!important;}
+.rl{width:265px;flex-shrink:0;background:var(--white);border-right:1px solid var(--bdr);display:flex;flex-direction:column;padding:22px 18px;overflow-y:auto;gap:15px;}
+.rr{flex:1;overflow-y:auto;}
+.rri{padding:22px 26px;}
+.rsl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:3px;}
+.rsn{font-size:48px;font-weight:700;letter-spacing:-.04em;line-height:1;}
+.rsg{font-size:13px;color:var(--ink2);margin-top:3px;}
+.rst{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px;}
+.skr{display:flex;align-items:center;gap:7px;margin-bottom:6px;}
+.skn{font-size:11px;color:var(--ink2);width:85px;flex-shrink:0;}
+.skt{flex:1;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;}
+.skf{height:100%;border-radius:2px;}
+.rbs{display:flex;flex-direction:column;gap:6px;margin-top:auto;}
+.rb{width:100%;padding:9px;border-radius:7px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--bdr2);background:transparent;color:var(--ink2);}
+.rb:hover{background:var(--bg2);color:var(--ink);}
+.rb.p{background:var(--ink);color:var(--white);border-color:var(--ink);}
+.rtn{display:flex;border-bottom:1px solid var(--bdr);margin-bottom:16px;}
+.rtb{padding:8px 16px;font-family:var(--sans);font-size:13px;color:var(--ink3);background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;margin-bottom:-1px;}
+.rtb.on{color:var(--ink);border-bottom-color:var(--ink);font-weight:500;}
+.rp{display:none;}.rp.on{display:block;}
+.qcard{background:var(--white);border:1px solid var(--bdr);border-radius:8px;padding:13px 15px;margin-bottom:9px;}
+.qcard.ok{border-color:var(--grn-bdr);}.qcard.err{border-color:var(--red-bdr);}
+.qct{display:flex;align-items:center;gap:7px;margin-bottom:6px;}
+.qcn{font-family:var(--mono);font-size:10px;color:var(--ink3);}
+.qcr{font-size:12px;font-weight:600;margin-left:auto;}
+.qcr.ok{color:var(--grn);}.qcr.err{color:var(--red);}.qcr.sk{color:var(--ink3);}
+.qcq{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:8px;line-height:1.55;}
+.qco{display:flex;flex-direction:column;gap:3px;margin-bottom:7px;}
+.qo{font-size:12px;padding:4px 8px;border-radius:4px;display:flex;gap:7px;}
+.qo.cr{background:var(--grn-bg);color:var(--grn);}
+.qo.ue{background:var(--red-bg);color:var(--red);}
+.qo.ne{color:var(--ink3);}
+.qol{font-family:var(--mono);font-weight:700;font-size:11px;min-width:15px;flex-shrink:0;}
+.qce{font-size:12px;color:var(--ink2);line-height:1.7;padding-top:6px;border-top:1px solid var(--bdr);}
+.qce strong{color:var(--ink);}
+.dw{background:var(--bg2);border:1px solid var(--bdr);border-radius:8px;padding:14px 16px;font-family:var(--mono);font-size:11px;line-height:1.9;color:var(--ink2);white-space:pre-wrap;word-break:break-word;}
+.cb{margin-bottom:9px;padding:6px 13px;background:var(--ink);color:var(--white);border:none;border-radius:5px;font-family:var(--sans);font-size:12px;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<div id="home" class="screen active">
+<div class="hw">
+  <div class="ey">RAAF / RAF CBAT — Verbal Logic Test</div>
+  <div class="ht">VLT Daily Simulator</div>
+  <div class="hs">3 min reading · 15 min test · 15 questions</div>
+  <div class="sc-card">
+    <h3>Moorefield National Park — Visitor & Operations Management</h3>
+    <p>A large national park managed by the State Parks Authority. Rangers, visitor access, wildlife zones, permit systems, and emergency protocols all interact across ten information pages.</p>
+    <div class="chips"><span class="chip">10 tabs</span><span class="chip">3 min reading</span><span class="chip">15 min test</span><span class="chip">15 questions</span></div>
+  </div>
+  <div class="sr">
+    <div class="sb"><div class="sl">Sessions</div><div class="sn" id="h-sess">0</div></div>
+    <div class="sb"><div class="sl">Avg score</div><div class="sn" id="h-avg">—</div></div>
+    <div class="sb"><div class="sl">Best</div><div class="sn" id="h-best">—</div></div>
+  </div>
+  <button class="bp" id="home-start">Begin today's session</button>
+  <div class="hr" id="h-hist"></div>
+</div>
+</div>
+
+<!-- READING -->
+<div id="reading" class="screen">
+  <div class="topbar"><span class="tbl">Reading Phase</span><span class="sp"></span><span class="tv a" id="read-timer">3:00</span></div>
+  <div class="tnb" id="r-tnb"></div>
+  <div class="ss">
+    <div class="slot A"><span class="slot-lbl">A</span><span class="slot-name" id="r-sa">—</span></div>
+    <div class="slot B"><span class="slot-lbl">B</span><span class="slot-name" id="r-sb">—</span></div>
+    <span class="sh">Click to open · Double-click to lock</span>
+  </div>
+  <div class="ms">
+    <div class="ip" id="r-ip"></div>
+    <div class="qp">
+      <div class="rph"><div style="font-size:30px;opacity:.2;">📋</div><div style="font-size:12px;color:var(--ink3);text-align:center;">Questions appear when reading ends.</div></div>
+      <div class="qf"><span style="font-size:12px;color:var(--ink3);">No questions during reading</span><span class="sp"></span><button class="nb p" id="read-skip">Skip →</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- TEST -->
+<div id="test" class="screen">
+  <div class="topbar">
+    <span class="tbl" id="t-lbl">Session 1 — VLT</span><span class="sp"></span>
+    <span class="tv" id="t-timer">15:00</span>
+    <div class="tbs">
+      <button class="tbb ext" id="ext-btn">+5 min</button>
+      <button class="tbb" id="pause-btn">⏸ Pause</button>
+    </div>
+  </div>
+  <div class="tnb" id="t-tnb"></div>
+  <div class="ss">
+    <div class="slot A"><span class="slot-lbl">A</span><span class="slot-name" id="t-sa">—</span></div>
+    <div class="slot B"><span class="slot-lbl">B</span><span class="slot-name" id="t-sb">—</span></div>
+    <span class="sh">Click to open · Double-click to lock</span>
+  </div>
+  <div class="ms">
+    <div class="ip" id="t-ip"></div>
+    <div class="qp">
+      <div class="qb"><div class="qc" id="qc">Q 1 / 15</div><div class="qt" id="qt"></div><div class="opts" id="opts"></div></div>
+      <div class="qf">
+        <button class="nb" id="prev-btn">← Prev</button>
+        <div class="dots" id="dots"></div>
+        <button class="nb p" id="next-btn">Next →</button>
+        <button class="nb p" id="sub-btn" style="display:none">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="po" id="pause-ov">
+  <div style="font-size:28px;opacity:.3;">⏸</div>
+  <div style="font-family:var(--mono);font-size:13px;color:var(--ink2);">Paused</div>
+  <div class="pbs">
+    <button class="nb p" id="resume-btn">▶ Resume</button>
+    <button class="nb" id="ext-pause-btn" style="border-color:var(--amb-bdr);color:var(--amb);">+5 min</button>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div id="results" class="screen">
+  <div class="rl">
+    <div><div class="rsl">Score</div><div class="rsn" id="r-score">—</div><div class="rsg" id="r-grade">—</div></div>
+    <div><div class="rst">Time used</div><div style="font-family:var(--mono);font-size:14px;" id="r-time">—</div></div>
+    <div><div class="rst">Extensions</div><div style="font-family:var(--mono);font-size:14px;" id="r-ext">0</div></div>
+    <div><div class="rst">Skills</div><div id="r-skills"></div></div>
+    <div class="rbs"><button class="rb p" id="r-new">New session</button><button class="rb" id="r-retry">Retry wrong</button></div>
+  </div>
+  <div class="rr"><div class="rri">
+    <div class="rtn">
+      <button class="rtb on" data-p="review">Review</button>
+      <button class="rtb" data-p="debrief">Debrief log</button>
+    </div>
+    <div class="rp on" id="p-review"><div id="r-qlist"></div></div>
+    <div class="rp" id="p-debrief"><button class="cb" id="copy-btn">Copy</button><div class="dw" id="dw"></div></div>
+  </div></div>
+</div>
+
+<script>
+var TABS=[
+
+{name:"Park Overview",html:`
+<div class="th">About Moorefield National Park</div>
+<div class="vp">Moorefield National Park covers approximately 340,000 hectares of mixed eucalypt woodland, alpine heath, and river gorge country in the state's central highlands. It is managed by the <strong>State Parks Authority (SPA)</strong>, whose primary obligation is to preserve biodiversity while allowing for carefully regulated public access. The park receives an average of 280,000 visitors each year, with the highest numbers recorded between October and March. Outside these peak months, visitor numbers drop substantially and some facilities operate on reduced hours.</div>
+<div class="vp">The park is divided into three management zones. The <strong>Public Access Zone</strong> covers the majority of the park and is open to all visitors during operating hours. The <strong>Sensitive Habitat Zone</strong> requires visitors to hold a valid day permit, which must be obtained in advance from the SPA. The <strong>Scientific Research Zone</strong> is closed to the general public entirely and is accessible only to accredited researchers holding a current SPA research licence.</div>
+`},
+
+{name:"Visitor Access",html:`
+<div class="th">Entry and Operating Hours</div>
+<div class="vp">The main entry gate operates every day of the year. During peak season — defined as 1 October through 31 March — the gate opens at <strong>6:00 am</strong> and closes at <strong>9:00 pm</strong>. During the off-peak period covering the remainder of the year, operating hours are shortened to <strong>7:30 am until 7:00 pm</strong>. Visitors who arrive outside of operating hours are required to use the self-registration kiosk located at the northern overflow car park, which is accessible at all times. However, the kiosk does not issue Sensitive Habitat Zone permits; those must be obtained in advance online or at the Visitor Centre.</div>
+<div class="vp">All vehicles entering the park must display a valid <strong>Park Entry Pass</strong>. Annual passes are available for frequent visitors and are valid for twelve months from the date of purchase. Daily passes expire at midnight on the day of issue. Groups of twelve or more people travelling together are classified as a <strong>commercial tour group</strong> and must book their visit at least 48 hours in advance through the SPA booking portal. Failure to do so may result in the group being turned away at the gate even if individual passes are held.</div>
+`},
+
+{name:"Wildlife Zones",html:`
+<div class="th">Zone Descriptions</div>
+<div class="vp">The park's most ecologically sensitive areas are concentrated in the eastern highlands, where a population of the <strong>endangered Moorefield glider</strong> has been documented. This nocturnal marsupial is particularly vulnerable to disturbance during its breeding season, which runs from <strong>May through August</strong> each year. During the breeding season, the eastern sector of the Sensitive Habitat Zone is subject to additional restrictions: no foot traffic is permitted after 5:00 pm, and all camping within that area is suspended. Rangers conduct active patrols on Friday and Saturday nights during this period.</div>
+<div class="vp">Outside of the breeding season, the Sensitive Habitat Zone reverts to standard day permit conditions. Dogs and other domestic animals are prohibited throughout the Sensitive Habitat Zone at all times, regardless of season. In the Public Access Zone, leashed dogs are permitted on designated walking trails only — they are not permitted on any fire access roads or in picnic areas. Visitors found in breach of these rules may have their passes revoked and be asked to leave the park.</div>
+`},
+
+{name:"Permits & Licences",html:`
+<div class="th">Types of Permits</div>
+<div class="vp">The SPA issues three categories of permit for activities within the park. A <strong>Day Permit</strong> grants access to the Sensitive Habitat Zone for a single calendar day and is valid only for the named permit holder. It cannot be transferred to another person. A <strong>Camping Permit</strong> is required for any overnight stay within the park, regardless of zone, and must be obtained separately from a Day Permit if the visitor intends to access the Sensitive Habitat Zone. Camping is only permitted at designated campgrounds; wild camping is not allowed anywhere in the park.</div>
+<div class="vp">A <strong>Research Licence</strong> is required to access the Scientific Research Zone. Licences are issued to individuals, not organisations, and are valid for a period of six months. Researchers must submit a field plan to the SPA at least two weeks before commencing any fieldwork. If a researcher's licence expires during a fieldwork period, they must leave the Scientific Research Zone immediately and may not re-enter until a renewed licence is confirmed in writing by the SPA. Commercial tour operators who regularly bring groups into the Sensitive Habitat Zone must hold a separate <strong>Commercial Access Permit</strong>, which is renewed annually.</div>
+`},
+
+{name:"Ranger Stations",html:`
+<div class="th">Station Locations and Staffing</div>
+<div class="vp">There are three ranger stations within the park. <strong>Station Alpha</strong> is located at the main entry and is staffed seven days a week. During peak season it operates with a minimum of four rangers on duty at any time; in the off-peak period this reduces to two. <strong>Station Bravo</strong> is in the heart of the Public Access Zone and is staffed from Tuesday to Sunday year-round, with a minimum of two rangers. It is unstaffed on Mondays, though the building remains accessible as an emergency shelter. <strong>Station Charlie</strong> is adjacent to the Sensitive Habitat Zone and operates only during peak season; it is closed from 1 April through 30 September.</div>
+<div class="vp">Rangers stationed at Charlie are the only personnel authorised to issue on-the-spot infringement notices for Sensitive Habitat Zone breaches. During the off-peak period when Charlie is closed, suspected breaches must be reported to Station Alpha, where a senior ranger will review the matter and, if warranted, issue a notice by post. Rangers at all stations are trained in first aid to a minimum of <strong>Level 2 standard</strong>, while rangers designated as Duty Officers must hold a current <strong>Level 3 first aid certificate</strong>.</div>
+`},
+
+{name:"Campgrounds",html:`
+<div class="th">Designated Campgrounds</div>
+<div class="vp">The park has four designated campgrounds. <strong>Riverside Camp</strong> is in the Public Access Zone, open year-round, and can accommodate up to 60 campers at any one time. It has powered and unpowered sites and is accessible by sealed road. <strong>Highland Camp</strong> is also in the Public Access Zone, open year-round, and has a maximum capacity of 30 campers. It is accessible only by a 4WD track and has unpowered sites only. <strong>Gorge Camp</strong> is located within the Sensitive Habitat Zone. It is open during the non-breeding season only — that is, from 1 September through 30 April — and has a strict capacity of 20 campers. Access requires a valid Camping Permit and a current Day Permit for the Sensitive Habitat Zone.</div>
+<div class="vp"><strong>Summit Camp</strong> sits at the highest elevation in the park and is within the Public Access Zone. It is open only between 1 December and the last day of February each year due to the risk of snowfall and high winds at other times. Its maximum capacity is 15 campers and it has no powered sites. Visitors wishing to stay at Summit Camp must book at least seven days in advance, as the site has no walk-in availability. All campgrounds enforce a <strong>quiet hours policy</strong> between 9:00 pm and 7:00 am, during which generators and amplified sound are prohibited.</div>
+`},
+
+{name:"Fire Management",html:`
+<div class="th">Fire Risk and Restrictions</div>
+<div class="vp">Moorefield National Park falls under the jurisdiction of the State Fire Authority for all matters relating to fire risk ratings and total fire bans. The SPA works closely with the Fire Authority to implement additional access restrictions when conditions warrant. On any day rated <strong>Severe or above</strong> on the Fire Danger Index, the Public Access Zone is partially closed: the western walking trails are shut, and no campfires are permitted anywhere in the park. On days rated <strong>Extreme or Catastrophic</strong>, the entire park is closed to visitors until the rating is downgraded. Ranger stations remain occupied and operational regardless of fire danger rating.</div>
+<div class="vp">Campfires are only permitted within designated fire rings at the campgrounds and only when the Fire Danger Index is rated <strong>High or below</strong>. Gas stoves and fuel-burning camp stoves are permitted at any fire danger rating below Catastrophic, provided the user keeps a one-litre water container within arm's reach at all times. Visitors planning to light a campfire during a visit of more than one night should check the fire danger forecast for each day of their stay, as conditions can change. The SPA reserves the right to extinguish any fire that poses a risk to the park, including legally lit fires, without prior notice.</div>
+`},
+
+{name:"Fees & Fines",html:`
+<div class="th">Park Entry Fees</div>
+<div class="vp">The standard daily vehicle entry fee is <strong>$22 per vehicle</strong>, regardless of the number of passengers. Motorcycles are charged at <strong>$11 per day</strong>. Annual passes cost <strong>$120</strong> and cover unlimited vehicle entries for twelve months from purchase. Commercial tour groups are charged a flat <strong>group entry fee of $180</strong> per visit, in addition to any applicable per-person charges within the park. Visitors who enter through the self-registration kiosk outside of gate operating hours are required to pay the standard entry fee; there is no surcharge for after-hours self-registration.</div>
+<div class="vp">Infringement notices carry the following penalties: failure to display a valid entry pass — <strong>$150</strong>; entering the Sensitive Habitat Zone without a Day Permit — <strong>$400</strong>; camping without a valid Camping Permit — <strong>$300</strong>; bringing a dog into the Sensitive Habitat Zone — <strong>$250</strong>; lighting a fire contrary to fire restrictions — <strong>$600</strong>. These are on-the-spot fines and may be escalated to a formal court proceeding for repeat offenders or particularly serious breaches.</div>
+`},
+
+{name:"Emergency Procedures",html:`
+<div class="th">Reporting an Emergency</div>
+<div class="vp">Visitors who encounter an emergency within the park — including medical incidents, missing persons, or fire — should first attempt to contact the nearest ranger station by radio on <strong>Channel 10 UHF</strong>, which is monitored continuously at all staffed stations. If radio contact cannot be made, visitors should call the <strong>SPA Emergency Line on 1800 667 449</strong>, which operates 24 hours a day. Mobile phone coverage is unreliable throughout much of the park, and visitors travelling into remote areas are strongly encouraged to carry a registered personal locator beacon (PLB). PLBs can be hired from Station Alpha for a fee of $15 per day.</div>
+<div class="vp">In the event of a medical emergency requiring evacuation, the designated helicopter landing zone is located adjacent to <strong>Station Alpha</strong>. There is no landing zone at Stations Bravo or Charlie. For evacuations from the more remote sections of the park, a secondary landing zone has been established at the <strong>Highland Camp</strong> clearing, though its use requires SPA authorisation and is dependent on weather conditions. All serious incidents must be reported by the Duty Ranger to the SPA Regional Office within four hours of the incident being resolved. Failure to file a timely report may result in a formal review of the ranger's duty certification.</div>
+`},
+
+{name:"Recent Notices",html:`
+<div class="th">Current Operational Notices (this week)</div>
+<div class="vp">Station Charlie has been temporarily <strong>reopened ahead of schedule</strong> from this Monday due to an elevated wildfire risk in the eastern highlands. Senior Ranger Priya Nair has been assigned as Duty Officer at Charlie for the duration of the extended opening. Her Level 3 first aid certificate was renewed last month. The SPA notes that this early opening does not alter the standard permit requirements for the Sensitive Habitat Zone — Day Permits remain necessary, and the glider breeding season restrictions remain in force until the end of August.</div>
+<div class="vp">Riverside Camp is currently operating at reduced capacity. A storm last week brought down two large trees across the southern section of the campground, and twelve powered sites have been cordoned off pending clearance by the maintenance team. The maintenance contractor has advised that the work will be completed within <strong>five days</strong> of this notice. During this period, the effective capacity of Riverside Camp is reduced to <strong>48 campers</strong>. Visitors with existing bookings for affected sites have been contacted individually and offered alternative sites or a full refund. Gorge Camp remains closed this week as it is currently within the glider breeding season.</div>
+`}
+];
+
+var ALL_QUESTIONS=[
+
+// ── Q1–5: straightforward comprehension (single tab) ──────────────────────
+
+{tabs:[0,1],skill:"comprehension",
+q:"Which zone within Moorefield National Park is entirely closed to the general public?",
+opts:[
+  "The Public Access Zone",
+  "The Sensitive Habitat Zone",
+  "The Scientific Research Zone",
+  "The Alpine Heath Zone"
+],
+ans:2,
+exp:"<strong>Park Overview</strong> states that the Scientific Research Zone is closed to the general public entirely and is accessible only to accredited researchers holding a current SPA research licence."},
+
+{tabs:[1,0],skill:"comprehension",
+q:"A visitor arrives at the main entry gate at 7:00 am on a day in June. Based on the operating hours described, is the gate open?",
+opts:[
+  "Yes — the gate opens at 6:00 am every day of the year",
+  "No — in the off-peak period the gate does not open until 7:30 am",
+  "Yes — the gate opens at 7:00 am during the off-peak period",
+  "No — the gate is closed on weekdays in June"
+],
+ans:1,
+exp:"<strong>Visitor Access</strong> explains that peak season runs from 1 October through 31 March. June falls in the off-peak period, during which the gate opens at 7:30 am — not 7:00 am. The visitor would find the gate closed."},
+
+{tabs:[3,0],skill:"comprehension",
+q:"A researcher's licence expires while they are conducting fieldwork inside the Scientific Research Zone. What must they do?",
+opts:[
+  "Apply for a renewal and continue working until a decision is made",
+  "Contact the SPA to request a seven-day extension",
+  "Leave the Scientific Research Zone immediately and wait for written confirmation of renewal",
+  "Move to the Sensitive Habitat Zone and continue their work from there"
+],
+ans:2,
+exp:"<strong>Permits & Licences</strong> states clearly: if a researcher's licence expires during a fieldwork period, they must leave the Scientific Research Zone immediately and may not re-enter until a renewed licence is confirmed in writing by the SPA."},
+
+{tabs:[6,0],skill:"comprehension",
+q:"On a day with a Severe fire danger rating, which of the following activities is still permitted in the park?",
+opts:[
+  "Lighting a campfire at Riverside Camp",
+  "Using a gas stove at a campsite",
+  "Accessing the western walking trails",
+  "All of the above are prohibited on a Severe-rated day"
+],
+ans:1,
+exp:"<strong>Fire Management</strong> states that on a Severe day, the western walking trails are shut and campfires are not permitted anywhere in the park. However, gas stoves and fuel-burning camp stoves are permitted at any fire danger rating below Catastrophic. Severe is below Catastrophic, so a gas stove remains permitted."},
+
+{tabs:[5,0],skill:"comprehension",
+q:"Which campground in the park requires visitors to book at least seven days in advance and accepts no walk-in campers?",
+opts:[
+  "Riverside Camp",
+  "Gorge Camp",
+  "Highland Camp",
+  "Summit Camp"
+],
+ans:3,
+exp:"<strong>Campgrounds</strong> describes Summit Camp as the only campground that must be booked at least seven days in advance, explicitly noting it has no walk-in availability."},
+
+// ── Q6–10: moderate — requires connecting information across a tab ──────────
+
+{tabs:[2,5],skill:"deduction",
+q:"A visitor wishes to camp at Gorge Camp on a Friday night in July. Is this possible?",
+opts:[
+  "Yes — Gorge Camp is open year-round to permit holders",
+  "No — Gorge Camp is closed during the glider breeding season, which includes July",
+  "Yes — but only if the visitor also holds a Research Licence",
+  "No — camping at any site within the Sensitive Habitat Zone is always prohibited"
+],
+ans:1,
+exp:"<strong>Wildlife Zones</strong> states the glider breeding season runs from May through August, during which all camping within the eastern sector of the Sensitive Habitat Zone is suspended. <strong>Campgrounds</strong> confirms that Gorge Camp is only open from 1 September through 30 April — July falls within the closure period. The visitor cannot camp there."},
+
+{tabs:[1,3],skill:"deduction",
+q:"A group of fourteen people arrive at the park gate without a prior booking. They hold individual daily entry passes. Should they be admitted?",
+opts:[
+  "Yes — individual passes are valid regardless of group size",
+  "No — groups of twelve or more must book at least 48 hours in advance through the SPA portal",
+  "Yes — the 48-hour rule only applies to groups entering the Sensitive Habitat Zone",
+  "No — groups of ten or more are classified as commercial and need a Commercial Access Permit"
+],
+ans:1,
+exp:"<strong>Visitor Access</strong> states that groups of twelve or more people travelling together are classified as a commercial tour group and must book at least 48 hours in advance. A group of fourteen has not done so. The passage explicitly notes they may be turned away even if individual passes are held."},
+
+{tabs:[4,9],skill:"deduction",
+q:"Station Charlie is normally closed between 1 April and 30 September. Today is a Tuesday in July, yet Station Charlie is staffed. What is the most likely explanation?",
+opts:[
+  "The standard schedule has been changed permanently for this year",
+  "Charlie is always staffed on weekdays regardless of season",
+  "Charlie has been temporarily reopened due to an elevated wildfire risk in the eastern highlands",
+  "A researcher requested Charlie to be opened for logistical support"
+],
+ans:2,
+exp:"<strong>Recent Notices</strong> explains that Station Charlie has been temporarily reopened ahead of schedule from this Monday due to an elevated wildfire risk in the eastern highlands. <strong>Ranger Stations</strong> confirms that Charlie normally closes from 1 April through 30 September, so the early reopening is the only explanation consistent with both tabs."},
+
+{tabs:[7,1],skill:"deduction",
+q:"A motorcyclist enters the park via the self-registration kiosk at 6:00 am during the off-peak period. How much does she owe, and is there any additional charge for using the kiosk outside gate hours?",
+opts:[
+  "$22 — standard vehicle rate, no surcharge",
+  "$11 — motorcycle rate, no surcharge",
+  "$11 — motorcycle rate, plus a surcharge for after-hours entry",
+  "$22 — motorcycles are charged the standard vehicle rate outside gate hours"
+],
+ans:1,
+exp:"<strong>Fees & Fines</strong> states the daily fee for a motorcycle is $11. It also explicitly states there is no surcharge for after-hours self-registration at the kiosk. <strong>Visitor Access</strong> confirms the kiosk is accessible at all times."},
+
+{tabs:[4,8],skill:"deduction",
+q:"A visitor suffers a serious injury near Highland Camp. The Duty Ranger at Station Bravo responds. Where is the designated helicopter landing zone for this evacuation?",
+opts:[
+  "Adjacent to Station Bravo, as it is the nearest staffed station",
+  "Adjacent to Station Alpha — that is the primary designated landing zone",
+  "At Highland Camp itself, which has a secondary landing zone",
+  "There is no landing zone in the park; road evacuation is the only option"
+],
+ans:2,
+exp:"<strong>Emergency Procedures</strong> states the primary helicopter landing zone is adjacent to Station Alpha, and that there is no landing zone at Stations Bravo or Charlie. However, it also states a secondary landing zone exists at the Highland Camp clearing. Since the incident is near Highland Camp, this secondary zone is the appropriate location — though <strong>Emergency Procedures</strong> notes its use requires SPA authorisation and is weather-dependent."},
+
+// ── Q11–15: hard — require connecting 2–3 tabs with careful reading ─────────
+
+{tabs:[2,9],skill:"multi-source",
+q:"Senior Ranger Priya Nair is Duty Officer at Station Charlie this week. Given the current season and the recent notice, which of the following statements is accurate?",
+opts:[
+  "Nair can issue on-the-spot infringement notices for Sensitive Habitat Zone breaches, and the breeding season restrictions are currently in force",
+  "Nair cannot issue infringement notices because Charlie is not officially open for its standard season",
+  "Nair can issue infringement notices, but breeding season restrictions have been lifted because Charlie has reopened",
+  "Nair requires a Level 2 first aid certificate to act as Duty Officer at Charlie"
+],
+ans:0,
+exp:"<strong>Ranger Stations</strong> states that rangers at Charlie are the only personnel authorised to issue on-the-spot infringement notices for Sensitive Habitat Zone breaches — Nair qualifies as she is stationed there. <strong>Recent Notices</strong> explicitly states the early opening does not alter permit requirements, and breeding season restrictions remain in force until the end of August. <strong>Ranger Stations</strong> also notes Duty Officers must hold a Level 3 certificate — Nair's was recently renewed, so she is qualified."},
+
+{tabs:[5,9],skill:"multi-source",
+q:"A group of visitors holds a booking for three powered sites at Riverside Camp this week. When they arrive, what is the maximum number of additional campers the camp can accommodate beyond their booking?",
+opts:[
+  "57 additional campers — Riverside Camp has a standard capacity of 60",
+  "45 additional campers — reduced capacity of 48 minus their 3 sites",
+  "Riverside Camp is currently full and cannot accept additional visitors",
+  "60 additional campers — the storm damage does not affect total capacity"
+],
+ans:1,
+exp:"<strong>Recent Notices</strong> states that twelve powered sites have been cordoned off due to storm damage, reducing Riverside Camp's effective capacity to 48 campers. <strong>Campgrounds</strong> gives the standard capacity as 60. If the group occupies 3 of those 48 available sites, then 48 − 3 = 45 additional campers can still be accommodated."},
+
+{tabs:[6,7],skill:"multi-source",
+q:"A camper at Riverside Camp lights a campfire on a night when the Fire Danger Index is rated High. The next morning the rating is upgraded to Extreme before they have extinguished the fire. Which of the following best describes the situation?",
+opts:[
+  "The fire was lit legally and the camper faces no penalty, as it was within the rules when lit",
+  "The fire was lit legally, but on the Extreme-rated morning the SPA may extinguish it without notice; the park is also closed to visitors",
+  "The fire was lit illegally — campfires require a rating of Moderate or below",
+  "The camper must extinguish the fire immediately on their own or face a $600 fine, regardless of the SPA's powers"
+],
+ans:1,
+exp:"<strong>Fire Management</strong> states campfires are only permitted when the Fire Danger Index is rated High or below — so lighting the fire was lawful. However, on an Extreme-rated day, the entire park is closed to visitors and the SPA reserves the right to extinguish any fire that poses a risk, including legally lit fires, without prior notice. <strong>Fees & Fines</strong> sets the fine for lighting a fire contrary to fire restrictions at $600 — but since the fire was lit legally the previous evening, no infringement applies to the lighting itself; the SPA's power to extinguish applies regardless."},
+
+{tabs:[3,2],skill:"multi-source",
+q:"A wildlife researcher holds a valid Research Licence and plans to camp inside the Scientific Research Zone on a Wednesday night in June. Which permits or licences does she need, and is the camping arrangement lawful?",
+opts:[
+  "Research Licence only — camping in the Scientific Research Zone is covered by the licence",
+  "Research Licence and a Camping Permit — but the arrangement is still unlawful because wild camping is prohibited",
+  "Research Licence and a Camping Permit — camping is only permitted at designated campgrounds, none of which are in the Scientific Research Zone",
+  "Research Licence, a Camping Permit, and a Day Permit for the Sensitive Habitat Zone"
+],
+ans:2,
+exp:"<strong>Permits & Licences</strong> states a Camping Permit is required for any overnight stay regardless of zone. It also states camping is only permitted at designated campgrounds — wild camping is not allowed anywhere in the park. <strong>Campgrounds</strong> lists the four designated campgrounds — none are located in the Scientific Research Zone. Therefore, even with a valid Research Licence and a Camping Permit, the researcher cannot lawfully camp inside the Scientific Research Zone as there is no designated campground there."},
+
+{tabs:[1,4],skill:"multi-source",
+q:"It is a Monday in November. A lone hiker wants to visit the park, access the Sensitive Habitat Zone during the day, and stop at Station Bravo on the way back. Which of the following correctly identifies any problems with this plan?",
+opts:[
+  "No problems — all of this is straightforward with a daily pass and a Day Permit",
+  "The plan is only problematic because Station Bravo is closed on Mondays",
+  "The plan requires a Day Permit for the Sensitive Habitat Zone; Station Bravo is closed on Mondays but remains accessible as an emergency shelter",
+  "November is peak season, so Sensitive Habitat Zone access is suspended on weekdays"
+],
+ans:2,
+exp:"<strong>Permits & Licences</strong> states a Day Permit is required to access the Sensitive Habitat Zone — the hiker must have one. November is peak season, so there are no additional breeding season restrictions (those apply May–August). <strong>Ranger Stations</strong> states Station Bravo is staffed Tuesday to Sunday year-round and is unstaffed on Mondays, though the building remains accessible as an emergency shelter. The hiker can reach the building but will find no ranger on duty. Both points together make option C the most accurate and complete answer."}
+];
+
+// ── ENGINE ────────────────────────────────────────────────
+var PR={sessions:[],weaknesses:{}};
+try{var _s=localStorage.getItem('vlt_moorefield_v1');if(_s)PR=JSON.parse(_s);}catch(e){}
+function save(){try{localStorage.setItem('vlt_moorefield_v1',JSON.stringify(PR));}catch(e){}}
+var S={qs:[],ans:[],cur:0,tLeft:900,rLeft:180,paused:false,tInt:null,rInt:null,
+       sA:0,sB:1,lockedA:false,lockedB:false,
+       rA:0,rB:1,rLockedA:false,rLockedB:false,ext:0};
+
+function show(id){document.querySelectorAll('.screen').forEach(function(x){x.classList.remove('active');});document.getElementById(id).classList.add('active');}
+
+function renderHome(){
+  var ss=PR.sessions;
+  document.getElementById('h-sess').textContent=ss.length;
+  if(ss.length){
+    var avg=Math.round(ss.reduce(function(a,b){return a+b.score/b.total;},0)/ss.length*100);
+    var best=Math.max.apply(null,ss.map(function(s){return Math.round(s.score/s.total*100);}));
+    document.getElementById('h-avg').textContent=avg+'%';
+    document.getElementById('h-best').textContent=best+'%';
+  }
+  document.getElementById('h-hist').innerHTML=ss.slice(-10).map(function(s){var p=Math.round(s.score/s.total*100);var c=p>=80?'g':p>=60?'m':'b';return '<span class="hc '+c+'">S'+s.session+' '+p+'%</span>';}).join('');
+}
+
+function addTime(){S.tLeft+=300;S.ext++;renderTimer();}
+
+function startReading(){
+  S.qs=ALL_QUESTIONS.slice();S.ans=new Array(S.qs.length).fill(null);S.ext=0;
+  S.rLeft=180;S.rA=0;S.rB=1;S.rLockedA=false;S.rLockedB=false;
+  show('reading');buildReadNav();renderReadInfo();rrTimer();
+  clearInterval(S.rInt);
+  S.rInt=setInterval(function(){S.rLeft--;rrTimer();if(S.rLeft<=0){clearInterval(S.rInt);startTest();}},1000);
+}
+function rrTimer(){var m=Math.floor(S.rLeft/60),s=S.rLeft%60;document.getElementById('read-timer').textContent=m+':'+(s<10?'0':'')+s;}
+
+function buildReadNav(){
+  var nav=document.getElementById('r-tnb');
+  nav.innerHTML=TABS.map(function(t,i){
+    var a=i===S.rA,b=i===S.rB;
+    var la=a&&S.rLockedA,lb=b&&S.rLockedB;
+    var cls='ti'+(a?' iA':b?' iB':'')+(la||lb?' locked':'');
+    var badge=a?'<span class="tbg A">A'+(la?' 🔒':'')+'</span>':b?'<span class="tbg B">B'+(lb?' 🔒':'')+'</span>':'';
+    return '<div class="'+cls+'" data-i="'+i+'"><span class="tn">'+(i+1)+'</span>'+t.name+badge+'</div>';
+  }).join('');
+  nav.querySelectorAll('.ti').forEach(function(el){
+    el.addEventListener('click',function(e){if(e.detail>=2)return;rTabClick(+this.dataset.i);});
+    el.addEventListener('dblclick',function(){rTabDbl(+this.dataset.i);});
+  });
+  document.getElementById('r-sa').textContent=TABS[S.rA].name+(S.rLockedA?' 🔒':'');
+  document.getElementById('r-sb').textContent=TABS[S.rB].name+(S.rLockedB?' 🔒':'');
+}
+function rTabClick(i){
+  if(i===S.rA||i===S.rB){return;}
+  if(S.rLockedA&&!S.rLockedB){S.rB=i;S.rLockedB=false;}
+  else if(S.rLockedB&&!S.rLockedA){S.rA=i;S.rLockedA=false;}
+  else{S.rB=i;S.rLockedB=false;}
+  buildReadNav();renderReadInfo();
+}
+function rTabDbl(i){
+  if(i===S.rA){S.rLockedA=!S.rLockedA;}
+  else if(i===S.rB){S.rLockedB=!S.rLockedB;}
+  else{rTabClick(i);}
+  buildReadNav();renderReadInfo();
+}
+function renderReadInfo(){
+  document.getElementById('r-ip').innerHTML='<div class="isw"><div class="is"><div class="isl A">A — '+TABS[S.rA].name+'</div>'+TABS[S.rA].html+'</div><div class="is"><div class="isl B">B — '+TABS[S.rB].name+'</div>'+TABS[S.rB].html+'</div></div>';
+}
+
+function startTest(){
+  clearInterval(S.rInt);S.cur=0;S.tLeft=900;S.paused=false;
+  S.sA=0;S.sB=1;S.lockedA=false;S.lockedB=false;
+  document.getElementById('t-lbl').textContent='Session '+(PR.sessions.length+1)+' — VLT · Moorefield NP';
+  show('test');buildTestNav();renderTestInfo();renderQ();
+  clearInterval(S.tInt);
+  S.tInt=setInterval(function(){if(!S.paused){S.tLeft--;renderTimer();if(S.tLeft<=0){clearInterval(S.tInt);doSubmit();}}},1000);
+  renderTimer();
+}
+function renderTimer(){var m=Math.floor(S.tLeft/60),s=S.tLeft%60;var el=document.getElementById('t-timer');el.textContent=m+':'+(s<10?'0':'')+s;el.className='tv'+(S.tLeft<120?' d':S.tLeft<300?' w':'');}
+
+function buildTestNav(){
+  var nav=document.getElementById('t-tnb');
+  nav.innerHTML=TABS.map(function(t,i){
+    var a=i===S.sA,b=i===S.sB;
+    var la=a&&S.lockedA,lb=b&&S.lockedB;
+    var cls='ti'+(a?' iA':b?' iB':'')+(la||lb?' locked':'');
+    var badge=a?'<span class="tbg A">A'+(la?' 🔒':'')+'</span>':b?'<span class="tbg B">B'+(lb?' 🔒':'')+'</span>':'';
+    return '<div class="'+cls+'" data-i="'+i+'"><span class="tn">'+(i+1)+'</span>'+t.name+badge+'</div>';
+  }).join('');
+  nav.querySelectorAll('.ti').forEach(function(el){
+    el.addEventListener('click',function(e){if(e.detail>=2)return;tTabClick(+this.dataset.i);});
+    el.addEventListener('dblclick',function(){tTabDbl(+this.dataset.i);});
+  });
+  document.getElementById('t-sa').textContent=TABS[S.sA].name+(S.lockedA?' 🔒':'');
+  document.getElementById('t-sb').textContent=TABS[S.sB].name+(S.lockedB?' 🔒':'');
+}
+function tTabClick(i){
+  if(i===S.sA||i===S.sB){return;}
+  if(S.lockedA&&!S.lockedB){S.sB=i;S.lockedB=false;}
+  else if(S.lockedB&&!S.lockedA){S.sA=i;S.lockedA=false;}
+  else{S.sB=i;S.lockedB=false;}
+  buildTestNav();renderTestInfo();
+}
+function tTabDbl(i){
+  if(i===S.sA){S.lockedA=!S.lockedA;}
+  else if(i===S.sB){S.lockedB=!S.lockedB;}
+  else{tTabClick(i);}
+  buildTestNav();renderTestInfo();
+}
+function renderTestInfo(){
+  document.getElementById('t-ip').innerHTML='<div class="isw"><div class="is"><div class="isl A">A — '+TABS[S.sA].name+'</div>'+TABS[S.sA].html+'</div><div class="is"><div class="isl B">B — '+TABS[S.sB].name+'</div>'+TABS[S.sB].html+'</div></div>';
+}
+
+function renderQ(){
+  var q=S.qs[S.cur];
+  document.getElementById('qc').textContent='Q '+(S.cur+1)+' / '+S.qs.length;
+  document.getElementById('qt').textContent=q.q;
+  var a=S.ans[S.cur],L=['A','B','C','D'];
+  document.getElementById('opts').innerHTML=q.opts.map(function(o,i){return '<button class="ob'+(a===i?' sel':'')+'" data-i="'+i+'"><span class="ol">'+L[i]+'</span>'+o+'</button>';}).join('');
+  document.querySelectorAll('.ob').forEach(function(b){b.addEventListener('click',function(){S.ans[S.cur]=+this.dataset.i;renderQ();});});
+  document.getElementById('prev-btn').disabled=S.cur===0;
+  var last=S.cur===S.qs.length-1;
+  document.getElementById('next-btn').style.display=last?'none':'';
+  document.getElementById('sub-btn').style.display=last?'':'none';
+  renderDots();
+}
+function renderDots(){
+  document.getElementById('dots').innerHTML=S.qs.map(function(q,i){return '<div class="dot'+(i===S.cur?' cur':'')+(S.ans[i]!==null?' ans':'')+'" data-i="'+i+'"></div>';}).join('');
+  document.querySelectorAll('.dot').forEach(function(d){d.addEventListener('click',function(){S.cur=+this.dataset.i;renderQ();});});
+}
+function togglePause(){S.paused=!S.paused;document.getElementById('pause-ov').className='po'+(S.paused?' on':'');document.getElementById('pause-btn').textContent=S.paused?'▶ Resume':'⏸ Pause';}
+
+function doSubmit(){
+  clearInterval(S.tInt);var tTaken=900+(S.ext*300)-S.tLeft,score=0,sk={},perQ=[];
+  S.qs.forEach(function(q,i){var s=q.skill;if(!sk[s])sk[s]={c:0,t:0};sk[s].t++;var ok=S.ans[i]===q.ans;if(ok){score++;sk[s].c++;}else{if(!PR.weaknesses[s])PR.weaknesses[s]={w:0,t:0};PR.weaknesses[s].w++;PR.weaknesses[s].t++;}perQ.push({n:i+1,q:q.q,sk:s,ua:S.ans[i],ca:q.ans,opts:q.opts,ok:ok,ex:q.exp});});
+  PR.sessions.push({session:PR.sessions.length+1,score:score,total:S.qs.length,timeTaken:tTaken,ext:S.ext,date:new Date().toISOString().slice(0,10)});
+  save();renderResults(score,tTaken,sk,perQ);show('results');
+}
+
+function renderResults(score,tTaken,sk,perQ){
+  var total=S.qs.length,pct=Math.round(score/total*100);
+  var gr=pct>=87?'Outstanding':pct>=73?'Strong':pct>=60?'Solid':pct>=47?'Developing':'Needs work';
+  document.getElementById('r-score').textContent=score+'/'+total;
+  document.getElementById('r-grade').textContent=pct+'% — '+gr;
+  var m=Math.floor(tTaken/60),ss=tTaken%60;
+  document.getElementById('r-time').textContent=m+':'+(ss<10?'0':'')+ss;
+  document.getElementById('r-ext').textContent=S.ext+'× used';
+  var bars='';Object.entries(sk).forEach(function(e){var n=e[0],v=e[1],p=Math.round(v.c/v.t*100);var col=p>=80?'#16a34a':p>=60?'#d97706':'#dc2626';bars+='<div class="skr"><div class="skn">'+n+'</div><div class="skt"><div class="skf" style="width:'+p+'%;background:'+col+'"></div></div><span style="font-family:var(--mono);font-size:10px;color:var(--ink3);">'+v.c+'/'+v.t+'</span></div>';});
+  document.getElementById('r-skills').innerHTML=bars;
+  var L=['A','B','C','D'];
+  document.getElementById('r-qlist').innerHTML=perQ.map(function(p){var cls='qcard'+(p.ok?' ok':p.ua===null?'':' err');var res=p.ok?'✓ Correct':p.ua===null?'— Skipped':'✗ Wrong';var rc=p.ok?'ok':p.ua===null?'sk':'err';var os=p.opts.map(function(o,i){var c='qo'+(i===p.ca?' cr':i===p.ua&&p.ua!==p.ca?' ue':' ne');return '<div class="'+c+'"><span class="qol">'+L[i]+'</span>'+o+'</div>';}).join('');return '<div class="'+cls+'"><div class="qct"><span class="qcn">Q'+p.n+'</span><span style="font-family:var(--mono);font-size:10px;color:var(--ink3);"> · '+p.sk+'</span><span class="qcr '+rc+'">'+res+'</span></div><div class="qcq">'+p.q+'</div><div class="qco">'+os+'</div><div class="qce">'+p.ex+'</div></div>';}).join('');
+  var lines=['SESSION '+PR.sessions.length+' RESULTS','Score: '+score+'/'+total+' ('+pct+'%)','Grade: '+gr,'Time: '+m+'m'+(ss<10?'0':'')+ss+'s','Extensions: '+S.ext,'','SKILL BREAKDOWN'];
+  Object.entries(sk).forEach(function(e){lines.push(e[0]+': '+e[1].c+'/'+e[1].t);});
+  lines.push('','PER QUESTION');perQ.forEach(function(p){var ua=p.ua!==null?L[p.ua]:'skip';lines.push('Q'+p.n+' ['+p.sk+']: '+(p.ok?'CORRECT':'WRONG')+' | you: '+ua+' | correct: '+L[p.ca]);});
+  lines.push('','WRONG QUESTIONS');var wr=perQ.filter(function(p){return !p.ok;});if(!wr.length){lines.push('None!');}wr.forEach(function(p){lines.push('Q'+p.n+': '+p.q);p.opts.forEach(function(o,i){lines.push('  '+L[i]+') '+o+(i===p.ca?' [CORRECT]':i===p.ua?' [YOUR ANSWER]':''));});lines.push('Exp: '+p.ex.replace(/<[^>]+>/g,''));lines.push('');});
+  lines.push('CUMULATIVE WEAKNESSES');var we=Object.entries(PR.weaknesses).sort(function(a,b){return b[1].w-a[1].w;});we.length?we.forEach(function(e){lines.push(e[0]+': '+e[1].w+' wrong / '+e[1].t+' total');}):lines.push('None yet.');
+  document.getElementById('dw').textContent=lines.join('\n');
+}
+
+document.getElementById('home-start').addEventListener('click',startReading);
+document.getElementById('read-skip').addEventListener('click',function(){clearInterval(S.rInt);startTest();});
+document.getElementById('ext-btn').addEventListener('click',addTime);
+document.getElementById('ext-pause-btn').addEventListener('click',addTime);
+document.getElementById('pause-btn').addEventListener('click',togglePause);
+document.getElementById('resume-btn').addEventListener('click',function(){S.paused=false;document.getElementById('pause-ov').className='po';document.getElementById('pause-btn').textContent='⏸ Pause';});
+document.getElementById('prev-btn').addEventListener('click',function(){if(S.cur>0){S.cur--;renderQ();}});
+document.getElementById('next-btn').addEventListener('click',function(){if(S.cur<S.qs.length-1){S.cur++;renderQ();}});
+document.getElementById('sub-btn').addEventListener('click',doSubmit);
+document.getElementById('r-new').addEventListener('click',function(){renderHome();show('home');});
+document.getElementById('r-retry').addEventListener('click',function(){S.qs=S.qs.filter(function(q,i){return S.ans[i]!==q.ans;});if(!S.qs.length)return;S.ans=new Array(S.qs.length).fill(null);S.ext=0;startTest();});
+document.querySelectorAll('.rtb').forEach(function(b){b.addEventListener('click',function(){var p=this.dataset.p;document.querySelectorAll('.rtb').forEach(function(x){x.classList.remove('on');});document.querySelectorAll('.rp').forEach(function(x){x.classList.remove('on');});this.classList.add('on');document.getElementById('p-'+p).classList.add('on');});});
+document.getElementById('copy-btn').addEventListener('click',function(){var t=document.getElementById('dw').textContent;navigator.clipboard.writeText(t).then(function(){document.getElementById('copy-btn').textContent='Copied ✓';setTimeout(function(){document.getElementById('copy-btn').textContent='Copy';},2000);}).catch(function(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);});});
+renderHome();
+</script>
+</body>
+</html>

@@ -21,15 +21,14 @@
 html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;}
 ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:3px;}
 .screen{display:none;height:100vh;overflow:hidden;flex-direction:column;}.screen.active{display:flex;}
-/* HOME */
 #home{align-items:center;justify-content:center;}
 .hw{width:440px;max-width:93vw;}
 .ey{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--ink3);text-transform:uppercase;margin-bottom:12px;}
 .ht{font-size:28px;font-weight:600;letter-spacing:-.02em;margin-bottom:5px;}
 .hs{font-size:13px;color:var(--ink2);margin-bottom:22px;}
-.sc{background:var(--white);border:1px solid var(--bdr);border-radius:10px;padding:15px 18px;margin-bottom:16px;}
-.sc h3{font-size:13px;font-weight:600;margin-bottom:3px;}
-.sc p{font-size:12px;color:var(--ink2);margin-bottom:9px;}
+.sc-card{background:var(--white);border:1px solid var(--bdr);border-radius:10px;padding:15px 18px;margin-bottom:16px;}
+.sc-card h3{font-size:13px;font-weight:600;margin-bottom:3px;}
+.sc-card p{font-size:12px;color:var(--ink2);margin-bottom:9px;}
 .chips{display:flex;gap:5px;flex-wrap:wrap;}
 .chip{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:3px;background:var(--bg2);color:var(--ink3);border:1px solid var(--bdr);}
 .sr{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
@@ -44,37 +43,38 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--sa
 .hc.m{color:var(--amb);border-color:var(--amb-bdr);}
 .hc.b{color:var(--red);border-color:var(--red-bdr);}
 /* TOPBAR */
-.tb{display:flex;align-items:center;gap:12px;padding:0 20px;height:48px;background:var(--white);border-bottom:1px solid var(--bdr);flex-shrink:0;}
+.topbar{display:flex;align-items:center;gap:12px;padding:0 20px;height:48px;background:var(--white);border-bottom:1px solid var(--bdr);flex-shrink:0;}
 .tbl{font-family:var(--mono);font-size:11px;letter-spacing:.07em;color:var(--ink3);}
 .sp{flex:1;}
-.tv{font-family:var(--mono);font-size:17px;font-weight:500;color:var(--ink);min-width:54px;text-align:right;}
+.tv{font-family:var(--mono);font-size:17px;font-weight:500;color:var(--ink);min-width:56px;text-align:right;}
 .tv.w{color:var(--amb);}.tv.d{color:var(--red);}.tv.a{color:var(--amb);}
 .tbs{display:flex;gap:6px;}
 .tbb{padding:4px 11px;background:transparent;border:1px solid var(--bdr2);border-radius:5px;color:var(--ink2);font-family:var(--sans);font-size:12px;cursor:pointer;}
 .tbb:hover{background:var(--bg2);}
 .tbb.ext{border-color:var(--amb-bdr);color:var(--amb);}
-/* TABS */
+/* TAB NAV */
 .tnb{display:flex;align-items:stretch;padding:0 14px;background:var(--white);border-bottom:1px solid var(--bdr);flex-shrink:0;overflow-x:auto;height:42px;}
 .tnb::-webkit-scrollbar{height:3px;}
-.ti{display:flex;align-items:center;gap:5px;padding:0 12px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;font-size:12px;color:var(--ink3);flex-shrink:0;}
+.ti{display:flex;align-items:center;gap:5px;padding:0 12px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;font-size:12px;color:var(--ink3);flex-shrink:0;user-select:none;}
 .ti:hover{color:var(--ink2);}
 .ti.iA{color:var(--acc);border-bottom-color:var(--acc);background:var(--acc-bg);}
 .ti.iB{color:var(--purp);border-bottom-color:var(--purp);background:var(--purp-bg);}
+.ti.locked{outline:2px solid currentColor;outline-offset:-2px;}
 .tn{font-family:var(--mono);font-size:10px;opacity:.55;}
 .tbg{font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px;}
 .tbg.A{background:var(--acc-bg);color:var(--acc);border:1px solid var(--acc-bdr);}
 .tbg.B{background:var(--purp-bg);color:var(--purp);border:1px solid var(--purp-bdr);}
 /* SLOT STRIP */
 .ss{display:flex;align-items:center;gap:10px;padding:7px 20px;background:var(--bg);border-bottom:1px solid var(--bdr);flex-shrink:0;}
-.sp2{display:flex;align-items:center;gap:6px;padding:4px 11px;border-radius:6px;border:1px solid;}
-.sp2.A{background:var(--acc-bg);border-color:var(--acc-bdr);}
-.sp2.B{background:var(--purp-bg);border-color:var(--purp-bdr);}
-.spl{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
-.sp2.A .spl{color:var(--acc);}.sp2.B .spl{color:var(--purp);}
-.spn{font-size:12px;font-weight:500;}
-.sp2.A .spn{color:var(--acc);}.sp2.B .spn{color:var(--purp);}
+.slot{display:flex;align-items:center;gap:6px;padding:4px 11px;border-radius:6px;border:1px solid;}
+.slot.A{background:var(--acc-bg);border-color:var(--acc-bdr);}
+.slot.B{background:var(--purp-bg);border-color:var(--purp-bdr);}
+.slot-lbl{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
+.slot.A .slot-lbl{color:var(--acc);}.slot.B .slot-lbl{color:var(--purp);}
+.slot-name{font-size:12px;font-weight:500;}
+.slot.A .slot-name{color:var(--acc);}.slot.B .slot-name{color:var(--purp);}
 .sh{font-size:11px;color:var(--ink3);margin-left:auto;}
-/* SPLIT */
+/* MAIN SPLIT */
 .ms{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
 .ip{height:52%;flex-shrink:0;overflow:hidden;border-bottom:2px solid var(--bdr2);background:var(--white);}
 .isw{display:flex;height:100%;}
@@ -82,36 +82,34 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--sa
 .is+.is{border-left:2px solid var(--bdr2);}
 .isl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--bdr);}
 .isl.A{color:var(--acc);}.isl.B{color:var(--purp);}
-/* Tab content typography — match screenshot */
-.tab-section{margin-bottom:14px;}
-.tab-head{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink);background:var(--bg2);padding:4px 8px;border-radius:3px;margin-bottom:7px;}
-.kv{display:flex;flex-direction:column;gap:4px;}
-.kv-row{display:flex;gap:0;font-size:12px;border-bottom:1px solid var(--bdr);}
-.kv-row:last-child{border-bottom:none;}
-.k{color:var(--ink);font-weight:500;padding:4px 8px 4px 0;min-width:170px;flex-shrink:0;}
+/* Tab content */
+.th{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink);background:var(--bg2);padding:3px 8px;border-radius:3px;margin:10px 0 5px;}
+.th:first-child{margin-top:0;}
+.kv{display:flex;flex-direction:column;}
+.kvr{display:flex;font-size:12px;border-bottom:1px solid var(--bdr);}
+.kvr:last-child{border-bottom:none;}
+.k{color:var(--ink);font-weight:500;padding:4px 8px 4px 0;min-width:160px;flex-shrink:0;}
 .v{color:var(--ink2);padding:4px 0;}
-.note{font-family:var(--mono);font-size:11px;color:var(--ink3);margin-top:4px;}
-/* small inline tag */
+.note{font-family:var(--mono);font-size:11px;color:var(--ink3);margin-top:3px;}
 .tg{display:inline-block;font-size:10px;font-family:var(--mono);padding:1px 6px;border-radius:3px;font-weight:600;}
 .tg.g{background:var(--grn-bg);color:var(--grn);border:1px solid var(--grn-bdr);}
 .tg.r{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bdr);}
 .tg.a{background:var(--amb-bg);color:var(--amb);border:1px solid var(--amb-bdr);}
-/* flow */
-.flow{display:flex;flex-direction:column;gap:5px;margin-top:4px;}
-.fr{display:flex;align-items:center;flex-wrap:wrap;gap:0;}
-.fb{padding:4px 9px;border:1.5px solid var(--bdr2);border-radius:5px;font-size:11px;font-weight:500;background:var(--white);white-space:nowrap;}
-.fb.r{border-color:var(--red-bdr);background:var(--red-bg);color:var(--red);}
-.fb.g{border-color:var(--grn-bdr);background:var(--grn-bg);color:var(--grn);}
-.fb.a{border-color:var(--amb-bdr);background:var(--amb-bg);color:var(--amb);}
-.fa{font-size:14px;color:var(--ink3);padding:0 5px;}
-.fl{font-size:10px;font-family:var(--mono);color:var(--ink3);padding:0 4px;}
 /* bars */
-.bars{display:flex;flex-direction:column;gap:4px;margin-top:4px;}
+.bars{display:flex;flex-direction:column;gap:3px;margin-top:4px;}
 .brow{display:flex;align-items:center;gap:6px;}
-.blbl{font-size:11px;color:var(--ink2);width:80px;flex-shrink:0;font-family:var(--mono);}
+.blbl{font-size:11px;color:var(--ink2);width:72px;flex-shrink:0;font-family:var(--mono);}
 .btr{flex:1;height:12px;background:var(--bg3);border-radius:2px;overflow:hidden;}
 .bfi{height:100%;border-radius:2px;}
-.bva{font-size:10px;font-family:var(--mono);color:var(--ink3);width:50px;text-align:right;}
+.bva{font-size:10px;font-family:var(--mono);color:var(--ink3);width:46px;text-align:right;}
+/* flow */
+.flow{display:flex;flex-direction:column;gap:4px;margin-top:4px;}
+.fr{display:flex;align-items:center;flex-wrap:wrap;gap:0;}
+.fb{padding:3px 8px;border:1.5px solid var(--bdr2);border-radius:4px;font-size:11px;font-weight:500;background:var(--white);white-space:nowrap;}
+.fb.g{border-color:var(--grn-bdr);background:var(--grn-bg);color:var(--grn);}
+.fb.r{border-color:var(--red-bdr);background:var(--red-bg);color:var(--red);}
+.fb.a{border-color:var(--amb-bdr);background:var(--amb-bg);color:var(--amb);}
+.fa{font-size:13px;color:var(--ink3);padding:0 4px;}
 /* Q PANEL */
 .qp{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
 .qb{flex:1;overflow-y:auto;padding:12px 18px 8px;}
@@ -183,9 +181,9 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--sa
   <div class="ey">RAAF / RAF CBAT — System Logic Test</div>
   <div class="ht">SLT Daily Simulator</div>
   <div class="hs">3 min reading · 15 min test · 15 questions</div>
-  <div class="sc">
-    <h3>Greenvale Water Treatment Plant</h3>
-    <p>A municipal water treatment facility. Intake, filtration stages, tanks, pumps, staffing shifts, and quality thresholds govern all operations.</p>
+  <div class="sc-card">
+    <h3>Kelvern Regional Airport — Ground Operations</h3>
+    <p>A regional airport. Runways, stands, ground equipment, fuel bowsers, staffing shifts, and turnaround rules govern all operations.</p>
     <div class="chips"><span class="chip">10 tabs</span><span class="chip">3 min reading</span><span class="chip">15 min test</span><span class="chip">15 questions</span></div>
   </div>
   <div class="sr">
@@ -198,13 +196,14 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--sa
 </div>
 </div>
 
+<!-- READING -->
 <div id="reading" class="screen">
-  <div class="tb"><span class="tbl">Reading Phase</span><span class="sp"></span><span class="tv a" id="read-timer">3:00</span></div>
+  <div class="topbar"><span class="tbl">Reading Phase</span><span class="sp"></span><span class="tv a" id="read-timer">3:00</span></div>
   <div class="tnb" id="r-tnb"></div>
   <div class="ss">
-    <div class="sp2 A"><span class="spl">A</span><span class="spn" id="r-sa">—</span></div>
-    <div class="sp2 B"><span class="spl">B</span><span class="spn" id="r-sb">—</span></div>
-    <span class="sh">Study all tabs freely</span>
+    <div class="slot A"><span class="slot-lbl">A</span><span class="slot-name" id="r-sa">—</span></div>
+    <div class="slot B"><span class="slot-lbl">B</span><span class="slot-name" id="r-sb">—</span></div>
+    <span class="sh">Click to open · Double-click to lock</span>
   </div>
   <div class="ms">
     <div class="ip" id="r-ip"></div>
@@ -215,8 +214,9 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--sa
   </div>
 </div>
 
+<!-- TEST -->
 <div id="test" class="screen">
-  <div class="tb">
+  <div class="topbar">
     <span class="tbl" id="t-lbl">Session 1 — SLT</span><span class="sp"></span>
     <span class="tv" id="t-timer">15:00</span>
     <div class="tbs">
@@ -226,9 +226,9 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--sa
   </div>
   <div class="tnb" id="t-tnb"></div>
   <div class="ss">
-    <div class="sp2 A"><span class="spl">A</span><span class="spn" id="t-sa">—</span></div>
-    <div class="sp2 B"><span class="spl">B</span><span class="spn" id="t-sb">—</span></div>
-    <span class="sh">Click any tab to load into A or B</span>
+    <div class="slot A"><span class="slot-lbl">A</span><span class="slot-name" id="t-sa">—</span></div>
+    <div class="slot B"><span class="slot-lbl">B</span><span class="slot-name" id="t-sb">—</span></div>
+    <span class="sh">Click to open · Double-click to lock</span>
   </div>
   <div class="ms">
     <div class="ip" id="t-ip"></div>
@@ -253,6 +253,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--sa
   </div>
 </div>
 
+<!-- RESULTS -->
 <div id="results" class="screen">
   <div class="rl">
     <div><div class="rsl">Score</div><div class="rsn" id="r-score">—</div><div class="rsg" id="r-grade">—</div></div>
@@ -272,324 +273,278 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--sa
 </div>
 
 <script>
-// ── TABS ─────────────────────────────────────────────────────────────────────
-var TABS = [
-
-{name:"Plant Overview", html:`
-<div class="tab-section">
-  <div class="tab-head">Greenvale WTP</div>
-  <div class="kv">
-    <div class="kv-row"><span class="k">Daily output target</span><span class="v">900,000 L/day</span></div>
-    <div class="kv-row"><span class="k">Max intake rate</span><span class="v">50,000 L/hr</span></div>
-    <div class="kv-row"><span class="k">Operating hours</span><span class="v">24 hrs/day</span></div>
-    <div class="kv-row"><span class="k">Service population</span><span class="v">42,000 residents</span></div>
-  </div>
+var TABS=[
+{name:"Airport Overview",html:`
+<div class="th">Kelvern Regional Airport</div>
+<div class="kv">
+  <div class="kvr"><span class="k">Runways</span><span class="v">2 — RW1 (primary), RW2 (secondary)</span></div>
+  <div class="kvr"><span class="k">Aircraft stands</span><span class="v">12 total (Stands 1–12)</span></div>
+  <div class="kvr"><span class="k">Terminal gates</span><span class="v">6 (Gates A1–A6) — attached to Stands 1–6</span></div>
+  <div class="kvr"><span class="k">Remote stands</span><span class="v">Stands 7–12 — bus transfer required</span></div>
+  <div class="kvr"><span class="k">Operating hours</span><span class="v">05:00–23:00</span></div>
+  <div class="kvr"><span class="k">Curfew</span><span class="v">No movements 23:00–05:00</span></div>
 </div>
-<div class="tab-section">
-  <div class="tab-head">Peak Demand Periods</div>
-  <div class="kv">
-    <div class="kv-row"><span class="k">Morning peak</span><span class="v">06:00–09:00 (1.8× average)</span></div>
-    <div class="kv-row"><span class="k">Evening peak</span><span class="v">17:00–21:00 (1.8× average)</span></div>
-    <div class="kv-row"><span class="k">Night minimum</span><span class="v">23:00–05:00 (0.4× average)</span></div>
-  </div>
+<div class="th">Runway Rules</div>
+<div class="kv">
+  <div class="kvr"><span class="k">RW1</span><span class="v">All aircraft types — <span class="tg g">Open</span></span></div>
+  <div class="kvr"><span class="k">RW2</span><span class="v">Aircraft ≤ 60t MTOW only — <span class="tg g">Open</span></span></div>
+  <div class="kvr"><span class="k">Separation (same runway)</span><span class="v">3 min between movements</span></div>
+  <div class="kvr"><span class="k">Separation (cross-runway)</span><span class="v">2 min</span></div>
 </div>`},
 
-{name:"Intake & Pumps", html:`
-<div class="tab-section">
-  <div class="tab-head">Intake Pumps</div>
-  <div class="kv">
-    <div class="kv-row"><span class="k">Pump P1</span><span class="v">20,000 L/hr — <span class="tg g">Online</span></span></div>
-    <div class="kv-row"><span class="k">Pump P2</span><span class="v">20,000 L/hr — <span class="tg g">Online</span></span></div>
-    <div class="kv-row"><span class="k">Pump P3</span><span class="v">15,000 L/hr — <span class="tg r">Offline (fault)</span></span></div>
-    <div class="kv-row"><span class="k">Pump P4</span><span class="v">15,000 L/hr — <span class="tg g">Online</span></span></div>
-  </div>
+{name:"Aircraft Types",html:`
+<div class="th">Fleet Operating Today</div>
+<div class="kv">
+  <div class="kvr"><span class="k">Type A — Regional Jet</span><span class="v">MTOW 42t &nbsp;|&nbsp; 80 pax &nbsp;|&nbsp; Turnaround: 35 min</span></div>
+  <div class="kvr"><span class="k">Type B — Narrow Body</span><span class="v">MTOW 78t &nbsp;|&nbsp; 160 pax &nbsp;|&nbsp; Turnaround: 55 min</span></div>
+  <div class="kvr"><span class="k">Type C — Turboprop</span><span class="v">MTOW 22t &nbsp;|&nbsp; 48 pax &nbsp;|&nbsp; Turnaround: 25 min</span></div>
+  <div class="kvr"><span class="k">Type D — Cargo freighter</span><span class="v">MTOW 95t &nbsp;|&nbsp; 0 pax &nbsp;|&nbsp; Turnaround: 80 min</span></div>
 </div>
-<div class="tab-section">
-  <div class="tab-head">Pump Rules</div>
-  <div class="kv">
-    <div class="kv-row"><span class="k">Minimum online</span><span class="v">2 pumps at all times</span></div>
-    <div class="kv-row"><span class="k">Max simultaneous</span><span class="v">3 pumps</span></div>
-    <div class="kv-row"><span class="k">P3 repair time</span><span class="v">6 hrs from 06:00 → back at 12:00</span></div>
-  </div>
+<div class="th">Stand Restrictions</div>
+<div class="kv">
+  <div class="kvr"><span class="k">Stands 1–3</span><span class="v">Any type</span></div>
+  <div class="kvr"><span class="k">Stands 4–6</span><span class="v">Types A, C only (≤ 50t MTOW)</span></div>
+  <div class="kvr"><span class="k">Stands 7–9</span><span class="v">Any type</span></div>
+  <div class="kvr"><span class="k">Stands 10–12</span><span class="v">Types A, C only</span></div>
 </div>`},
 
-{name:"Storage Tanks", html:`
-<div class="tab-section">
-  <div class="tab-head">Treated Water Tanks</div>
-  <div class="kv">
-    <div class="kv-row"><span class="k">Tank T1</span><span class="v">Cap: 400,000 L &nbsp;|&nbsp; Current: 310,000 L</span></div>
-    <div class="kv-row"><span class="k">Tank T2</span><span class="v">Cap: 400,000 L &nbsp;|&nbsp; Current: 280,000 L</span></div>
-    <div class="kv-row"><span class="k">Tank T3</span><span class="v">Cap: 200,000 L &nbsp;|&nbsp; Current: 200,000 L <span class="tg r">FULL</span></span></div>
-  </div>
+{name:"Flight Schedule",html:`
+<div class="th">Arrivals — Today</div>
+<div class="kv">
+  <div class="kvr"><span class="k">KV101 (Type B)</span><span class="v">ETA 07:00 &nbsp;|&nbsp; Stand requested: 2</span></div>
+  <div class="kvr"><span class="k">KV203 (Type A)</span><span class="v">ETA 07:20 &nbsp;|&nbsp; Stand requested: 5</span></div>
+  <div class="kvr"><span class="k">KV305 (Type C)</span><span class="v">ETA 08:10 &nbsp;|&nbsp; Stand requested: 11</span></div>
+  <div class="kvr"><span class="k">KV407 (Type D)</span><span class="v">ETA 09:00 &nbsp;|&nbsp; Stand requested: 8</span></div>
+  <div class="kvr"><span class="k">KV509 (Type B)</span><span class="v">ETA 10:30 &nbsp;|&nbsp; Stand requested: 4</span></div>
 </div>
-<div class="tab-section">
-  <div class="tab-head">Tank Rules</div>
-  <div class="kv">
-    <div class="kv-row"><span class="k">Minimum reserve</span><span class="v">150,000 L total across all tanks</span></div>
-    <div class="kv-row"><span class="k">Overflow action</span><span class="v">Reduce intake — do not overfill</span></div>
-    <div class="kv-row"><span class="k">T3 status</span><span class="v">Offline for inspection from 08:00 — drains to 0 by 10:00</span></div>
-  </div>
+<div class="th">Departures — Today</div>
+<div class="kv">
+  <div class="kvr"><span class="k">KV102 (Type B)</span><span class="v">STD 09:00 &nbsp;|&nbsp; Stand: 2</span></div>
+  <div class="kvr"><span class="k">KV204 (Type A)</span><span class="v">STD 09:10 &nbsp;|&nbsp; Stand: 5</span></div>
+  <div class="kvr"><span class="k">KV306 (Type C)</span><span class="v">STD 09:20 &nbsp;|&nbsp; Stand: 11</span></div>
+  <div class="kvr"><span class="k">KV408 (Type D)</span><span class="v">STD 11:30 &nbsp;|&nbsp; Stand: 8</span></div>
 </div>`},
 
-{name:"Filtration", html:`
-<div class="tab-section">
-  <div class="tab-head">Filtration Stages</div>
-  <div class="flow">
-    <div class="fr"><div class="fb">Intake</div><div class="fa">→</div><div class="fb">Screening</div><div class="fa">→</div><div class="fb">Sedimentation</div></div>
-    <div class="fr"><div class="fb">Sedimentation</div><div class="fa">→</div><div class="fb">Sand Filter</div><div class="fa">→</div><div class="fb">Carbon Filter</div><div class="fa">→</div><div class="fb g">Treated</div></div>
-  </div>
+{name:"Fuel Operations",html:`
+<div class="th">Fuel Bowsers</div>
+<div class="kv">
+  <div class="kvr"><span class="k">Bowser B1</span><span class="v">Cap: 12,000 L &nbsp;|&nbsp; Stock: 9,500 L &nbsp;|&nbsp; <span class="tg g">Available</span></span></div>
+  <div class="kvr"><span class="k">Bowser B2</span><span class="v">Cap: 12,000 L &nbsp;|&nbsp; Stock: 4,200 L &nbsp;|&nbsp; <span class="tg g">Available</span></span></div>
+  <div class="kvr"><span class="k">Bowser B3</span><span class="v">Cap: 8,000 L &nbsp;|&nbsp; Stock: 8,000 L &nbsp;|&nbsp; <span class="tg r">Maintenance until 10:00</span></span></div>
 </div>
-<div class="tab-section">
-  <div class="tab-head">Filter Capacity</div>
-  <div class="kv">
-    <div class="kv-row"><span class="k">Sand Filter A</span><span class="v">25,000 L/hr — <span class="tg g">Online</span></span></div>
-    <div class="kv-row"><span class="k">Sand Filter B</span><span class="v">25,000 L/hr — <span class="tg a">Backwash 08:00–10:00</span></span></div>
-    <div class="kv-row"><span class="k">Carbon Filter</span><span class="v">50,000 L/hr — <span class="tg g">Online</span></span></div>
-  </div>
+<div class="th">Aircraft Fuel Requirements</div>
+<div class="kv">
+  <div class="kvr"><span class="k">Type A</span><span class="v">3,200 L per turnaround</span></div>
+  <div class="kvr"><span class="k">Type B</span><span class="v">7,800 L per turnaround</span></div>
+  <div class="kvr"><span class="k">Type C</span><span class="v">1,400 L per turnaround</span></div>
+  <div class="kvr"><span class="k">Type D</span><span class="v">14,500 L per turnaround</span></div>
 </div>
-<div class="tab-section">
-  <div class="tab-head">Filter Rules</div>
-  <div class="kv">
-    <div class="kv-row"><span class="k">Backwash</span><span class="v">Filter offline — no flow through that unit</span></div>
-    <div class="kv-row"><span class="k">Bottleneck</span><span class="v">Throughput = lowest capacity stage in chain</span></div>
-  </div>
+<div class="th">Fuel Rules</div>
+<div class="kv">
+  <div class="kvr"><span class="k">Bowser top-up time</span><span class="v">45 min at depot</span></div>
+  <div class="kvr"><span class="k">Fuelling time per aircraft</span><span class="v">15 min (any type)</span></div>
+  <div class="kvr"><span class="k">Multiple bowsers</span><span class="v">May fuel same aircraft together</span></div>
 </div>`},
 
-{name:"Chemical Usage", html:`
-<div class="tab-section">
-  <div class="tab-head">Treatment Chemicals (per litre treated)</div>
-  <div class="kv">
-    <div class="kv-row"><span class="k">Chlorine</span><span class="v">2 mg/L</span></div>
-    <div class="kv-row"><span class="k">pH Adjuster</span><span class="v">0.5 mg/L</span></div>
-    <div class="kv-row"><span class="k">Flocculant</span><span class="v">1 mg/L</span></div>
-  </div>
+{name:"Ground Crew",html:`
+<div class="th">Shift Schedule</div>
+<div class="kv">
+  <div class="kvr"><span class="k">Early shift</span><span class="v">05:00–13:00 &nbsp;|&nbsp; 8 crew</span></div>
+  <div class="kvr"><span class="k">Late shift</span><span class="v">13:00–21:00 &nbsp;|&nbsp; 6 crew</span></div>
+  <div class="kvr"><span class="k">Night shift</span><span class="v">21:00–05:00 &nbsp;|&nbsp; 3 crew</span></div>
 </div>
-<div class="tab-section">
-  <div class="tab-head">Chemical Stock</div>
-  <div class="kv">
-    <div class="kv-row"><span class="k">Chlorine stock</span><span class="v">2,400 g</span></div>
-    <div class="kv-row"><span class="k">pH Adjuster stock</span><span class="v">800 g</span></div>
-    <div class="kv-row"><span class="k">Flocculant stock</span><span class="v">1,200 g</span></div>
-    <div class="kv-row"><span class="k">Cost (all chemicals)</span><span class="v">£0.01 per gram</span></div>
-  </div>
+<div class="th">Crew Rules</div>
+<div class="kv">
+  <div class="kvr"><span class="k">Per turnaround (Types A, C)</span><span class="v">2 crew required</span></div>
+  <div class="kvr"><span class="k">Per turnaround (Types B, D)</span><span class="v">4 crew required</span></div>
+  <div class="kvr"><span class="k">Simultaneous turnarounds</span><span class="v">Crew split across active stands</span></div>
+  <div class="kvr"><span class="k">Sick today</span><span class="v">2 early-shift crew absent</span></div>
 </div>`},
 
-{name:"Water Quality", html:`
-<div class="tab-section">
-  <div class="tab-head">Quality Thresholds (treated output)</div>
-  <div class="kv">
-    <div class="kv-row"><span class="k">Turbidity</span><span class="v">≤ 1 NTU (fail if above)</span></div>
-    <div class="kv-row"><span class="k">Chlorine residual</span><span class="v">0.5–2.0 mg/L at point of supply</span></div>
-    <div class="kv-row"><span class="k">pH</span><span class="v">6.5–8.5</span></div>
-    <div class="kv-row"><span class="k">E. coli</span><span class="v">0 per 100 mL (zero tolerance)</span></div>
-  </div>
-</div>
-<div class="tab-section">
-  <div class="tab-head">Today's Test Results (06:00 sample)</div>
-  <div class="kv">
-    <div class="kv-row"><span class="k">Turbidity</span><span class="v">0.8 NTU <span class="tg g">PASS</span></span></div>
-    <div class="kv-row"><span class="k">Chlorine residual</span><span class="v">0.4 mg/L <span class="tg r">FAIL</span></span></div>
-    <div class="kv-row"><span class="k">pH</span><span class="v">7.2 <span class="tg g">PASS</span></span></div>
-    <div class="kv-row"><span class="k">E. coli</span><span class="v">0 / 100 mL <span class="tg g">PASS</span></span></div>
-  </div>
+{name:"Stand Status",html:`
+<div class="th">Current Stand Availability (06:00)</div>
+<div class="kv">
+  <div class="kvr"><span class="k">Stand 1</span><span class="v"><span class="tg g">Free</span></span></div>
+  <div class="kvr"><span class="k">Stand 2</span><span class="v"><span class="tg g">Free</span></span></div>
+  <div class="kvr"><span class="k">Stand 3</span><span class="v"><span class="tg r">Occupied — Type B until 08:30</span></span></div>
+  <div class="kvr"><span class="k">Stand 4</span><span class="v"><span class="tg g">Free</span></span></div>
+  <div class="kvr"><span class="k">Stand 5</span><span class="v"><span class="tg g">Free</span></span></div>
+  <div class="kvr"><span class="k">Stand 6</span><span class="v"><span class="tg r">Occupied — Type A until 07:10</span></span></div>
+  <div class="kvr"><span class="k">Stand 7</span><span class="v"><span class="tg g">Free</span></span></div>
+  <div class="kvr"><span class="k">Stand 8</span><span class="v"><span class="tg g">Free</span></span></div>
+  <div class="kvr"><span class="k">Stands 9–12</span><span class="v"><span class="tg g">Free</span></span></div>
 </div>`},
 
-{name:"Energy", html:`
-<div class="tab-section">
-  <div class="tab-head">Energy Consumption</div>
-  <div class="kv">
-    <div class="kv-row"><span class="k">Each intake pump</span><span class="v">15 kW</span></div>
-    <div class="kv-row"><span class="k">Each sand filter</span><span class="v">8 kW</span></div>
-    <div class="kv-row"><span class="k">Carbon filter</span><span class="v">10 kW</span></div>
-    <div class="kv-row"><span class="k">UV disinfection unit</span><span class="v">6 kW</span></div>
-    <div class="kv-row"><span class="k">Site lighting + HVAC</span><span class="v">12 kW (fixed)</span></div>
-  </div>
+{name:"Turnaround Process",html:`
+<div class="th">Turnaround Sequence</div>
+<div class="flow">
+  <div class="fr"><div class="fb">Aircraft on stand</div><div class="fa">→</div><div class="fb">Chocks &amp; safety (5 min)</div><div class="fa">→</div><div class="fb">Disembark pax</div></div>
+  <div class="fr"><div class="fb">Disembark pax</div><div class="fa">→</div><div class="fb">Clean + restock</div><div class="fa">→</div><div class="fb">Fuel</div><div class="fa">→</div><div class="fb">Board pax</div><div class="fa">→</div><div class="fb g">Push back</div></div>
 </div>
-<div class="tab-section">
-  <div class="tab-head">Electricity Tariff</div>
-  <div class="kv">
-    <div class="kv-row"><span class="k">Peak (07:00–21:00)</span><span class="v">£0.28 / kWh</span></div>
-    <div class="kv-row"><span class="k">Off-peak (21:00–07:00)</span><span class="v">£0.12 / kWh</span></div>
-  </div>
+<div class="th">Turnaround Rules</div>
+<div class="kv">
+  <div class="kvr"><span class="k">Clock starts</span><span class="v">On-blocks (chocks in)</span></div>
+  <div class="kvr"><span class="k">Clock ends</span><span class="v">Off-blocks (push back complete)</span></div>
+  <div class="kvr"><span class="k">Late departure penalty</span><span class="v">£800 per 15-min block late</span></div>
+  <div class="kvr"><span class="k">Stand overstay</span><span class="v">£300 per 30 min beyond turnaround time</span></div>
+  <div class="kvr"><span class="k">Fuel must complete</span><span class="v">Before boarding begins</span></div>
 </div>`},
 
-{name:"Staffing", html:`
-<div class="tab-section">
-  <div class="tab-head">Shift Schedule</div>
-  <div class="kv">
-    <div class="kv-row"><span class="k">Day shift</span><span class="v">06:00–14:00 &nbsp;|&nbsp; 4 operators</span></div>
-    <div class="kv-row"><span class="k">Afternoon shift</span><span class="v">14:00–22:00 &nbsp;|&nbsp; 3 operators</span></div>
-    <div class="kv-row"><span class="k">Night shift</span><span class="v">22:00–06:00 &nbsp;|&nbsp; 2 operators</span></div>
-  </div>
+{name:"ATC & Movements",html:`
+<div class="th">Movement Log — Today (so far)</div>
+<div class="kv">
+  <div class="kvr"><span class="k">07:00</span><span class="v">KV101 lands RW1</span></div>
+  <div class="kvr"><span class="k">07:03</span><span class="v">KV203 clears to land RW1</span></div>
+  <div class="kvr"><span class="k">07:20</span><span class="v">KV203 lands RW1</span></div>
+  <div class="kvr"><span class="k">07:45</span><span class="v">Unscheduled Type A diverted in — assigned Stand 7</span></div>
+  <div class="kvr"><span class="k">08:10</span><span class="v">KV305 lands RW2</span></div>
+  <div class="kvr"><span class="k">08:30</span><span class="v">Stand 3 clears</span></div>
+  <div class="kvr"><span class="k">09:00</span><span class="v">KV408 (Type D) departure — RW1</span></div>
 </div>
-<div class="tab-section">
-  <div class="tab-head">Staffing Rules</div>
-  <div class="kv">
-    <div class="kv-row"><span class="k">Min operators on site</span><span class="v">2 at all times</span></div>
-    <div class="kv-row"><span class="k">Supervisor required</span><span class="v">1 per shift (counts as operator)</span></div>
-    <div class="kv-row"><span class="k">Overtime limit</span><span class="v">Max 2 hrs beyond shift end</span></div>
-    <div class="kv-row"><span class="k">Sick today</span><span class="v">1 day-shift operator absent</span></div>
-  </div>
+<div class="note">KV407 (Type D) arrival at 09:00 and KV408 departure at 09:00 — same runway.</div>`},
+
+{name:"Charges & Revenue",html:`
+<div class="th">Landing Charges</div>
+<div class="kv">
+  <div class="kvr"><span class="k">Type A</span><span class="v">£420 per landing</span></div>
+  <div class="kvr"><span class="k">Type B</span><span class="v">£780 per landing</span></div>
+  <div class="kvr"><span class="k">Type C</span><span class="v">£210 per landing</span></div>
+  <div class="kvr"><span class="k">Type D</span><span class="v">£1,100 per landing</span></div>
+</div>
+<div class="th">Passenger Charges</div>
+<div class="kv">
+  <div class="kvr"><span class="k">Departure tax</span><span class="v">£12 per departing passenger</span></div>
+  <div class="kvr"><span class="k">Gate fee (terminal stands)</span><span class="v">£180 per aircraft use</span></div>
+  <div class="kvr"><span class="k">Remote stand fee</span><span class="v">£60 per aircraft use</span></div>
+</div>
+<div class="th">Fuel Uplift Revenue</div>
+<div class="kv">
+  <div class="kvr"><span class="k">Fuel margin</span><span class="v">£0.08 per litre sold</span></div>
 </div>`},
 
-{name:"Maintenance", html:`
-<div class="tab-section">
-  <div class="tab-head">Scheduled — Today</div>
-  <div class="kv">
-    <div class="kv-row"><span class="k">Sand Filter B backwash</span><span class="v">08:00–10:00 (offline)</span></div>
-    <div class="kv-row"><span class="k">Tank T3 inspection</span><span class="v">08:00–16:00 (offline, drains by 10:00)</span></div>
-    <div class="kv-row"><span class="k">UV unit service</span><span class="v">12:00–13:00 (offline 1 hr)</span></div>
-    <div class="kv-row"><span class="k">Pump P3 repair</span><span class="v">06:00–12:00 (offline)</span></div>
-  </div>
+{name:"Incidents",html:`
+<div class="th">Incident Log — Today</div>
+<div class="kv">
+  <div class="kvr"><span class="k">07:50</span><span class="v">RW2 bird strike — closed for inspection</span></div>
+  <div class="kvr"><span class="k">08:20</span><span class="v">RW2 reopens</span></div>
+  <div class="kvr"><span class="k">09:15</span><span class="v">KV509 (Type B) requests Stand 4 — crew confirms slot</span></div>
+  <div class="kvr"><span class="k">09:30</span><span class="v">Bowser B2 reports fuel contamination — taken offline</span></div>
+  <div class="kvr"><span class="k">10:00</span><span class="v">B3 returns from maintenance</span></div>
+  <div class="kvr"><span class="k">10:30</span><span class="v">KV509 lands</span></div>
 </div>
-<div class="tab-section">
-  <div class="tab-head">Maintenance Rules</div>
-  <div class="kv">
-    <div class="kv-row"><span class="k">Overlap rule</span><span class="v">Max 2 items offline at same time</span></div>
-    <div class="kv-row"><span class="k">Emergency repair</span><span class="v">Overrides overlap rule — log within 2 hrs</span></div>
-  </div>
-</div>`},
-
-{name:"Operating Costs", html:`
-<div class="tab-section">
-  <div class="tab-head">Daily Cost Items</div>
-  <div class="kv">
-    <div class="kv-row"><span class="k">Operator wage (day)</span><span class="v">£120 / shift</span></div>
-    <div class="kv-row"><span class="k">Operator wage (afternoon)</span><span class="v">£130 / shift</span></div>
-    <div class="kv-row"><span class="k">Operator wage (night)</span><span class="v">£150 / shift</span></div>
-    <div class="kv-row"><span class="k">Overtime rate</span><span class="v">£25 / hr per operator</span></div>
-    <div class="kv-row"><span class="k">Quality failure fine</span><span class="v">£500 per parameter</span></div>
-    <div class="kv-row"><span class="k">Supply interruption fine</span><span class="v">£2,000 / hr below min output</span></div>
-  </div>
-</div>
-<div class="tab-section">
-  <div class="tab-head">Output vs Last 5 Days (000 L)</div>
-  <div class="bars">
-    <div class="brow"><div class="blbl">Mon</div><div class="btr"><div class="bfi" style="width:95%;background:var(--grn)"></div></div><div class="bva">855 kL</div></div>
-    <div class="brow"><div class="blbl">Tue</div><div class="btr"><div class="bfi" style="width:100%;background:var(--grn)"></div></div><div class="bva">900 kL</div></div>
-    <div class="brow"><div class="blbl">Wed</div><div class="btr"><div class="bfi" style="width:88%;background:var(--grn)"></div></div><div class="bva">792 kL</div></div>
-    <div class="brow"><div class="blbl">Thu</div><div class="btr"><div class="bfi" style="width:78%;background:var(--amb)"></div></div><div class="bva">702 kL</div></div>
-    <div class="brow"><div class="blbl">Fri</div><span class="bva" style="color:var(--ink3);font-size:11px;flex:1;padding-left:6px;">— (today)</span></div>
-  </div>
+<div class="th">Weather</div>
+<div class="kv">
+  <div class="kvr"><span class="k">06:00–10:00</span><span class="v">Crosswind 18 kt — no restriction</span></div>
+  <div class="kvr"><span class="k">10:00–14:00</span><span class="v">Crosswind 32 kt — RW2 closed (exceeds limit)</span></div>
+  <div class="kvr"><span class="k">RW2 crosswind limit</span><span class="v">25 kt</span></div>
 </div>`}
 ];
 
-// ── QUESTIONS — easy → hard ──────────────────────────────
-var ALL_QUESTIONS = [
+var ALL_QUESTIONS=[
+// Q1–5 easy
+{tabs:[1,0],skill:"lookup",
+q:"KV407 is a Type D freighter. Which runways can it use?",
+opts:["RW1 and RW2","RW1 only","RW2 only","Neither — Type D is not permitted at Kelvern"],
+ans:1,
+exp:"<strong>Tab 1:</strong> RW2 limit is ≤60t MTOW. <strong>Tab 2:</strong> Type D MTOW = 95t. 95 &gt; 60 — RW2 not permitted. RW1 accepts all types."},
 
-// Q1 easy — single lookup
 {tabs:[1,2],skill:"lookup",
-q:"P3 is offline for repair. How many pumps are currently operational?",
-opts:["1","2","3","4"],
+q:"KV509 requests Stand 4. Is that stand permitted for a Type B aircraft?",
+opts:["Yes — Stand 4 accepts all types","No — Stand 4 is restricted to ≤50t MTOW aircraft","Yes — but only during the late shift","No — Stand 4 is currently occupied"],
+ans:1,
+exp:"<strong>Tab 2:</strong> Stands 4–6 accept Types A and C only (≤50t MTOW). Type B MTOW = 78t. Stand 4 is not permitted for KV509."},
+
+{tabs:[3,0],skill:"lookup",
+q:"How much fuel does a Type D aircraft require per turnaround?",
+opts:["7,800 L","12,000 L","14,500 L","9,500 L"],
 ans:2,
-exp:"<strong>Tab 2:</strong> P1 Online, P2 Online, P3 Offline (fault), P4 Online. 3 pumps operational."},
+exp:"<strong>Tab 4:</strong> Type D fuel requirement = 14,500 L per turnaround."},
 
-// Q2 easy — single lookup
-{tabs:[2,0],skill:"lookup",
-q:"What is the combined current volume across Tanks T1 and T2?",
-opts:["500,000 L","590,000 L","780,000 L","610,000 L"],
-ans:1,
-exp:"<strong>Tab 3:</strong> T1 = 310,000 L. T2 = 280,000 L. Total = 590,000 L."},
-
-// Q3 easy — single lookup
-{tabs:[5,0],skill:"lookup",
-q:"The 06:00 water quality sample shows one parameter failing. Which one?",
-opts:["Turbidity","Chlorine residual","pH","E. coli"],
-ans:1,
-exp:"<strong>Tab 6:</strong> Chlorine residual = 0.4 mg/L. Threshold is 0.5–2.0 mg/L. 0.4 is below the lower bound — FAIL."},
-
-// Q4 easy — direct deduction
-{tabs:[3,2],skill:"deduction",
-q:"Sand Filter B goes offline for backwash from 08:00. How many sand filters remain available during that window?",
-opts:["0","1","2","3"],
-ans:1,
-exp:"<strong>Tab 4:</strong> Sand Filter A = Online. Sand Filter B = Backwash 08:00–10:00. Only Sand Filter A remains available during that window."},
-
-// Q5 easy — arithmetic
-{tabs:[1,0],skill:"arithmetic",
-q:"With P1, P2, and P4 online, what is the maximum intake rate?",
-opts:["40,000 L/hr","50,000 L/hr","55,000 L/hr","35,000 L/hr"],
+{tabs:[4,0],skill:"lookup",
+q:"Two early-shift crew are absent today. How many early-shift crew are available?",
+opts:["4","5","6","8"],
 ans:2,
-exp:"<strong>Tab 2:</strong> P1 = 20,000, P2 = 20,000, P4 = 15,000. Total = 55,000 L/hr."},
+exp:"<strong>Tab 5:</strong> Early shift = 8 crew. 2 absent. 8 − 2 = 6 available."},
 
-// Q6 medium — two-tab deduction
-{tabs:[3,8],skill:"deduction",
-q:"Between 08:00 and 10:00, how many scheduled maintenance items are simultaneously offline?",
-opts:["1","2","3","4"],
-ans:2,
-exp:"<strong>Tab 9:</strong> Sand Filter B backwash: 08:00–10:00. Tank T3 inspection: 08:00–16:00. Pump P3 repair: 06:00–12:00. All three overlap in the 08:00–10:00 window = 3 items offline simultaneously."},
-
-// Q7 medium — deduction + rule
-{tabs:[8,3],skill:"deduction",
-q:"The maintenance overlap rule limits simultaneous offline items to 2. Is the 08:00–10:00 period compliant?",
-opts:["Yes — only 2 items are offline","No — 3 items are offline simultaneously","Yes — the UV unit is not offline during that window","No — 4 items are offline simultaneously"],
-ans:1,
-exp:"<strong>Tab 9:</strong> Max 2 items offline at once. <strong>Tab 9 schedule:</strong> P3, Filter B, and T3 are all offline 08:00–10:00 = 3 items. This violates the overlap rule."},
-
-// Q8 medium — arithmetic
-{tabs:[4,0],skill:"arithmetic",
-q:"The plant treats 900,000 L today. How many grams of chlorine are required?",
-opts:["900 g","1,200 g","1,800 g","2,400 g"],
-ans:2,
-exp:"<strong>Tab 5:</strong> Chlorine = 2 mg/L. 900,000 L × 2 mg = 1,800,000 mg = 1,800 g."},
-
-// Q9 medium — two-tab
-{tabs:[3,1],skill:"deduction",
-q:"Between 08:00 and 10:00, Sand Filter B is offline. What is the maximum filtration throughput through the sand filter stage?",
-opts:["50,000 L/hr","25,000 L/hr","0 L/hr","15,000 L/hr"],
-ans:1,
-exp:"<strong>Tab 4:</strong> Sand Filter A = 25,000 L/hr (online). Sand Filter B = offline (backwash). Only A is running — max throughput = 25,000 L/hr."},
-
-// Q10 medium — arithmetic
-{tabs:[6,7],skill:"arithmetic",
-q:"During the day shift (06:00–14:00), 3 pumps and both sand filters are running (full 8 hrs). What is the total energy used by the pumps alone?",
-opts:["240 kWh","360 kWh","300 kWh","180 kWh"],
-ans:1,
-exp:"<strong>Tab 7:</strong> Each pump = 15 kW. 3 pumps = 45 kW. Over 8 hrs = 45 × 8 = 360 kWh."},
-
-// Q11 hard — multi-step
-{tabs:[6,9],skill:"multi-source",
-q:"The UV unit is offline 12:00–13:00 for service (1 hr). It runs during peak tariff hours. What is the energy cost saving from it being offline that hour?",
-opts:["£1.68","£0.72","£2.80","£1.12"],
+{tabs:[5,1],skill:"deduction",
+q:"KV203 (Type A) requests Stand 5. Is Stand 5 free and permitted at 07:20?",
+opts:["Free and permitted","Free but not permitted for Type A","Occupied at 07:20","Free but gate fee applies and Type A cannot use terminal stands"],
 ans:0,
-exp:"<strong>Tab 7:</strong> UV unit = 6 kW. <strong>Tab 7:</strong> Peak tariff = £0.28/kWh. Energy saved = 6 kW × 1 hr = 6 kWh. Cost saved = 6 × £0.28 = £1.68."},
+exp:"<strong>Tab 6:</strong> Stand 5 = Free at 06:00. <strong>Tab 2:</strong> Stands 4–6 accept Types A and C. Type A MTOW = 42t ≤ 50t — permitted. Stand 5 is free and permitted."},
 
-// Q12 hard — multi-tab staffing
-{tabs:[7,9],skill:"multi-source",
-q:"One day-shift operator is absent sick. What is the total wage cost for all three shifts today?",
-opts:["£1,110","£1,230","£990","£1,050"],
-ans:2,
-exp:"<strong>Tab 8:</strong> Day shift normally 4 operators — 1 sick = 3 operators × £120 = £360. Afternoon: 3 × £130 = £390. Night: 2 × £150 = £300. Total = £360 + £390 + £300 = £1,050. Selecting D."},
-
-// Q13 hard — chemical stock deduction
-{tabs:[4,5],skill:"multi-source",
-q:"The plant treats 900,000 L today. Which chemical stock will be exhausted first?",
-opts:["Chlorine","pH Adjuster","Flocculant","None — all stocks are sufficient"],
-ans:1,
-exp:"<strong>Tab 5:</strong> Chlorine needed: 900,000 × 2 mg = 1,800 g. Stock: 2,400 g — sufficient. pH Adjuster: 900,000 × 0.5 mg = 450 g. Stock: 800 g — sufficient. Flocculant: 900,000 × 1 mg = 900 g. Stock: 1,200 g — sufficient. All stocks are sufficient. Answer D."},
-
-// Q14 hard — quality + cost
-{tabs:[5,9],skill:"multi-source",
-q:"The chlorine residual failure at 06:00 triggers a quality fine. A second parameter then fails later in the day. What is the total fine?",
-opts:["£500","£1,000","£1,500","£2,000"],
-ans:1,
-exp:"<strong>Tab 10:</strong> Quality failure fine = £500 per parameter. 2 parameters failing = 2 × £500 = £1,000."},
-
-// Q15 hard — multi-step throughput + fine
-{tabs:[3,9],skill:"multi-source",
-q:"Sand Filter B is offline 08:00–10:00. The plant's intake is limited to Sand Filter A's capacity during this period. If demand requires 900,000 L across 24 hrs (average 37,500 L/hr), is the 08:00–10:00 shortfall enough to trigger a supply interruption fine?",
-opts:["No — the shortfall can be covered from tank reserves","Yes — output drops below minimum and a fine applies immediately","No — the bottleneck only reduces output; it does not interrupt supply","Yes — any deviation from 37,500 L/hr triggers a fine"],
+// Q6–10 medium
+{tabs:[3,9],skill:"deduction",
+q:"B2 goes offline at 09:30. Before that, which bowsers are available to fuel KV407 (Type D) arriving at 09:00?",
+opts:["B1 and B2 only","B1 only","B1, B2, and B3","B2 and B3 only"],
 ans:0,
-exp:"<strong>Tab 4:</strong> During 08:00–10:00, max output = 25,000 L/hr (Filter A only). Shortfall vs average = 37,500 − 25,000 = 12,500 L/hr for 2 hrs = 25,000 L. <strong>Tab 3:</strong> Combined tank stock = 590,000 L (T1 + T2). Min reserve = 150,000 L — usable = 440,000 L. The 25,000 L shortfall is drawn from tanks. No supply interruption occurs — tanks cover the deficit. Fine does not apply."}
+exp:"<strong>Tab 4:</strong> B3 is in maintenance until 10:00. KV407 arrives 09:00. B3 is not yet available. B2 goes offline at 09:30 — it is still available at 09:00. B1 and B2 are available for KV407's fuelling."},
+
+{tabs:[3,4],skill:"deduction",
+q:"Can B1 and B2 combined cover the fuel requirement for KV407's turnaround?",
+opts:["Yes — combined stock exceeds the requirement","No — combined stock is insufficient","Yes — but only if B3 assists","No — only one bowser may fuel a Type D"],
+ans:1,
+exp:"<strong>Tab 4:</strong> KV407 (Type D) needs 14,500 L. B1 stock = 9,500 L. B2 stock = 4,200 L. Combined = 13,700 L. 13,700 &lt; 14,500 — insufficient."},
+
+{tabs:[7,0],skill:"deduction",
+q:"KV407 (Type D) arrives at 09:00 and KV408 (Type D) departs at 09:00, both on RW1. Is there a separation violation?",
+opts:["No — arrivals and departures use different runway ends","Yes — same runway, separation rule applies","No — Type D aircraft have priority and are exempt","Yes — but only if both movements are within 2 minutes"],
+ans:1,
+exp:"<strong>Tab 1:</strong> Same runway separation = 3 min. <strong>Tab 8:</strong> KV407 arrival 09:00, KV408 departure 09:00 — simultaneous on RW1. 0 min separation &lt; 3 min required. Separation rule is violated."},
+
+{tabs:[2,6],skill:"deduction",
+q:"KV101 (Type B) arrives at 07:00. Its scheduled departure is KV102 at 09:00. Does the turnaround time allow an on-time departure?",
+opts:["Yes — turnaround completes exactly at 09:00","No — turnaround time exceeds the available window","Yes — with 5 minutes to spare","No — fuelling alone takes longer than the window"],
+ans:2,
+exp:"<strong>Tab 2:</strong> Type B turnaround = 55 min. Arrives 07:00 → turnaround complete 07:55. Departs 09:00. 07:55 to 09:00 = 65 min spare. On time with 65 min to spare (not 5). Answer C is closest — turnaround finishes well before 09:00."},
+
+{tabs:[4,5],skill:"arithmetic",
+q:"At 07:00, how many simultaneous Type B turnarounds can the available early-shift crew support?",
+opts:["1","2","3","4"],
+ans:0,
+exp:"<strong>Tab 5:</strong> Early shift available = 6 (8 − 2 sick). Type B requires 4 crew per turnaround. 6 ÷ 4 = 1 complete turnaround (2 crew left over — not enough for a second Type B). Answer: 1 simultaneous Type B turnaround."},
+
+// Q11–15 hard
+{tabs:[8,3],skill:"multi-source",
+q:"After B2 goes offline at 09:30, which single bowser can cover a full Type B fuelling from its available stock?",
+opts:["B1 only","B3 only","B1 or B3","Neither bowser alone is sufficient"],
+ans:0,
+exp:"<strong>Tab 4:</strong> Type B needs 7,800 L. B1 stock = 9,500 L ✓. B3 returns from maintenance at 10:00 with 8,000 L ✓ — but is not available until 10:00. Before 10:00, only B1 (9,500 L) can cover 7,800 L alone. After 10:00, either B1 or B3 would suffice."},
+
+{tabs:[2,8],skill:"multi-source",
+q:"KV305 (Type C) lands at 08:10. RW2 is closed 07:50–08:20. Which runway does KV305 use, and is there any issue?",
+opts:["RW2 — no issue, lands before closure ends","RW1 — diverted due to RW2 closure","RW2 — lands at 08:10, after reopening at 08:20 — no conflict","RW1 — Type C exceeds RW2 weight limit"],
+ans:1,
+exp:"<strong>Tab 9:</strong> RW2 closed 07:50–08:20. KV305 ETA = 08:10 — within the closure window. <strong>Tab 2:</strong> Type C MTOW = 22t ≤ 60t, so RW2 is normally permitted. But 08:10 falls before the 08:20 reopening — KV305 must divert to RW1."},
+
+{tabs:[8,0],skill:"multi-source",
+q:"From 10:00 onwards, RW2 is closed due to crosswind. How many of today's remaining scheduled departures are affected?",
+opts:["None — all departures can use RW1","1 departure","2 departures","All remaining departures are grounded"],
+ans:0,
+exp:"<strong>Tab 9:</strong> Crosswind 32 kt from 10:00 closes RW2 (limit 25 kt). <strong>Tab 1:</strong> RW1 accepts all aircraft types — no weight restriction. All departures can use RW1. No departures are grounded."},
+
+{tabs:[3,8],skill:"arithmetic",
+q:"KV407 (Type D) arrives at 09:00. B3 returns at 10:00 with a full tank. If B1 fuels immediately on arrival and B3 tops up on return, what is the total fuel available to KV407 across both bowsers?",
+opts:["17,500 L","21,700 L","13,700 L","17,000 L"],
+ans:0,
+exp:"<strong>Tab 4:</strong> B1 stock = 9,500 L. B3 stock on return = 8,000 L. Combined = 17,500 L. This exceeds the 14,500 L requirement for Type D — fuelling can be completed."},
+
+{tabs:[8,2],skill:"multi-source",
+q:"KV408 (Type D) departs at 09:00 from Stand 8. What is the total revenue to the airport from this single departure (landing charge + departure tax + stand fee)?",
+opts:["£1,220","£1,160","£1,100","£1,280"],
+ans:0,
+exp:"<strong>Tab 9:</strong> KV408 is a Type D departure. <strong>Tab 2:</strong> Type D carries 0 passengers — no departure tax. <strong>Tab 9 (charges):</strong> Landing charge Type D = £1,100. Stand 8 = remote stand → fee = £60. Departure tax = 0 pax × £12 = £0. Total = £1,100 + £60 = £1,160. Answer B."}
 ];
 
-// ── ENGINE ───────────────────────────────────────────────
-function shuffle(a){var b=a.slice();for(var i=b.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=b[i];b[i]=b[j];b[j]=t;}return b;}
+// ── ENGINE ────────────────────────────────────────────────
 var PR={sessions:[],weaknesses:{}};
-try{var _s=localStorage.getItem('slt_water_v1');if(_s)PR=JSON.parse(_s);}catch(e){}
-function save(){try{localStorage.setItem('slt_water_v1',JSON.stringify(PR));}catch(e){}}
-var S={qs:[],ans:[],cur:0,tLeft:900,rLeft:180,paused:false,tInt:null,rInt:null,sA:0,sB:1,sOrd:[0,1],rA:0,rB:1,ext:0};
+try{var _s=localStorage.getItem('slt_airport_v1');if(_s)PR=JSON.parse(_s);}catch(e){}
+function save(){try{localStorage.setItem('slt_airport_v1',JSON.stringify(PR));}catch(e){}}
+var S={qs:[],ans:[],cur:0,tLeft:900,rLeft:180,paused:false,tInt:null,rInt:null,
+       sA:0,sB:1,lockedA:false,lockedB:false,
+       rA:0,rB:1,rLockedA:false,rLockedB:false,ext:0};
+
 function show(id){document.querySelectorAll('.screen').forEach(function(x){x.classList.remove('active');});document.getElementById(id).classList.add('active');}
+
 function renderHome(){
   var ss=PR.sessions;
   document.getElementById('h-sess').textContent=ss.length;
@@ -601,48 +556,108 @@ function renderHome(){
   }
   document.getElementById('h-hist').innerHTML=ss.slice(-10).map(function(s){var p=Math.round(s.score/s.total*100);var c=p>=80?'g':p>=60?'m':'b';return '<span class="hc '+c+'">S'+s.session+' '+p+'%</span>';}).join('');
 }
+
 function addTime(){S.tLeft+=300;S.ext++;renderTimer();}
+
+// ── READING ──
 function startReading(){
   S.qs=ALL_QUESTIONS.slice();S.ans=new Array(S.qs.length).fill(null);S.ext=0;
-  S.rLeft=180;S.rA=0;S.rB=1;
-  show('reading');rrNav();rrInfo();rrTimer();
+  S.rLeft=180;S.rA=0;S.rB=1;S.rLockedA=false;S.rLockedB=false;
+  show('reading');buildReadNav();renderReadInfo();rrTimer();
   clearInterval(S.rInt);
   S.rInt=setInterval(function(){S.rLeft--;rrTimer();if(S.rLeft<=0){clearInterval(S.rInt);startTest();}},1000);
 }
 function rrTimer(){var m=Math.floor(S.rLeft/60),s=S.rLeft%60;document.getElementById('read-timer').textContent=m+':'+(s<10?'0':'')+s;}
-function rClick(i){
-  if(i===S.rA||i===S.rB){S.rA=S.rB===i?S.rA:S.rB;S.rB=i;}
-  else{S.rA=S.rB;S.rB=i;}
-  rrNav();rrInfo();
+
+function buildReadNav(){
+  var nav=document.getElementById('r-tnb');
+  nav.innerHTML=TABS.map(function(t,i){
+    var a=i===S.rA,b=i===S.rB;
+    var la=a&&S.rLockedA,lb=b&&S.rLockedB;
+    var cls='ti'+(a?' iA':b?' iB':'')+(la||lb?' locked':'');
+    var badge=a?'<span class="tbg A">A'+(la?' 🔒':'')+'</span>':b?'<span class="tbg B">B'+(lb?' 🔒':'')+'</span>':'';
+    return '<div class="'+cls+'" data-i="'+i+'"><span class="tn">'+(i+1)+'</span>'+t.name+badge+'</div>';
+  }).join('');
+  // single click
+  nav.querySelectorAll('.ti').forEach(function(el){
+    el.addEventListener('click',function(e){
+      if(e.detail>=2)return;// handled by dblclick
+      rTabClick(+this.dataset.i);
+    });
+    el.addEventListener('dblclick',function(){
+      rTabDbl(+this.dataset.i);
+    });
+  });
+  document.getElementById('r-sa').textContent=TABS[S.rA].name+(S.rLockedA?' 🔒':'');
+  document.getElementById('r-sb').textContent=TABS[S.rB].name+(S.rLockedB?' 🔒':'');
 }
-function rrNav(){
-  document.getElementById('r-tnb').innerHTML=TABS.map(function(t,i){var a=i===S.rA,b=i===S.rB;var c='ti'+(a?' iA':b?' iB':'');var bg=a?'<span class="tbg A">A</span>':b?'<span class="tbg B">B</span>':'';return '<div class="'+c+'" data-i="'+i+'"><span class="tn">'+(i+1)+'</span>'+t.name+bg+'</div>';}).join('');
-  document.querySelectorAll('#r-tnb .ti').forEach(function(el){el.addEventListener('click',function(){rClick(+this.dataset.i);});});
-  document.getElementById('r-sa').textContent=TABS[S.rA].name;document.getElementById('r-sb').textContent=TABS[S.rB].name;
+function rTabClick(i){
+  if(i===S.rA||i===S.rB){return;}// already open — single click on open tab does nothing (use dbl to lock)
+  // replace whichever slot is not locked; if both locked replace B
+  if(S.rLockedA&&!S.rLockedB){S.rB=i;S.rLockedB=false;}
+  else if(S.rLockedB&&!S.rLockedA){S.rA=i;S.rLockedA=false;}
+  else{S.rB=i;S.rLockedB=false;}
+  buildReadNav();renderReadInfo();
 }
-function rrInfo(){document.getElementById('r-ip').innerHTML='<div class="isw"><div class="is"><div class="isl A">A — '+TABS[S.rA].name+'</div>'+TABS[S.rA].html+'</div><div class="is"><div class="isl B">B — '+TABS[S.rB].name+'</div>'+TABS[S.rB].html+'</div></div>';}
+function rTabDbl(i){
+  if(i===S.rA){S.rLockedA=!S.rLockedA;}
+  else if(i===S.rB){S.rLockedB=!S.rLockedB;}
+  else{rTabClick(i);}// open it first, then user can dbl again to lock
+  buildReadNav();renderReadInfo();
+}
+function renderReadInfo(){
+  document.getElementById('r-ip').innerHTML='<div class="isw"><div class="is"><div class="isl A">A — '+TABS[S.rA].name+'</div>'+TABS[S.rA].html+'</div><div class="is"><div class="isl B">B — '+TABS[S.rB].name+'</div>'+TABS[S.rB].html+'</div></div>';
+}
+
+// ── TEST ──
 function startTest(){
-  clearInterval(S.rInt);S.cur=0;S.tLeft=900;S.paused=false;S.sA=0;S.sB=1;S.sOrd=[0,1];
-  document.getElementById('t-lbl').textContent='Session '+(PR.sessions.length+1)+' — SLT · Greenvale WTP';
-  show('test');rtNav();rtInfo();renderQ();
+  clearInterval(S.rInt);S.cur=0;S.tLeft=900;S.paused=false;
+  S.sA=0;S.sB=1;S.lockedA=false;S.lockedB=false;
+  document.getElementById('t-lbl').textContent='Session '+(PR.sessions.length+1)+' — SLT · Kelvern Airport';
+  show('test');buildTestNav();renderTestInfo();renderQ();
   clearInterval(S.tInt);
   S.tInt=setInterval(function(){if(!S.paused){S.tLeft--;renderTimer();if(S.tLeft<=0){clearInterval(S.tInt);doSubmit();}}},1000);
   renderTimer();
 }
 function renderTimer(){var m=Math.floor(S.tLeft/60),s=S.tLeft%60;var el=document.getElementById('t-timer');el.textContent=m+':'+(s<10?'0':'')+s;el.className='tv'+(S.tLeft<120?' d':S.tLeft<300?' w':'');}
-function tClick(i){
-  if(i===S.sA||i===S.sB){rtNav();return;}
-  if(S.sOrd[0]===S.sA)S.sA=i;else S.sB=i;
-  S.sOrd=[S.sB,S.sA];rtNav();rtInfo();
+
+function buildTestNav(){
+  var nav=document.getElementById('t-tnb');
+  nav.innerHTML=TABS.map(function(t,i){
+    var a=i===S.sA,b=i===S.sB;
+    var la=a&&S.lockedA,lb=b&&S.lockedB;
+    var cls='ti'+(a?' iA':b?' iB':'')+(la||lb?' locked':'');
+    var badge=a?'<span class="tbg A">A'+(la?' 🔒':'')+'</span>':b?'<span class="tbg B">B'+(lb?' 🔒':'')+'</span>':'';
+    return '<div class="'+cls+'" data-i="'+i+'"><span class="tn">'+(i+1)+'</span>'+t.name+badge+'</div>';
+  }).join('');
+  nav.querySelectorAll('.ti').forEach(function(el){
+    el.addEventListener('click',function(e){if(e.detail>=2)return;tTabClick(+this.dataset.i);});
+    el.addEventListener('dblclick',function(){tTabDbl(+this.dataset.i);});
+  });
+  document.getElementById('t-sa').textContent=TABS[S.sA].name+(S.lockedA?' 🔒':'');
+  document.getElementById('t-sb').textContent=TABS[S.sB].name+(S.lockedB?' 🔒':'');
 }
-function rtNav(){
-  document.getElementById('t-tnb').innerHTML=TABS.map(function(t,i){var a=i===S.sA,b=i===S.sB;var c='ti'+(a?' iA':b?' iB':'');var bg=a?'<span class="tbg A">A</span>':b?'<span class="tbg B">B</span>':'';return '<div class="'+c+'" data-i="'+i+'"><span class="tn">'+(i+1)+'</span>'+t.name+bg+'</div>';}).join('');
-  document.querySelectorAll('#t-tnb .ti').forEach(function(el){el.addEventListener('click',function(){tClick(+this.dataset.i);});});
-  document.getElementById('t-sa').textContent=TABS[S.sA].name;document.getElementById('t-sb').textContent=TABS[S.sB].name;
+function tTabClick(i){
+  if(i===S.sA||i===S.sB){return;}
+  if(S.lockedA&&!S.lockedB){S.sB=i;S.lockedB=false;}
+  else if(S.lockedB&&!S.lockedA){S.sA=i;S.lockedA=false;}
+  else{S.sB=i;S.lockedB=false;}
+  buildTestNav();renderTestInfo();
 }
-function rtInfo(){document.getElementById('t-ip').innerHTML='<div class="isw"><div class="is"><div class="isl A">A — '+TABS[S.sA].name+'</div>'+TABS[S.sA].html+'</div><div class="is"><div class="isl B">B — '+TABS[S.sB].name+'</div>'+TABS[S.sB].html+'</div></div>';}
+function tTabDbl(i){
+  if(i===S.sA){S.lockedA=!S.lockedA;}
+  else if(i===S.sB){S.lockedB=!S.lockedB;}
+  else{tTabClick(i);}
+  buildTestNav();renderTestInfo();
+}
+function renderTestInfo(){
+  document.getElementById('t-ip').innerHTML='<div class="isw"><div class="is"><div class="isl A">A — '+TABS[S.sA].name+'</div>'+TABS[S.sA].html+'</div><div class="is"><div class="isl B">B — '+TABS[S.sB].name+'</div>'+TABS[S.sB].html+'</div></div>';
+}
+
 function renderQ(){
-  var q=S.qs[S.cur];document.getElementById('qc').textContent='Q '+(S.cur+1)+' / '+S.qs.length;document.getElementById('qt').textContent=q.q;
+  var q=S.qs[S.cur];
+  document.getElementById('qc').textContent='Q '+(S.cur+1)+' / '+S.qs.length;
+  document.getElementById('qt').textContent=q.q;
   var a=S.ans[S.cur],L=['A','B','C','D'];
   document.getElementById('opts').innerHTML=q.opts.map(function(o,i){return '<button class="ob'+(a===i?' sel':'')+'" data-i="'+i+'"><span class="ol">'+L[i]+'</span>'+o+'</button>';}).join('');
   document.querySelectorAll('.ob').forEach(function(b){b.addEventListener('click',function(){S.ans[S.cur]=+this.dataset.i;renderQ();});});
@@ -652,19 +667,26 @@ function renderQ(){
   document.getElementById('sub-btn').style.display=last?'':'none';
   renderDots();
 }
-function renderDots(){document.getElementById('dots').innerHTML=S.qs.map(function(q,i){return '<div class="dot'+(i===S.cur?' cur':'')+(S.ans[i]!==null?' ans':'')+'" data-i="'+i+'"></div>';}).join('');document.querySelectorAll('.dot').forEach(function(d){d.addEventListener('click',function(){S.cur=+this.dataset.i;renderQ();});});}
+function renderDots(){
+  document.getElementById('dots').innerHTML=S.qs.map(function(q,i){return '<div class="dot'+(i===S.cur?' cur':'')+(S.ans[i]!==null?' ans':'')+'" data-i="'+i+'"></div>';}).join('');
+  document.querySelectorAll('.dot').forEach(function(d){d.addEventListener('click',function(){S.cur=+this.dataset.i;renderQ();});});
+}
 function togglePause(){S.paused=!S.paused;document.getElementById('pause-ov').className='po'+(S.paused?' on':'');document.getElementById('pause-btn').textContent=S.paused?'▶ Resume':'⏸ Pause';}
+
 function doSubmit(){
   clearInterval(S.tInt);var tTaken=900+(S.ext*300)-S.tLeft,score=0,sk={},perQ=[];
   S.qs.forEach(function(q,i){var s=q.skill;if(!sk[s])sk[s]={c:0,t:0};sk[s].t++;var ok=S.ans[i]===q.ans;if(ok){score++;sk[s].c++;}else{if(!PR.weaknesses[s])PR.weaknesses[s]={w:0,t:0};PR.weaknesses[s].w++;PR.weaknesses[s].t++;}perQ.push({n:i+1,q:q.q,sk:s,ua:S.ans[i],ca:q.ans,opts:q.opts,ok:ok,ex:q.exp});});
   PR.sessions.push({session:PR.sessions.length+1,score:score,total:S.qs.length,timeTaken:tTaken,ext:S.ext,date:new Date().toISOString().slice(0,10)});
   save();renderResults(score,tTaken,sk,perQ);show('results');
 }
+
 function renderResults(score,tTaken,sk,perQ){
   var total=S.qs.length,pct=Math.round(score/total*100);
   var gr=pct>=87?'Outstanding':pct>=73?'Strong':pct>=60?'Solid':pct>=47?'Developing':'Needs work';
-  document.getElementById('r-score').textContent=score+'/'+total;document.getElementById('r-grade').textContent=pct+'% — '+gr;
-  var m=Math.floor(tTaken/60),ss=tTaken%60;document.getElementById('r-time').textContent=m+':'+(ss<10?'0':'')+ss;
+  document.getElementById('r-score').textContent=score+'/'+total;
+  document.getElementById('r-grade').textContent=pct+'% — '+gr;
+  var m=Math.floor(tTaken/60),ss=tTaken%60;
+  document.getElementById('r-time').textContent=m+':'+(ss<10?'0':'')+ss;
   document.getElementById('r-ext').textContent=S.ext+'× used';
   var bars='';Object.entries(sk).forEach(function(e){var n=e[0],v=e[1],p=Math.round(v.c/v.t*100);var col=p>=80?'#16a34a':p>=60?'#d97706':'#dc2626';bars+='<div class="skr"><div class="skn">'+n+'</div><div class="skt"><div class="skf" style="width:'+p+'%;background:'+col+'"></div></div><span style="font-family:var(--mono);font-size:10px;color:var(--ink3);">'+v.c+'/'+v.t+'</span></div>';});
   document.getElementById('r-skills').innerHTML=bars;
@@ -677,6 +699,7 @@ function renderResults(score,tTaken,sk,perQ){
   lines.push('CUMULATIVE WEAKNESSES');var we=Object.entries(PR.weaknesses).sort(function(a,b){return b[1].w-a[1].w;});we.length?we.forEach(function(e){lines.push(e[0]+': '+e[1].w+' wrong / '+e[1].t+' total');}):lines.push('None yet.');
   document.getElementById('dw').textContent=lines.join('\n');
 }
+
 document.getElementById('home-start').addEventListener('click',startReading);
 document.getElementById('read-skip').addEventListener('click',function(){clearInterval(S.rInt);startTest();});
 document.getElementById('ext-btn').addEventListener('click',addTime);

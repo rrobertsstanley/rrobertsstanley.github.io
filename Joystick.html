@@ -3,656 +3,847 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dual Task Trainer</title>
+<title>Psychomotor Tracker</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;700;900&display=swap');
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#000; color:#fff; font-family:'Courier New',monospace;
+  height:100vh; overflow:hidden;
+  display:flex; align-items:center; justify-content:center;
+  user-select:none;
+}
+#tracking-canvas { display:block; cursor:none; position:fixed; inset:0; z-index:1; }
 
-  :root {
-    --bg:     #eef2f6;
-    --panel:  #ffffff;
-    --border: #c8d4de;
-    --accent: #1a6fa8;
-    --green:  #1a9e5c;
-    --red:    #d63048;
-    --warn:   #b05c00;
-    --text:   #2a3a4a;
-    --dim:    #7a95aa;
-    --track-bg: #f4f7fa;
-  }
+/* HUD */
+#hud {
+  position:fixed; top:0; left:0; right:0; z-index:10;
+  display:flex; justify-content:space-between; align-items:flex-start;
+  padding:14px 20px; pointer-events:none;
+}
+.hud-block { display:flex; flex-direction:column; gap:2px; }
+.hud-label { font-size:0.55rem; letter-spacing:0.22em; color:rgba(255,60,60,0.5); text-transform:uppercase; }
+.hud-value { font-size:1.1rem; color:rgba(255,60,60,0.85); letter-spacing:0.1em; }
+#diff-bar-wrap { display:flex; flex-direction:column; align-items:center; gap:4px; }
+#diff-bar-bg { width:160px; height:3px; background:rgba(255,60,60,0.15); border-radius:2px; overflow:hidden; }
+#diff-bar-fill { height:100%; background:rgba(255,60,60,0.7); width:0%; transition:width 0.5s linear; }
+.phase-lbl { font-size:0.6rem; letter-spacing:0.2em; color:rgba(255,60,60,0.35); text-transform:uppercase; text-align:center; }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+/* OVERLAYS */
+.overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.96);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  z-index:100; gap:16px;
+}
+.overlay h1 { font-size:1.7rem; font-weight:700; letter-spacing:0.25em; color:rgba(255,60,60,0.9); text-transform:uppercase; text-align:center; line-height:1.3; }
+.overlay h2 { font-size:0.9rem; font-weight:700; letter-spacing:0.2em; color:rgba(255,60,60,0.65); text-transform:uppercase; text-align:center; }
+.overlay p  { font-size:0.73rem; color:rgba(255,255,255,0.38); text-align:center; max-width:480px; line-height:1.9; letter-spacing:0.04em; }
+.overlay p strong { color:rgba(255,255,255,0.75); }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Share Tech Mono', monospace;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-  }
+.btn {
+  background:transparent; border:1px solid rgba(255,60,60,0.55);
+  color:rgba(255,60,60,0.9); font-family:'Courier New',monospace;
+  font-size:0.78rem; letter-spacing:0.22em; text-transform:uppercase;
+  padding:10px 36px; cursor:pointer; transition:background 0.18s;
+}
+.btn:hover:not(:disabled) { background:rgba(255,60,60,0.1); }
+.btn:disabled { opacity:0.28; cursor:default; }
 
-  #app {
-    width: 100%;
-    max-width: 900px;
-    height: 100vh;
-    max-height: 660px;
-    padding: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
+/* Device picker */
+.dev-list { display:flex; flex-direction:column; gap:5px; width:380px; max-height:180px; overflow-y:auto; }
+.dev-row {
+  display:flex; align-items:center; justify-content:space-between;
+  border:1px solid rgba(255,60,60,0.15); padding:9px 13px;
+  cursor:pointer; transition:background 0.14s;
+  font-size:0.68rem; letter-spacing:0.06em; color:rgba(255,255,255,0.45);
+}
+.dev-row:hover { background:rgba(255,60,60,0.07); }
+.dev-row.sel { border-color:rgba(255,60,60,0.8); color:rgba(255,255,255,0.9); background:rgba(255,60,60,0.1); }
+.dev-tag { font-size:0.56rem; letter-spacing:0.18em; text-transform:uppercase; color:rgba(255,60,60,0.7); padding:2px 7px; border:1px solid rgba(255,60,60,0.35); }
 
-  /* ── HEADER ── */
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
+/* Calibration */
+.cal-box {
+  width:380px; border:1px solid rgba(255,60,60,0.18); padding:14px 16px;
+  display:flex; flex-direction:column; gap:10px;
+}
+.cal-row { display:flex; flex-direction:column; gap:5px; }
+.cal-label { font-size:0.6rem; letter-spacing:0.16em; color:rgba(255,60,60,0.45); text-transform:uppercase; }
+.cal-bar-wrap { height:8px; background:rgba(255,255,255,0.07); border-radius:4px; position:relative; overflow:hidden; }
+.cal-bar-fill { position:absolute; top:0; height:100%; background:rgba(255,60,60,0.65); border-radius:4px; }
+.cal-center { position:absolute; top:0; left:50%; width:1px; height:100%; background:rgba(255,255,255,0.2); }
+.cal-val { font-size:0.65rem; color:rgba(255,60,60,0.6); letter-spacing:0.08em; text-align:right; }
+.cal-steps { display:flex; gap:8px; }
+.cal-step-btn {
+  flex:1; background:transparent; border:1px solid rgba(255,60,60,0.3);
+  color:rgba(255,255,255,0.45); font-family:'Courier New',monospace;
+  font-size:0.65rem; letter-spacing:0.1em; text-transform:uppercase;
+  padding:7px 10px; cursor:pointer; transition:all 0.15s; text-align:center;
+}
+.cal-step-btn:hover { background:rgba(255,60,60,0.08); }
+.cal-step-btn.recording { border-color:rgba(255,60,60,1); color:rgba(255,100,100,1); background:rgba(255,60,60,0.15); animation:pulse 0.6s infinite alternate; }
+.cal-step-btn.done { border-color:rgba(100,220,140,0.7); color:rgba(100,220,140,0.9); }
+@keyframes pulse { from{opacity:0.7} to{opacity:1} }
 
-  .logo {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 0.9rem;
-    letter-spacing: 0.18em;
-    color: var(--dim);
-    text-transform: uppercase;
-  }
+.dir-row { display:flex; gap:10px; }
+.dir-btn {
+  background:transparent; border:1px solid rgba(255,60,60,0.25);
+  color:rgba(255,255,255,0.4); font-family:'Courier New',monospace;
+  font-size:0.68rem; letter-spacing:0.14em; text-transform:uppercase;
+  padding:7px 16px; cursor:pointer; transition:all 0.14s;
+}
+.dir-btn:hover { border-color:rgba(255,60,60,0.6); }
+.dir-btn.chosen { background:rgba(255,60,60,0.18); border-color:rgba(255,60,60,1); color:rgba(255,255,255,0.9); }
 
-  #timer-display {
-    font-size: 1.3rem;
-    color: var(--warn);
-    letter-spacing: 0.1em;
-  }
+/* Preview canvas */
+.prev-canvas { border:1px solid rgba(255,60,60,0.18); background:#040404; }
 
-  #input-hint {
-    font-size: 0.62rem;
-    color: var(--dim);
-    letter-spacing: 0.06em;
-  }
+/* warning */
+.warn { font-size:0.68rem; color:rgba(255,180,60,0.8); letter-spacing:0.1em; text-align:center; }
 
-  /* ── BODY: tracking left, question+stats right ── */
-  .main-grid {
-    display: grid;
-    grid-template-columns: 1fr 280px;
-    grid-template-rows: 1fr;
-    gap: 10px;
-    flex: 1;
-    min-height: 0;
-  }
+/* Axis selector rows inside pedal box */
+.axis-row {
+  display:flex; align-items:center; gap:8px;
+  padding:5px 7px; cursor:pointer;
+  border:1px solid rgba(255,60,60,0.1);
+  transition:background 0.12s;
+}
+.axis-row:hover { background:rgba(255,60,60,0.08); }
+.axis-row.sel-axis { border-color:rgba(255,60,60,0.8); background:rgba(255,60,60,0.14); }
+.axis-row .ax-lbl { font-size:0.58rem; color:rgba(255,60,60,0.55); letter-spacing:0.1em; min-width:42px; flex-shrink:0; }
+.axis-row .ax-bar-wrap { flex:1; height:6px; background:rgba(255,255,255,0.07); border-radius:3px; position:relative; overflow:hidden; }
+.axis-row .ax-bar-fill { position:absolute; top:0; height:100%; background:rgba(255,60,60,0.6); border-radius:3px; }
+.axis-row .ax-center { position:absolute; top:0; left:50%; width:1px; height:100%; background:rgba(255,255,255,0.18); }
+.axis-row .ax-val { font-size:0.58rem; color:rgba(255,255,255,0.3); min-width:44px; text-align:right; flex-shrink:0; }
 
-  /* ── TRACKING ── */
-  #tracking-wrap {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
+/* Results */
+.res-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1px; background:rgba(255,60,60,0.2); width:360px; }
+.res-cell { background:#0a0a0a; padding:16px 12px; text-align:center; }
+.r-lbl { font-size:0.54rem; letter-spacing:0.2em; color:rgba(255,60,60,0.5); text-transform:uppercase; margin-bottom:5px; }
+.r-val { font-size:1.8rem; color:rgba(255,60,60,0.85); }
+.r-val.good { color:rgba(100,220,140,0.85); }
+.r-val.bad  { color:rgba(255,60,60,1); }
 
-  #tracking-canvas {
-    display: block;
-    flex: 1;
-    width: 100%;
-  }
+/* Sensitivity slider */
+.sens-wrap {
+  display:flex; flex-direction:column; gap:6px; width:380px;
+  border:1px solid rgba(255,60,60,0.18); padding:12px 16px;
+}
+.sens-row { display:flex; align-items:center; gap:12px; }
+.sens-label { font-size:0.6rem; letter-spacing:0.16em; color:rgba(255,60,60,0.45); text-transform:uppercase; min-width:90px; }
+.sens-val { font-size:0.8rem; color:rgba(255,60,60,0.8); min-width:36px; text-align:right; }
+input[type=range].sens-slider {
+  flex:1; -webkit-appearance:none; appearance:none;
+  height:4px; background:rgba(255,60,60,0.2); border-radius:2px; outline:none; cursor:pointer;
+}
+input[type=range].sens-slider::-webkit-slider-thumb {
+  -webkit-appearance:none; width:14px; height:14px; border-radius:50%;
+  background:rgba(255,60,60,0.85); cursor:pointer;
+}
+input[type=range].sens-slider::-moz-range-thumb {
+  width:14px; height:14px; border-radius:50%; border:none;
+  background:rgba(255,60,60,0.85); cursor:pointer;
+}
 
-  /* ── RIGHT COLUMN ── */
-  .right-col {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  /* ── QUESTION ── */
-  #question-wrap {
-    flex: 1;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 0;
-    position: relative;
-    overflow: hidden;
-  }
-
-  #question-text {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 2.8rem;
-    font-weight: 700;
-    color: var(--text);
-    text-align: center;
-    letter-spacing: 0.04em;
-    line-height: 1;
-    padding: 16px;
-  }
-
-  /* countdown bar runs along top of question wrap */
-  #countdown-bar {
-    position: absolute;
-    top: 0; left: 0;
-    height: 3px;
-    background: var(--accent);
-    transition: width 0.1s linear, background 0.3s;
-  }
-
-  /* ── STATS ── */
-  #stats-row {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-    flex-shrink: 0;
-  }
-
-  .stat {
-    padding: 7px 8px;
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-  }
-  .stat:last-child { border-right: none; }
-
-  .stat-label {
-    font-size: 0.52rem;
-    letter-spacing: 0.16em;
-    color: var(--dim);
-    text-transform: uppercase;
-    font-family: 'Barlow Condensed', sans-serif;
-  }
-
-  .stat-value { font-size: 1rem; color: var(--accent); }
-
-  /* ── ANSWER ROW — full width, 4 across the bottom ── */
-  #answer-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-    gap: 8px;
-    flex-shrink: 0;
-  }
-
-  .answer-btn {
-    background: var(--panel);
-    border: 1.5px solid var(--border);
-    color: var(--text);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 1.25rem;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: border-color 0.12s, color 0.12s, background 0.12s;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    padding: 10px 4px;
-  }
-
-  .answer-btn .key-hint {
-    font-size: 0.55rem;
-    color: var(--dim);
-    letter-spacing: 0.12em;
-  }
-
-  .answer-btn:hover:not(:disabled) {
-    border-color: var(--accent);
-    color: var(--accent);
-    background: #eaf3fb;
-  }
-
-  .answer-btn.correct {
-    border-color: var(--green);
-    color: var(--green);
-    background: #eafaf2;
-  }
-
-  .answer-btn.wrong {
-    border-color: var(--red);
-    color: var(--red);
-    background: #fdeef0;
-  }
-
-  .answer-btn:disabled { cursor: default; }
-
-  /* ── OVERLAYS ── */
-  .overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(238,242,246,0.97);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-    gap: 18px;
-  }
-
-  .overlay h1 {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 2.8rem;
-    font-weight: 900;
-    letter-spacing: 0.12em;
-    color: var(--accent);
-    text-transform: uppercase;
-    line-height: 1.1;
-    text-align: center;
-  }
-
-  .overlay p {
-    font-size: 0.78rem;
-    color: var(--dim);
-    text-align: center;
-    max-width: 420px;
-    line-height: 1.8;
-  }
-  .overlay p strong { color: var(--text); }
-
-  .big-btn {
-    background: transparent;
-    border: 1.5px solid var(--accent);
-    color: var(--accent);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 1rem;
-    font-weight: 700;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    padding: 12px 44px;
-    border-radius: 3px;
-    cursor: pointer;
-    transition: background 0.18s, color 0.18s;
-  }
-  .big-btn:hover { background: var(--accent); color: #fff; }
-
-  .settings-row {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .settings-row label {
-    font-size: 0.62rem;
-    letter-spacing: 0.14em;
-    color: var(--dim);
-    text-transform: uppercase;
-  }
-
-  .diff-btn {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--dim);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.82rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    padding: 5px 14px;
-    border-radius: 3px;
-    cursor: pointer;
-    transition: all 0.15s;
-    text-transform: uppercase;
-  }
-  .diff-btn.selected { border-color: var(--accent); color: var(--accent); background: #eaf3fb; }
-
-  select {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.78rem;
-    padding: 5px 10px;
-    border-radius: 3px;
-    cursor: pointer;
-  }
-
-  /* results */
-  .results-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1px;
-    background: var(--border);
-    width: 370px;
-    border-radius: 3px;
-    overflow: hidden;
-  }
-
-  .result-cell { background: var(--panel); padding: 14px 12px; text-align: center; }
-  .r-label {
-    font-size: 0.58rem; letter-spacing: 0.18em; color: var(--dim);
-    font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; margin-bottom: 4px;
-  }
-  .r-val { font-size: 1.7rem; color: var(--accent); }
-  .r-val.good { color: var(--green); }
-  .r-val.bad  { color: var(--red); }
+/* Limit rows inside cal-box */
+.limit-row {
+  display:flex; align-items:center; gap:8px; font-size:0.62rem;
+  color:rgba(255,255,255,0.35); letter-spacing:0.06em;
+}
+.limit-row .lim-lbl { min-width:56px; color:rgba(255,60,60,0.4); font-size:0.58rem; letter-spacing:0.1em; text-transform:uppercase; }
+.limit-row .lim-val { min-width:52px; text-align:right; color:rgba(255,255,255,0.5); }
+.eq-badge {
+  font-size:0.58rem; letter-spacing:0.12em; text-transform:uppercase;
+  color:rgba(100,220,140,0.7); border:1px solid rgba(100,220,140,0.3);
+  padding:2px 8px; display:inline-block;
+}
 </style>
 </head>
 <body>
 
-<!-- START -->
-<div class="overlay" id="start-overlay">
-  <h1>Dual Task<br>Trainer</h1>
-  <p>
-    <strong>Tracking:</strong> Keep the dot centred — arrow keys or joystick.<br>
-    <strong>Math:</strong> Answer with keys 1–4 or click the buttons below.<br>
-    Both tasks run simultaneously.
-  </p>
-  <div class="settings-row">
-    <label>Difficulty</label>
-    <button class="diff-btn" data-diff="easy">Easy</button>
-    <button class="diff-btn selected" data-diff="normal">Normal</button>
-    <button class="diff-btn" data-diff="hard">Hard</button>
+<!-- ── MODE SELECT ─────────────────────────────────────────────────────────── -->
+<div class="overlay" id="s-mode">
+  <h1>Psychomotor<br>Tracking Test</h1>
+  <p>Connect all USB devices first, then press a button on each to activate it in the browser.</p>
+  <div style="display:flex;gap:12px;">
+    <button class="btn" id="btn-mode-stick">Joystick Only</button>
+    <button class="btn" id="btn-mode-pedal">Joystick + Pedals</button>
   </div>
-  <div class="settings-row">
-    <label>Duration</label>
-    <select id="duration-select">
-      <option value="60">1 min</option>
-      <option value="120" selected>2 min</option>
-      <option value="180">3 min</option>
-      <option value="300">5 min</option>
-    </select>
-  </div>
-  <button class="big-btn" id="start-btn">Begin</button>
 </div>
 
-<!-- RESULTS -->
-<div class="overlay" id="results-overlay" style="display:none">
-  <h1>Complete</h1>
-  <div class="results-grid" id="results-grid"></div>
-  <button class="big-btn" id="restart-btn">Run Again</button>
-</div>
+<!-- ── JOYSTICK-ONLY SETUP ─────────────────────────────────────────────────── -->
+<div class="overlay" id="s-stick" style="display:none">
+  <h1>Joystick Setup</h1>
 
-<div id="app">
-  <header>
-    <div class="logo">Dual Task Trainer</div>
-    <div id="timer-display">—</div>
-    <div id="input-hint">arrows / joystick &nbsp;·&nbsp; keys 1 – 4 to answer</div>
-  </header>
+  <h2>1 — Select device</h2>
+  <div class="dev-list" id="so-list"></div>
+  <div class="warn" id="so-warn" style="display:none">No gamepads detected. Wiggle the stick or press a button.</div>
 
-  <!-- tracking + question side by side -->
-  <div class="main-grid">
-    <div id="tracking-wrap">
-      <canvas id="tracking-canvas"></canvas>
-    </div>
+  <h2>2 — Select axes &amp; calibrate</h2>
+  <p>Move each axis fully. <strong>Click an axis row</strong> to assign it to Up/Down or Left/Right, then hold the calibration buttons at full deflection.</p>
 
-    <div class="right-col">
-      <div id="question-wrap">
-        <div id="countdown-bar" style="width:100%"></div>
-        <div id="question-text">—</div>
+  <div style="display:flex;gap:16px;align-items:flex-start">
+    <!-- All-axes list -->
+    <div class="cal-box" style="width:260px;padding:10px 12px">
+      <div class="cal-label" style="margin-bottom:6px">All axes — live values</div>
+      <div id="so-axes-list" style="display:flex;flex-direction:column;gap:5px;max-height:180px;overflow-y:auto">
+        <div style="font-size:0.62rem;color:rgba(255,255,255,0.25);padding:6px">Select a device above</div>
       </div>
-
-      <div id="stats-row">
-        <div class="stat"><div class="stat-label">Tracking</div><div class="stat-value" id="m-track">—</div></div>
-        <div class="stat"><div class="stat-label">Math</div><div class="stat-value" id="m-math">—</div></div>
-        <div class="stat"><div class="stat-label">Qs</div><div class="stat-value" id="m-questions">0</div></div>
-        <div class="stat"><div class="stat-label">Score</div><div class="stat-value" id="m-combined">—</div></div>
+    </div>
+    <!-- Assign + calibrate -->
+    <div style="display:flex;flex-direction:column;gap:10px;width:200px">
+      <div class="cal-box" style="width:200px;padding:10px 12px">
+        <div class="cal-label">Up/Down axis: <span id="so-y-axis-lbl" style="color:rgba(255,255,255,0.6)">none</span></div>
+        <div class="cal-bar-wrap" style="margin:4px 0"><div class="cal-bar-fill" id="so-y-fill" style="left:50%;width:0%"></div><div class="cal-center"></div></div>
+        <div style="display:flex;gap:5px;margin-top:4px">
+          <div class="cal-step-btn" id="so-cal-up" style="font-size:0.58rem">Hold UP</div>
+          <div class="cal-step-btn" id="so-cal-down" style="font-size:0.58rem">Hold DOWN</div>
+        </div>
+        <div class="dir-row" style="margin-top:6px">
+          <button class="dir-btn chosen" id="so-iy-no" style="font-size:0.6rem;padding:5px 8px">Up=Up ✓</button>
+          <button class="dir-btn" id="so-iy-yes" style="font-size:0.6rem;padding:5px 8px">Invert</button>
+        </div>
+      </div>
+      <div class="cal-box" style="width:200px;padding:10px 12px">
+        <div class="cal-label">Left/Right axis: <span id="so-x-axis-lbl" style="color:rgba(255,255,255,0.6)">none</span></div>
+        <div class="cal-bar-wrap" style="margin:4px 0"><div class="cal-bar-fill" id="so-x-fill" style="left:50%;width:0%"></div><div class="cal-center"></div></div>
+        <div style="display:flex;gap:5px;margin-top:4px">
+          <div class="cal-step-btn" id="so-cal-left" style="font-size:0.58rem">Hold LEFT</div>
+          <div class="cal-step-btn" id="so-cal-right" style="font-size:0.58rem">Hold RIGHT</div>
+        </div>
+        <div class="dir-row" style="margin-top:6px">
+          <button class="dir-btn chosen" id="so-ix-no" style="font-size:0.6rem;padding:5px 8px">Right=Right ✓</button>
+          <button class="dir-btn" id="so-ix-yes" style="font-size:0.6rem;padding:5px 8px">Invert</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- 4 answer buttons full-width across the bottom -->
-  <div id="answer-row">
-    <button class="answer-btn" data-idx="0"><span class="key-hint">[1]</span><span class="btn-val">—</span></button>
-    <button class="answer-btn" data-idx="1"><span class="key-hint">[2]</span><span class="btn-val">—</span></button>
-    <button class="answer-btn" data-idx="2"><span class="key-hint">[3]</span><span class="btn-val">—</span></button>
-    <button class="answer-btn" data-idx="3"><span class="key-hint">[4]</span><span class="btn-val">—</span></button>
+  <canvas class="prev-canvas" id="so-preview" width="200" height="140"></canvas>
+  <p style="margin-top:-6px;font-size:0.65rem">Move stick — dot should follow assigned axes.</p>
+
+  <h2>3 — Set limits &amp; sensitivity</h2>
+  <div class="sens-wrap" style="width:480px">
+    <div style="display:flex;gap:16px">
+      <div style="flex:1">
+        <div class="cal-label" style="margin-bottom:6px">Up/Down physical limits</div>
+        <div class="limit-row"><span class="lim-lbl">Max Up</span><div class="cal-bar-wrap" style="flex:1;height:6px"><div class="cal-bar-fill" id="so-ylim-bar" style="left:50%;width:0%"></div><div class="cal-center"></div></div><span class="lim-val" id="so-ylim-val">±1.000</span></div>
+        <div style="display:flex;gap:5px;margin-top:5px">
+          <div class="cal-step-btn" id="so-lim-up" style="font-size:0.58rem;flex:1">Hold UP limit</div>
+          <div class="cal-step-btn" id="so-lim-down" style="font-size:0.58rem;flex:1">Hold DOWN limit</div>
+        </div>
+      </div>
+      <div style="flex:1">
+        <div class="cal-label" style="margin-bottom:6px">Left/Right physical limits</div>
+        <div class="limit-row"><span class="lim-lbl">Max Right</span><div class="cal-bar-wrap" style="flex:1;height:6px"><div class="cal-bar-fill" id="so-xlim-bar" style="left:50%;width:0%"></div><div class="cal-center"></div></div><span class="lim-val" id="so-xlim-val">±1.000</span></div>
+        <div style="display:flex;gap:5px;margin-top:5px">
+          <div class="cal-step-btn" id="so-lim-left" style="font-size:0.58rem;flex:1">Hold LEFT limit</div>
+          <div class="cal-step-btn" id="so-lim-right" style="font-size:0.58rem;flex:1">Hold RIGHT limit</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+      <span id="so-eq-badge" class="eq-badge" style="display:none">Equalised ✓</span>
+      <span style="font-size:0.6rem;color:rgba(255,255,255,0.25)">Full deflection on both axes will move the dot at the same speed once limits are set.</span>
+    </div>
+    <div class="sens-row" style="margin-top:4px">
+      <span class="sens-label">Sensitivity</span>
+      <input type="range" class="sens-slider" id="so-sens" min="10" max="200" value="100" step="5">
+      <span class="sens-val" id="so-sens-val">1.00×</span>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:12px">
+    <button class="btn" id="so-confirm" disabled>Begin Test</button>
+    <button class="btn" style="opacity:0.35;font-size:0.65rem;padding:7px 18px" id="so-back">← Back</button>
   </div>
 </div>
+
+<!-- ── PEDAL SETUP ─────────────────────────────────────────────────────────── -->
+<div class="overlay" id="s-pedal" style="display:none">
+  <h1>Device Setup</h1>
+  <div class="warn" id="pd-warn"></div>
+
+  <div style="display:flex;gap:32px;align-items:flex-start">
+
+    <!-- JOYSTICK -->
+    <div style="display:flex;flex-direction:column;gap:10px;align-items:center;width:230px">
+      <h2>Joystick</h2>
+      <p style="font-size:0.63rem">Select device, then <strong>click the axis</strong> that moves when you push up/down.</p>
+      <div class="dev-list" id="js-list" style="width:230px;max-height:110px"></div>
+      <div class="cal-box" style="width:230px;padding:10px 12px">
+        <div class="cal-label" style="margin-bottom:4px">All axes — Up/Down axis: <span id="js-y-axis-lbl" style="color:rgba(255,255,255,0.6)">none</span></div>
+        <div id="js-axes-list" style="display:flex;flex-direction:column;gap:4px;max-height:120px;overflow-y:auto">
+          <div style="font-size:0.62rem;color:rgba(255,255,255,0.25);padding:4px">Select a device above</div>
+        </div>
+        <div class="cal-bar-wrap" style="margin:6px 0"><div class="cal-bar-fill" id="js-y-fill" style="left:50%;width:0%"></div><div class="cal-center"></div></div>
+        <div style="display:flex;gap:5px">
+          <div class="cal-step-btn" id="js-cal-up" style="font-size:0.6rem">Hold UP</div>
+          <div class="cal-step-btn" id="js-cal-down" style="font-size:0.6rem">Hold DOWN</div>
+        </div>
+      </div>
+      <div class="dir-row">
+        <button class="dir-btn chosen" id="js-iy-no" style="font-size:0.62rem;padding:6px 10px">Up=Up ✓</button>
+        <button class="dir-btn" id="js-iy-yes" style="font-size:0.62rem;padding:6px 10px">Invert</button>
+      </div>
+    </div>
+
+    <!-- PEDALS -->
+    <div style="display:flex;flex-direction:column;gap:10px;align-items:center;width:240px">
+      <h2>Foot Pedals</h2>
+      <p style="font-size:0.63rem">Controls left/right.<br>Select device, then <strong>click the axis that moves</strong> when you press the pedals.</p>
+      <div class="dev-list" id="pd-list" style="width:240px;max-height:110px"></div>
+      <div class="cal-box" style="width:240px;padding:10px 12px">
+        <div class="cal-label" style="margin-bottom:6px">All axes — click to select, then calibrate</div>
+        <div id="pd-axes-list" style="display:flex;flex-direction:column;gap:5px;max-height:160px;overflow-y:auto"></div>
+      </div>
+      <div style="display:flex;gap:5px;width:240px">
+        <div class="cal-step-btn" id="pd-cal-left" style="font-size:0.6rem;flex:1">Hold LEFT max</div>
+        <div class="cal-step-btn" id="pd-cal-right" style="font-size:0.6rem;flex:1">Hold RIGHT max</div>
+      </div>
+      <div class="dir-row">
+        <button class="dir-btn chosen" id="pd-ir-no" style="font-size:0.62rem;padding:6px 10px">Right=Right ✓</button>
+        <button class="dir-btn" id="pd-ir-yes" style="font-size:0.62rem;padding:6px 10px">Invert</button>
+      </div>
+    </div>
+
+  </div>
+
+  <canvas class="prev-canvas" id="pd-preview" width="220" height="110"></canvas>
+  <p style="font-size:0.63rem;margin-top:-6px">Live preview — push joystick up/down, pedals left/right</p>
+
+  <div class="sens-wrap" style="width:480px">
+    <div style="display:flex;gap:16px">
+      <div style="flex:1">
+        <div class="cal-label" style="margin-bottom:6px">Joystick Y limits</div>
+        <div class="limit-row"><span class="lim-lbl">Max</span><div class="cal-bar-wrap" style="flex:1;height:6px"><div class="cal-bar-fill" id="pd-jslim-bar" style="left:50%;width:0%"></div><div class="cal-center"></div></div><span class="lim-val" id="pd-jslim-val">±1.000</span></div>
+        <div style="display:flex;gap:5px;margin-top:5px">
+          <div class="cal-step-btn" id="pd-lim-up" style="font-size:0.58rem;flex:1">Hold UP limit</div>
+          <div class="cal-step-btn" id="pd-lim-down" style="font-size:0.58rem;flex:1">Hold DOWN limit</div>
+        </div>
+      </div>
+      <div style="flex:1">
+        <div class="cal-label" style="margin-bottom:6px">Pedal limits</div>
+        <div class="limit-row"><span class="lim-lbl">Max</span><div class="cal-bar-wrap" style="flex:1;height:6px"><div class="cal-bar-fill" id="pd-pdlim-bar" style="left:50%;width:0%"></div><div class="cal-center"></div></div><span class="lim-val" id="pd-pdlim-val">±1.000</span></div>
+        <div style="display:flex;gap:5px;margin-top:5px">
+          <div class="cal-step-btn" id="pd-lim-left" style="font-size:0.58rem;flex:1">Hold LEFT limit</div>
+          <div class="cal-step-btn" id="pd-lim-right" style="font-size:0.58rem;flex:1">Hold RIGHT limit</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+      <span id="pd-eq-badge" class="eq-badge" style="display:none">Equalised ✓</span>
+      <span style="font-size:0.6rem;color:rgba(255,255,255,0.25)">Max joystick and max pedal will move the dot at equal speed once limits are set.</span>
+    </div>
+    <div class="sens-row" style="margin-top:4px">
+      <span class="sens-label">Sensitivity</span>
+      <input type="range" class="sens-slider" id="pd-sens" min="10" max="200" value="100" step="5">
+      <span class="sens-val" id="pd-sens-val">1.00×</span>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:12px">
+    <button class="btn" id="pd-confirm" disabled>Begin Test</button>
+    <button class="btn" style="opacity:0.35;font-size:0.65rem;padding:7px 18px" id="pd-back">← Back</button>
+  </div>
+</div>
+
+<!-- ── RESULTS ─────────────────────────────────────────────────────────────── -->
+<div class="overlay" id="s-results" style="display:none">
+  <h1>Test Complete</h1>
+  <div class="res-grid" id="results-grid"></div>
+  <div style="display:flex;gap:12px">
+    <button class="btn" id="btn-again">Run Again</button>
+    <button class="btn" style="opacity:0.35;font-size:0.65rem;padding:7px 18px" id="btn-menu">← Setup</button>
+  </div>
+</div>
+
+<!-- GAME + HUD -->
+<div><canvas id="tracking-canvas"></canvas></div>
+<div id="hud">
+  <div class="hud-block"><div class="hud-label">Time</div><div class="hud-value" id="hud-time">03:00</div></div>
+  <div id="diff-bar-wrap">
+    <div class="hud-label" style="letter-spacing:0.2em">Difficulty</div>
+    <div id="diff-bar-bg"><div id="diff-bar-fill"></div></div>
+    <div class="phase-lbl" id="hud-phase">Easy</div>
+  </div>
+  <div class="hud-block" style="align-items:flex-end"><div class="hud-label">Accuracy</div><div class="hud-value" id="hud-acc">—</div></div>
+</div>
+
 
 <script>
-const DIFFICULTY = {
-  easy:   { driftSpeed: 0.5,  driftChange: 0.006, mathTime: 10, ops: ['+','-'] },
-  normal: { driftSpeed: 0.9,  driftChange: 0.012, mathTime: 10, ops: ['+','-','×'] },
-  hard:   { driftSpeed: 1.5,  driftChange: 0.020, mathTime: 10, ops: ['+','-','×','÷'] },
+// ══ GAME CONSTANTS ═══════════════════════════════════════════════════════════
+const TOTAL = 180;
+const PARAMS = {
+  driftSpeed:  {s:5.25, e:13.44},
+  driftChange: {s:0.10,  e:0.267},
+  damping:     {s:0.80,  e:0.911},
+};
+function lerp(a,b,t){ return a+(b-a)*t; }
+function gparam(n,p){ return lerp(PARAMS[n].s,PARAMS[n].e,p); }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+
+// ══ CALIBRATION ═══════════════════════════════════════════════════════════════
+// cal entry: {min, max, center, limMin, limMax}
+// normalise() maps raw → -1..1 using the physical limits (limMin/limMax)
+// If limits not set, falls back to min/max from response calibration
+const CAL0 = () => ({min:-1, max:1, center:0, limMin:null, limMax:null});
+
+function getLimit(c, side){
+  // side: 'min' or 'max'. Returns physical limit if set, else cal extreme
+  if(side==='min') return c.limMin !== null ? c.limMin : c.min;
+  return c.limMax !== null ? c.limMax : c.max;
+}
+
+function normalise(raw, c){
+  // Map raw → -1..1 using physical limits
+  const lo = getLimit(c,'min'), hi = getLimit(c,'max');
+  if(raw >= c.center){
+    return hi === c.center ? 0 : clamp((raw - c.center)/(hi - c.center), -1, 1);
+  } else {
+    return lo === c.center ? 0 : clamp((raw - c.center)/(c.center - lo), -1, 1);
+  }
+}
+
+// Physical range of an axis (max excursion from center in either direction)
+function axisRange(c){
+  const lo = getLimit(c,'min'), hi = getLimit(c,'max');
+  return Math.max(Math.abs(hi - c.center), Math.abs(lo - c.center));
+}
+
+// ══ SETUP STATE ═══════════════════════════════════════════════════════════════
+let mode = 'stick';
+let cfg = {
+  stickIdx: null,  soAxisY: 1, soAxisX: 0,
+  pedalIdx: null,  jsAxisY: 1, pdAxisX: 0,
+  invertSoY:false, invertSoX:false,
+  invertJsY:false, invertPdX:false,
+  sensitivity: 1.0,  // global multiplier
+};
+let cal = {
+  soY: CAL0(), soX: CAL0(),
+  jsY: CAL0(), pdX: CAL0(),
 };
 
-// Your sensitivity settings preserved exactly
-const KEY_ACCEL = 15;
-const KEY_MAX   = 0.05;
-
-let cfg = DIFFICULTY.normal;
-let totalDuration = 120;
-let running = false, startTime = 0, animId = null;
-let dotX = 0, dotY = 0, velX = 0, velY = 0;
-let driftAngle = 0;
-let keyAxisX = 0, keyAxisY = 0;
-let trackSamples = [];
-let currentQ = null, mathCorrect = 0, mathTotal = 0;
-let questionDeadline = 0, answerLocked = false;
-let keyState = { ArrowUp:false, ArrowDown:false, ArrowLeft:false, ArrowRight:false };
-
+// ══ CANVAS / GAME ═════════════════════════════════════════════════════════════
 const canvas = document.getElementById('tracking-canvas');
-const ctx = canvas.getContext('2d');
+const ctx    = canvas.getContext('2d');
+let running=false, startTime=0, animId=null, lastT=0;
+let dotX=0,dotY=0,velX=0,velY=0,driftAngle=0,trackSamples=[];
 
-function resizeCanvas() {
-  const wrap = document.getElementById('tracking-wrap');
-  canvas.width  = wrap.clientWidth;
-  canvas.height = wrap.clientHeight;
-}
-window.addEventListener('resize', () => { resizeCanvas(); if (!running) drawTracking(); });
+function resizeCanvas(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+window.addEventListener('resize',()=>{ resizeCanvas(); if(!running) drawGame(); });
 
-// ── MATH ─────────────────────────────────────────────────────────────────────
-function rnd(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
-
-function genQuestion() {
-  const op = cfg.ops[Math.floor(Math.random() * cfg.ops.length)];
-  let a, b, answer;
-  if      (op === '+') { a = rnd(10,60); b = rnd(5,40);  answer = a+b; }
-  else if (op === '-') { a = rnd(20,80); b = rnd(5,a-1); answer = a-b; }
-  else if (op === '×') { a = rnd(2,12);  b = rnd(2,12);  answer = a*b; }
-  else                 { b = rnd(2,9); answer = rnd(2,12); a = b*answer; }
-
-  const wrongs = new Set();
-  while (wrongs.size < 3) {
-    const w = answer + Math.sign(Math.random()-0.5) * rnd(1, Math.max(3, Math.round(Math.abs(answer)*0.25)));
-    if (w !== answer && w > 0) wrongs.add(w);
-  }
-  const options = [answer, ...wrongs].sort(() => Math.random()-0.5);
-  return { text: `${a} ${op} ${b} = ?`, answer, options };
+function drawGame(){
+  const W=canvas.width,H=canvas.height,cx=W/2,cy=H/2,arm=Math.min(W,H)*0.09;
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(210,30,30,0.85)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(cx-arm,cy); ctx.lineTo(cx+arm,cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx,cy-arm); ctx.lineTo(cx,cy+arm); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx+dotX,cy+dotY,6,0,Math.PI*2);
+  ctx.fillStyle='rgb(220,35,35)'; ctx.fill();
 }
 
-function loadQuestion() {
-  currentQ = genQuestion();
-  answerLocked = false;
-  questionDeadline = performance.now() + cfg.mathTime * 1000;
-  document.getElementById('question-text').textContent = currentQ.text;
-  document.querySelectorAll('.answer-btn').forEach((btn, i) => {
-    btn.querySelector('.btn-val').textContent = currentQ.options[i];
-    btn.className = 'answer-btn';
-    btn.disabled = false;
-  });
-}
+function gameLoop(t){
+  if(!running) return;
+  const dt=Math.min((t-lastT)/1000,0.05); lastT=t;
+  const elapsed=(t-startTime)/1000;
+  const rem=Math.max(0,TOTAL-elapsed);
+  const prog=Math.min(elapsed/TOTAL,1);
+  if(rem<=0){ endTest(); return; }
 
-function answerQuestion(idx) {
-  if (!running || answerLocked || !currentQ) return;
-  answerLocked = true; mathTotal++;
-  const btns = document.querySelectorAll('.answer-btn');
-  const correct = currentQ.options[idx] === currentQ.answer;
-  if (correct) { mathCorrect++; btns[idx].classList.add('correct'); }
-  else {
-    btns[idx].classList.add('wrong');
-    currentQ.options.forEach((o,i) => { if (o === currentQ.answer) btns[i].classList.add('correct'); });
-  }
-  btns.forEach(b => b.disabled = true);
-  updateMathStats();
-  setTimeout(loadQuestion, 550);
-}
+  document.getElementById('hud-time').textContent=
+    String(Math.floor(rem/60)).padStart(2,'0')+':'+String(Math.floor(rem%60)).padStart(2,'0');
+  document.getElementById('diff-bar-fill').style.width=(prog*100)+'%';
+  document.getElementById('hud-phase').textContent=prog<0.33?'Easy':prog<0.66?'Moderate':'Hard';
 
-function updateMathStats() {
-  document.getElementById('m-math').textContent      = mathTotal > 0 ? Math.round(mathCorrect/mathTotal*100)+'%' : '—';
-  document.getElementById('m-questions').textContent = mathTotal;
-}
+  const ds=gparam('driftSpeed',prog), dc=gparam('driftChange',prog), damp=gparam('damping',prog);
+  // Base inputStr overcomes drift at full deflection; sensitivity multiplier scales on top
+  const inputStr = ds * 60 * 1.8 * cfg.sensitivity;
 
-// ── DRAW ─────────────────────────────────────────────────────────────────────
-function drawTracking() {
-  const W = canvas.width, H = canvas.height;
-  const cx = W/2, cy = H/2;
-  const R  = Math.min(W,H) * 0.43;
+  const gps = navigator.getGamepads ? navigator.getGamepads() : [];
+  let axisX=0, axisY=0;
 
-  ctx.clearRect(0,0,W,H);
-  ctx.fillStyle = '#f4f7fa';
-  ctx.fillRect(0,0,W,H);
-
-  // Rings
-  [0.33, 0.66, 1].forEach(f => {
-    ctx.beginPath(); ctx.arc(cx,cy,R*f,0,Math.PI*2);
-    ctx.strokeStyle = f===1 ? 'rgba(160,185,205,0.85)' : 'rgba(160,185,205,0.35)';
-    ctx.lineWidth   = f===1 ? 1.2 : 0.6;
-    ctx.stroke();
-  });
-
-  // Crosshair
-  ctx.strokeStyle = 'rgba(160,185,205,0.4)'; ctx.lineWidth = 0.6;
-  ctx.beginPath(); ctx.moveTo(cx-R,cy); ctx.lineTo(cx+R,cy); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cx,cy-R); ctx.lineTo(cx,cy+R); ctx.stroke();
-
-  // Centre target ring
-  ctx.beginPath(); ctx.arc(cx,cy,6,0,Math.PI*2);
-  ctx.strokeStyle = 'rgba(26,111,168,0.4)'; ctx.lineWidth = 1.2; ctx.stroke();
-
-  const dist = Math.sqrt(dotX*dotX+dotY*dotY);
-  const dn   = Math.min(dist/R, 1);
-  const px = cx+dotX, py = cy+dotY;
-
-  // Colour: green near centre → blue mid → red far
-  const col = dn < 0.2 ? '26,158,92' : dn < 0.55 ? '26,111,168' : '214,48,72';
-
-  // Glow
-  const g = ctx.createRadialGradient(px,py,0,px,py,20);
-  g.addColorStop(0, `rgba(${col},0.22)`); g.addColorStop(1,'rgba(0,0,0,0)');
-  ctx.beginPath(); ctx.arc(px,py,20,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
-
-  // Dot
-  ctx.beginPath(); ctx.arc(px,py,7,0,Math.PI*2);
-  ctx.fillStyle = `rgb(${col})`; ctx.fill();
-}
-
-// ── LOOP ─────────────────────────────────────────────────────────────────────
-let lastT = 0;
-function gameLoop(t) {
-  if (!running) return;
-  const dt = Math.min((t-lastT)/1000, 0.05); lastT = t;
-
-  const remaining = totalDuration - (t-startTime)/1000;
-  if (remaining <= 0) { endTest(); return; }
-
-  const mm = String(Math.floor(remaining/60)).padStart(2,'0');
-  const ss = String(Math.floor(remaining%60)).padStart(2,'0');
-  document.getElementById('timer-display').textContent = `${mm}:${ss}`;
-
-  if (currentQ && !answerLocked) {
-    const frac = Math.max(0, (questionDeadline-t)/(cfg.mathTime*1000));
-    document.getElementById('countdown-bar').style.width = (frac*100)+'%';
-    document.getElementById('countdown-bar').style.background = frac<0.25 ? 'var(--red)' : 'var(--accent)';
-    if (frac <= 0) { mathTotal++; updateMathStats(); loadQuestion(); }
-  }
-
-  // Input — your inverted arrow directions preserved
-  const gp = getGamepad();
-  let axisX, axisY;
-  if (gp) {
-    axisX = deadzone(gp.axes[0]);
-    axisY = deadzone(gp.axes[1]);
+  if(mode==='stick'){
+    const g = gps[cfg.stickIdx];
+    if(g){
+      // Equalise: scale each normalised axis by the ratio of the other axis's range
+      // so both axes produce identical physical ball speed at full deflection
+      const normX = normalise(g.axes[cfg.soAxisX]??0, cal.soX) * (cfg.invertSoX?-1:1);
+      const normY = normalise(g.axes[cfg.soAxisY]??0, cal.soY) * (cfg.invertSoY?-1:1);
+      const rX = axisRange(cal.soX), rY = axisRange(cal.soY);
+      const eqScale = (rX>0&&rY>0) ? Math.min(rX,rY)/Math.max(rX,rY) : 1;
+      // Axis with smaller range gets no scaling; larger range gets scaled down to match
+      axisX = rX >= rY ? normX * eqScale : normX;
+      axisY = rX <= rY ? normY * eqScale : normY;
+    }
   } else {
-    const tx = (keyState.ArrowLeft?1:0)-(keyState.ArrowRight?1:0);
-    const ty = (keyState.ArrowUp  ?1:0)-(keyState.ArrowDown ?1:0);
-    keyAxisX = tx !== 0 ? Math.max(-KEY_MAX, Math.min(KEY_MAX, keyAxisX + tx*KEY_ACCEL*dt))
-                        : keyAxisX * Math.pow(0.04, dt);
-    keyAxisY = ty !== 0 ? Math.max(-KEY_MAX, Math.min(KEY_MAX, keyAxisY + ty*KEY_ACCEL*dt))
-                        : keyAxisY * Math.pow(0.04, dt);
-    axisX = keyAxisX; axisY = keyAxisY;
+    const js = gps[cfg.stickIdx];
+    const pd = gps[cfg.pedalIdx];
+    let normY=0, normX=0;
+    if(js) normY = normalise(js.axes[cfg.jsAxisY]??0, cal.jsY) * (cfg.invertJsY?-1:1);
+    if(pd) normX = normalise(pd.axes[cfg.pdAxisX]??0, cal.pdX) * (cfg.invertPdX?-1:1);
+    // Equalise joystick Y vs pedal X
+    const rY = axisRange(cal.jsY), rX = axisRange(cal.pdX);
+    const eqScale = (rX>0&&rY>0) ? Math.min(rX,rY)/Math.max(rX,rY) : 1;
+    axisX = rX >= rY ? normX * eqScale : normX;
+    axisY = rX <= rY ? normY * eqScale : normY;
   }
 
-  // Physics
-  driftAngle += (Math.random()-0.5)*cfg.driftChange*60*dt;
-  const driftX = Math.cos(driftAngle)*cfg.driftSpeed;
-  const driftY = Math.sin(driftAngle)*cfg.driftSpeed;
-  const str = cfg.driftSpeed * 55;
-  velX += (driftX - axisX*str)*dt;
-  velY += (driftY - axisY*str)*dt;
-  velX *= Math.pow(0.88, dt*60);
-  velY *= Math.pow(0.88, dt*60);
-  dotX += velX*dt*60;
-  dotY += velY*dt*60;
+  driftAngle += (Math.random()-0.5)*dc*60*dt;
+  const dX=Math.cos(driftAngle)*ds, dY=Math.sin(driftAngle)*ds;
+  velX += (dX - axisX*inputStr)*dt;
+  velY += (dY - axisY*inputStr)*dt;
+  velX *= Math.pow(damp,dt*60);
+  velY *= Math.pow(damp,dt*60);
+  dotX += velX*dt*60; dotY += velY*dt*60;
 
-  const R = Math.min(canvas.width,canvas.height)*0.43;
-  const dist = Math.sqrt(dotX*dotX+dotY*dotY);
-  if (dist > R) { dotX=dotX/dist*R; dotY=dotY/dist*R; velX*=-0.25; velY*=-0.25; }
+  const R=Math.min(canvas.width,canvas.height)*0.44;
+  const dist=Math.sqrt(dotX*dotX+dotY*dotY);
+  if(dist>R){ dotX=dotX/dist*R; dotY=dotY/dist*R; velX*=-0.2; velY*=-0.2; }
 
   trackSamples.push(Math.min(dist/R,1));
-  const slice  = trackSamples.slice(-90);
-  const avgDev = slice.reduce((a,b)=>a+b,0)/slice.length;
-  const trackAcc  = Math.max(0,Math.round((1-avgDev)*100));
-  const mathPct   = mathTotal>0 ? mathCorrect/mathTotal : 1;
-  const combined  = Math.round(trackAcc*0.6+mathPct*100*0.4);
-  document.getElementById('m-track').textContent    = trackAcc+'%';
-  document.getElementById('m-combined').textContent = combined+'%';
+  const slice=trackSamples.slice(-120);
+  const avgDev=slice.reduce((a,b)=>a+b,0)/slice.length;
+  document.getElementById('hud-acc').textContent=
+    Math.max(0,Math.round((1-Math.pow(avgDev,0.5))*100))+'%';
 
-  drawTracking();
-  animId = requestAnimationFrame(gameLoop);
-}
-
-function deadzone(v, dz=0.08) {
-  if (Math.abs(v)<dz) return 0;
-  return (v-Math.sign(v)*dz)/(1-dz);
-}
-function getGamepad() {
-  for (const g of (navigator.getGamepads?.()??[])) if (g?.connected) return g;
-  return null;
-}
-
-function startTest() {
-  dotX=dotY=velX=velY=keyAxisX=keyAxisY=0;
-  driftAngle=Math.random()*Math.PI*2;
-  trackSamples=[]; mathCorrect=mathTotal=0;
-  running=true; startTime=performance.now(); lastT=startTime;
-  document.getElementById('start-overlay').style.display='none';
-  document.getElementById('results-overlay').style.display='none';
-  resizeCanvas(); loadQuestion();
+  drawGame();
   animId=requestAnimationFrame(gameLoop);
 }
 
-function endTest() {
-  running=false; cancelAnimationFrame(animId);
-  const avgDev   = trackSamples.reduce((a,b)=>a+b,0)/trackSamples.length;
-  const trackAcc = Math.max(0,Math.round((1-avgDev)*100));
-  const mathPct  = mathTotal>0?Math.round(mathCorrect/mathTotal*100):0;
-  const combined = Math.round(trackAcc*0.6+mathPct*0.4);
-  const grade    = combined>=80?'PASS':combined>=60?'MARGINAL':'FAIL';
-  const gc       = combined>=80?'good':combined>=60?'':'bad';
-  document.getElementById('results-grid').innerHTML=`
-    <div class="result-cell"><div class="r-label">Tracking</div><div class="r-val">${trackAcc}%</div></div>
-    <div class="result-cell"><div class="r-label">Math</div><div class="r-val">${mathPct}%</div></div>
-    <div class="result-cell"><div class="r-label">Questions</div><div class="r-val">${mathTotal}</div></div>
-    <div class="result-cell" style="grid-column:span 2"><div class="r-label">Combined</div><div class="r-val ${gc}">${combined}%</div></div>
-    <div class="result-cell"><div class="r-label">Grade</div><div class="r-val ${gc}">${grade}</div></div>`;
-  document.getElementById('results-overlay').style.display='flex';
+function startGame(){
+  dotX=dotY=velX=velY=0; driftAngle=Math.random()*Math.PI*2; trackSamples=[];
+  running=true; startTime=performance.now(); lastT=startTime;
+  hideAll(); resizeCanvas();
+  animId=requestAnimationFrame(gameLoop);
 }
 
-document.addEventListener('keydown', e => {
-  if (keyState.hasOwnProperty(e.key)) { e.preventDefault(); keyState[e.key]=true; }
-  const n=parseInt(e.key); if (n>=1&&n<=4) answerQuestion(n-1);
-});
-document.addEventListener('keyup', e => { if (keyState.hasOwnProperty(e.key)) keyState[e.key]=false; });
-document.querySelectorAll('.answer-btn').forEach(btn=>btn.addEventListener('click',()=>answerQuestion(parseInt(btn.dataset.idx))));
-document.getElementById('start-btn').addEventListener('click', startTest);
-document.getElementById('restart-btn').addEventListener('click', startTest);
-document.querySelectorAll('.diff-btn').forEach(btn=>btn.addEventListener('click',()=>{
-  document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('selected'));
-  btn.classList.add('selected'); cfg=DIFFICULTY[btn.dataset.diff];
-}));
-document.getElementById('duration-select').addEventListener('change',e=>{ totalDuration=parseInt(e.target.value); });
+function endTest(){
+  running=false; cancelAnimationFrame(animId);
+  const avgDev=trackSamples.reduce((a,b)=>a+b,0)/trackSamples.length;
+  const acc=Math.max(0,Math.round((1-Math.pow(avgDev,0.5))*100));
+  const grade=acc>=80?'PASS':acc>=60?'MARGINAL':'FAIL';
+  const gc=acc>=80?'good':acc>=60?'':'bad';
+  document.getElementById('results-grid').innerHTML=`
+    <div class="res-cell" style="grid-column:span 3"><div class="r-lbl">Tracking Accuracy</div><div class="r-val ${gc}">${acc}%</div></div>
+    <div class="res-cell" style="grid-column:span 2"><div class="r-lbl">Duration</div><div class="r-val">3:00</div></div>
+    <div class="res-cell"><div class="r-lbl">Grade</div><div class="r-val ${gc}">${grade}</div></div>`;
+  show('s-results');
+}
 
-resizeCanvas();
-drawTracking();
+// ══ SCREENS ═══════════════════════════════════════════════════════════════════
+const SCREENS=['s-mode','s-stick','s-pedal','s-results'];
+function hideAll(){ SCREENS.forEach(id=>document.getElementById(id).style.display='none'); }
+function show(id){ hideAll(); document.getElementById(id).style.display='flex'; }
+
+// ══ POLL ══════════════════════════════════════════════════════════════════════
+let pollId=null;
+function startPoll(fn){ clearInterval(pollId); pollId=setInterval(fn,80); }
+function stopPoll(){ clearInterval(pollId); pollId=null; }
+function getGPs(){ return Array.from(navigator.getGamepads?navigator.getGamepads():[]).filter(Boolean); }
+
+// ══ STABLE DEVICE LIST ════════════════════════════════════════════════════════
+function renderDevList(container, gps, selectedIdx, onSelect, tagLabel){
+  const existing = Array.from(container.children);
+  const ids = gps.map(g=>String(g.index));
+  existing.forEach(el=>{ if(!ids.includes(el.dataset.i)) el.remove(); });
+  gps.forEach(g=>{
+    const key = String(g.index);
+    let row = container.querySelector(`.dev-row[data-i="${key}"]`);
+    if(!row){
+      row = document.createElement('div');
+      row.className = 'dev-row'; row.dataset.i = key;
+      row.addEventListener('click', ()=> onSelect(g.index));
+      container.appendChild(row);
+    }
+    const sel = selectedIdx===g.index;
+    row.classList.toggle('sel', sel);
+    row.textContent = '';
+    const span = document.createElement('span');
+    span.style.fontSize='0.65rem'; span.textContent = g.id.substring(0,40);
+    row.appendChild(span);
+    if(sel){ const tag=document.createElement('span'); tag.className='dev-tag'; tag.textContent=tagLabel; row.appendChild(tag); }
+  });
+}
+
+// ══ STABLE AXIS LIST ═════════════════════════════════════════════════════════
+function renderAxisList(container, gp, selectedAxis, onSelect, fillIdPrefix){
+  if(!gp){ container.innerHTML='<div style="font-size:0.62rem;color:rgba(255,255,255,0.25);padding:4px">Select a device above</div>'; return; }
+  const count = gp.axes.length;
+  if(parseInt(container.dataset.count||'0') !== count){
+    container.dataset.count = count;
+    container.innerHTML = Array.from({length:count},(_,i)=>`
+      <div class="axis-row" data-ax="${i}">
+        <span class="ax-lbl">Axis ${i}</span>
+        <div class="ax-bar-wrap"><div class="ax-bar-fill" id="${fillIdPrefix}-${i}" style="left:50%;width:0%"></div><div class="ax-center"></div></div>
+        <span class="ax-val" id="${fillIdPrefix}-val-${i}">0.000</span>
+      </div>`).join('');
+    container.querySelectorAll('.axis-row').forEach(row=>{
+      row.addEventListener('click',()=> onSelect(parseInt(row.dataset.ax)));
+    });
+  }
+  container.querySelectorAll('.axis-row').forEach(row=>{
+    const i = parseInt(row.dataset.ax);
+    row.classList.toggle('sel-axis', i===selectedAxis);
+    const v = gp.axes[i]??0;
+    const fill = document.getElementById(`${fillIdPrefix}-${i}`);
+    const val  = document.getElementById(`${fillIdPrefix}-val-${i}`);
+    if(fill){ const pct=Math.abs(v)*50; fill.style.left=v<0?(50-pct)+'%':'50%'; fill.style.width=pct+'%'; }
+    if(val) val.textContent=v.toFixed(3);
+  });
+}
+
+// ══ CALIBRATION BUTTONS ═══════════════════════════════════════════════════════
+function wireCalBtn(btn, rawFn, onCapture){
+  let rec=null;
+  btn.addEventListener('mousedown', e=>{ e.preventDefault(); rec={min:Infinity,max:-Infinity}; btn.classList.add('recording'); btn.classList.remove('done'); });
+  const release=()=>{
+    if(!rec) return;
+    btn.classList.remove('recording'); btn.classList.add('done');
+    if(rec.min!==Infinity) onCapture(rec.min, rec.max);
+    rec=null;
+  };
+  btn.addEventListener('mouseup',    release);
+  btn.addEventListener('mouseleave', release);
+  btn.addEventListener('touchstart', e=>{ e.preventDefault(); btn.dispatchEvent(new MouseEvent('mousedown')); });
+  btn.addEventListener('touchend',   e=>{ e.preventDefault(); release(); });
+  return ()=>{ if(rec){ const v=rawFn(); rec.min=Math.min(rec.min,v); rec.max=Math.max(rec.max,v); } };
+}
+
+// ══ BAR / PREVIEW HELPERS ════════════════════════════════════════════════════
+function setBar(fillEl, v){
+  if(!fillEl) return;
+  const pct=Math.abs(v)*50;
+  fillEl.style.left=v<0?(50-pct)+'%':'50%';
+  fillEl.style.width=pct+'%';
+}
+
+function drawPreview(cv, ax, ay){
+  const c=cv.getContext('2d'),W=cv.width,H=cv.height,cx=W/2,cy=H/2;
+  c.clearRect(0,0,W,H); c.fillStyle='#040404'; c.fillRect(0,0,W,H);
+  c.strokeStyle='rgba(210,30,30,0.4)'; c.lineWidth=1;
+  c.beginPath(); c.moveTo(cx-55,cy); c.lineTo(cx+55,cy); c.stroke();
+  c.beginPath(); c.moveTo(cx,cy-45); c.lineTo(cx,cy+45); c.stroke();
+  const px=cx+ax*(W*0.44), py=cy+ay*(H*0.40);
+  c.beginPath(); c.arc(px,py,6,0,Math.PI*2);
+  c.fillStyle='rgb(220,35,35)'; c.fill();
+}
+
+// Update limit bar: shows the physical limit range as a bar width
+function updateLimBar(fillId, valId, c){
+  const lo=getLimit(c,'min'), hi=getLimit(c,'max');
+  const range = Math.max(Math.abs(hi-c.center), Math.abs(lo-c.center));
+  const fill=document.getElementById(fillId);
+  const val =document.getElementById(valId);
+  if(fill){ const pct=range*50; fill.style.left=(50-pct)+'%'; fill.style.width=(pct*2)+'%'; }
+  if(val) val.textContent='±'+range.toFixed(3);
+}
+
+// Check if both axes have limits set and show equalised badge
+function checkEqualised(calA, calB, badgeId){
+  const badge=document.getElementById(badgeId);
+  if(!badge) return;
+  const hasLimA = calA.limMin!==null && calA.limMax!==null;
+  const hasLimB = calB.limMin!==null && calB.limMax!==null;
+  badge.style.display = (hasLimA&&hasLimB) ? 'inline-block' : 'none';
+}
+
+// ══ SENSITIVITY SLIDERS ═══════════════════════════════════════════════════════
+function wireSensSlider(sliderId, valId){
+  const slider=document.getElementById(sliderId);
+  const valEl =document.getElementById(valId);
+  if(!slider) return;
+  slider.addEventListener('input',()=>{
+    cfg.sensitivity = parseInt(slider.value)/100;
+    valEl.textContent = cfg.sensitivity.toFixed(2)+'×';
+  });
+}
+
+// ══ JOYSTICK-ONLY SETUP ═══════════════════════════════════════════════════════
+function startStickSetup(){
+  cfg.stickIdx=null; cfg.soAxisY=1; cfg.soAxisX=0;
+  cfg.invertSoY=false; cfg.invertSoX=false; cfg.sensitivity=1.0;
+  cal.soY=CAL0(); cal.soX=CAL0();
+  updateSoInvertUI();
+  wireSensSlider('so-sens','so-sens-val');
+  // Reset slider
+  const sl=document.getElementById('so-sens'); if(sl) sl.value=100;
+  document.getElementById('so-sens-val').textContent='1.00×';
+
+  const soList    = document.getElementById('so-list');
+  const soAxes    = document.getElementById('so-axes-list');
+  const soYFill   = document.getElementById('so-y-fill');
+  const soXFill   = document.getElementById('so-x-fill');
+  const soYLbl    = document.getElementById('so-y-axis-lbl');
+  const soXLbl    = document.getElementById('so-x-axis-lbl');
+  const soPreview = document.getElementById('so-preview');
+  const soConfirm = document.getElementById('so-confirm');
+
+  const feedUp    = wireCalBtn(document.getElementById('so-cal-up'),    ()=>{ const g=getGPs().find(g=>g.index===cfg.stickIdx); return g?g.axes[cfg.soAxisY]??0:0; }, (mn,mx)=>{ cal.soY.min=Math.min(mn,cal.soY.min); });
+  const feedDown  = wireCalBtn(document.getElementById('so-cal-down'),  ()=>{ const g=getGPs().find(g=>g.index===cfg.stickIdx); return g?g.axes[cfg.soAxisY]??0:0; }, (mn,mx)=>{ cal.soY.max=Math.max(mx,cal.soY.max); });
+  const feedLeft  = wireCalBtn(document.getElementById('so-cal-left'),  ()=>{ const g=getGPs().find(g=>g.index===cfg.stickIdx); return g?g.axes[cfg.soAxisX]??0:0; }, (mn,mx)=>{ cal.soX.min=Math.min(mn,cal.soX.min); });
+  const feedRight = wireCalBtn(document.getElementById('so-cal-right'), ()=>{ const g=getGPs().find(g=>g.index===cfg.stickIdx); return g?g.axes[cfg.soAxisX]??0:0; }, (mn,mx)=>{ cal.soX.max=Math.max(mx,cal.soX.max); });
+
+  // Limit buttons
+  const feedLimUp    = wireCalBtn(document.getElementById('so-lim-up'),    ()=>{ const g=getGPs().find(g=>g.index===cfg.stickIdx); return g?g.axes[cfg.soAxisY]??0:0; }, (mn,mx)=>{ cal.soY.limMin=Math.min(mn, cal.soY.limMin??Infinity); cal.soY.limMax=Math.max(mx, cal.soY.limMax??-Infinity); updateLimBar('so-ylim-bar','so-ylim-val',cal.soY); checkEqualised(cal.soY,cal.soX,'so-eq-badge'); });
+  const feedLimDown  = wireCalBtn(document.getElementById('so-lim-down'),  ()=>{ const g=getGPs().find(g=>g.index===cfg.stickIdx); return g?g.axes[cfg.soAxisY]??0:0; }, (mn,mx)=>{ cal.soY.limMin=Math.min(mn, cal.soY.limMin??Infinity); cal.soY.limMax=Math.max(mx, cal.soY.limMax??-Infinity); updateLimBar('so-ylim-bar','so-ylim-val',cal.soY); checkEqualised(cal.soY,cal.soX,'so-eq-badge'); });
+  const feedLimLeft  = wireCalBtn(document.getElementById('so-lim-left'),  ()=>{ const g=getGPs().find(g=>g.index===cfg.stickIdx); return g?g.axes[cfg.soAxisX]??0:0; }, (mn,mx)=>{ cal.soX.limMin=Math.min(mn, cal.soX.limMin??Infinity); cal.soX.limMax=Math.max(mx, cal.soX.limMax??-Infinity); updateLimBar('so-xlim-bar','so-xlim-val',cal.soX); checkEqualised(cal.soY,cal.soX,'so-eq-badge'); });
+  const feedLimRight = wireCalBtn(document.getElementById('so-lim-right'), ()=>{ const g=getGPs().find(g=>g.index===cfg.stickIdx); return g?g.axes[cfg.soAxisX]??0:0; }, (mn,mx)=>{ cal.soX.limMin=Math.min(mn, cal.soX.limMin??Infinity); cal.soX.limMax=Math.max(mx, cal.soX.limMax??-Infinity); updateLimBar('so-xlim-bar','so-xlim-val',cal.soX); checkEqualised(cal.soY,cal.soX,'so-eq-badge'); });
+
+  startPoll(()=>{
+    const gps = getGPs();
+    document.getElementById('so-warn').style.display = gps.length?'none':'block';
+
+    renderDevList(soList, gps, cfg.stickIdx, idx=>{
+      cfg.stickIdx=idx;
+      const g=gps.find(g=>g.index===idx);
+      if(g){ cal.soY.center=g.axes[cfg.soAxisY]??0; cal.soX.center=g.axes[cfg.soAxisX]??0; }
+      soConfirm.disabled=false;
+    }, 'Selected');
+
+    const g = cfg.stickIdx!==null ? gps.find(g=>g.index===cfg.stickIdx) : null;
+
+    renderAxisList(soAxes, g, -1, axIdx=>{
+      if(cfg.soAxisY !== axIdx){ cfg.soAxisY=axIdx; cal.soY=CAL0(); if(g) cal.soY.center=g.axes[axIdx]??0; }
+      else { cfg.soAxisX=axIdx; cal.soX=CAL0(); if(g) cal.soX.center=g.axes[axIdx]??0; }
+      soYLbl.textContent = `Axis ${cfg.soAxisY}`;
+      soXLbl.textContent = `Axis ${cfg.soAxisX}`;
+    }, 'so-ax');
+
+    soAxes.querySelectorAll('.axis-row').forEach(row=>{
+      const i=parseInt(row.dataset.ax);
+      row.classList.toggle('sel-axis', i===cfg.soAxisY||i===cfg.soAxisX);
+      if(i===cfg.soAxisY) row.style.background='rgba(255,60,60,0.18)';
+      else if(i===cfg.soAxisX) row.style.background='rgba(60,120,255,0.14)';
+      else row.style.background='';
+    });
+
+    soYLbl.textContent = g ? `Axis ${cfg.soAxisY}` : 'none';
+    soXLbl.textContent = g ? `Axis ${cfg.soAxisX}` : 'none';
+
+    if(g){
+      feedUp(); feedDown(); feedLeft(); feedRight();
+      feedLimUp(); feedLimDown(); feedLimLeft(); feedLimRight();
+      setBar(soYFill, g.axes[cfg.soAxisY]??0);
+      setBar(soXFill, g.axes[cfg.soAxisX]??0);
+      const nx = normalise(g.axes[cfg.soAxisX]??0, cal.soX)*(cfg.invertSoX?-1:1);
+      const ny = normalise(g.axes[cfg.soAxisY]??0, cal.soY)*(cfg.invertSoY?-1:1);
+      drawPreview(soPreview, nx, ny);
+    }
+  });
+}
+
+function updateSoInvertUI(){
+  document.getElementById('so-iy-no').classList.toggle('chosen',!cfg.invertSoY);
+  document.getElementById('so-iy-yes').classList.toggle('chosen', cfg.invertSoY);
+  document.getElementById('so-ix-no').classList.toggle('chosen',!cfg.invertSoX);
+  document.getElementById('so-ix-yes').classList.toggle('chosen', cfg.invertSoX);
+}
+document.getElementById('so-iy-no').addEventListener('click',()=>{ cfg.invertSoY=false; updateSoInvertUI(); });
+document.getElementById('so-iy-yes').addEventListener('click',()=>{ cfg.invertSoY=true;  updateSoInvertUI(); });
+document.getElementById('so-ix-no').addEventListener('click',()=>{ cfg.invertSoX=false; updateSoInvertUI(); });
+document.getElementById('so-ix-yes').addEventListener('click',()=>{ cfg.invertSoX=true;  updateSoInvertUI(); });
+document.getElementById('so-confirm').addEventListener('click',()=>{ stopPoll(); startGame(); });
+document.getElementById('so-back').addEventListener('click',()=>{ stopPoll(); show('s-mode'); });
+
+// ══ PEDAL SETUP ═══════════════════════════════════════════════════════════════
+function startPedalSetup(){
+  cfg.stickIdx=null; cfg.pedalIdx=null; cfg.jsAxisY=1; cfg.pdAxisX=0;
+  cfg.invertJsY=false; cfg.invertPdX=false; cfg.sensitivity=1.0;
+  cal.jsY=CAL0(); cal.pdX=CAL0();
+  updatePdInvertUI();
+  wireSensSlider('pd-sens','pd-sens-val');
+  const sl=document.getElementById('pd-sens'); if(sl) sl.value=100;
+  document.getElementById('pd-sens-val').textContent='1.00×';
+
+  const jsList    = document.getElementById('js-list');
+  const jsAxes    = document.getElementById('js-axes-list');
+  const jsYFill   = document.getElementById('js-y-fill');
+  const jsYLbl    = document.getElementById('js-y-axis-lbl');
+  const pdList    = document.getElementById('pd-list');
+  const pdAxes    = document.getElementById('pd-axes-list');
+  const pdPreview = document.getElementById('pd-preview');
+  const pdConfirm = document.getElementById('pd-confirm');
+
+  const feedJsUp   = wireCalBtn(document.getElementById('js-cal-up'),   ()=>{ const g=getGPs().find(g=>g.index===cfg.stickIdx); return g?g.axes[cfg.jsAxisY]??0:0; }, (mn,mx)=>{ cal.jsY.min=Math.min(mn,cal.jsY.min); });
+  const feedJsDown = wireCalBtn(document.getElementById('js-cal-down'), ()=>{ const g=getGPs().find(g=>g.index===cfg.stickIdx); return g?g.axes[cfg.jsAxisY]??0:0; }, (mn,mx)=>{ cal.jsY.max=Math.max(mx,cal.jsY.max); });
+  const feedPdL    = wireCalBtn(document.getElementById('pd-cal-left'), ()=>{ const g=getGPs().find(g=>g.index===cfg.pedalIdx); return g?g.axes[cfg.pdAxisX]??0:0; }, (mn,mx)=>{ cal.pdX.min=Math.min(mn,cal.pdX.min); });
+  const feedPdR    = wireCalBtn(document.getElementById('pd-cal-right'),()=>{ const g=getGPs().find(g=>g.index===cfg.pedalIdx); return g?g.axes[cfg.pdAxisX]??0:0; }, (mn,mx)=>{ cal.pdX.max=Math.max(mx,cal.pdX.max); });
+
+  // Limit buttons
+  const feedLimJsUp   = wireCalBtn(document.getElementById('pd-lim-up'),    ()=>{ const g=getGPs().find(g=>g.index===cfg.stickIdx); return g?g.axes[cfg.jsAxisY]??0:0; }, (mn,mx)=>{ cal.jsY.limMin=Math.min(mn,cal.jsY.limMin??Infinity); cal.jsY.limMax=Math.max(mx,cal.jsY.limMax??-Infinity); updateLimBar('pd-jslim-bar','pd-jslim-val',cal.jsY); checkEqualised(cal.jsY,cal.pdX,'pd-eq-badge'); });
+  const feedLimJsDown = wireCalBtn(document.getElementById('pd-lim-down'),  ()=>{ const g=getGPs().find(g=>g.index===cfg.stickIdx); return g?g.axes[cfg.jsAxisY]??0:0; }, (mn,mx)=>{ cal.jsY.limMin=Math.min(mn,cal.jsY.limMin??Infinity); cal.jsY.limMax=Math.max(mx,cal.jsY.limMax??-Infinity); updateLimBar('pd-jslim-bar','pd-jslim-val',cal.jsY); checkEqualised(cal.jsY,cal.pdX,'pd-eq-badge'); });
+  const feedLimPdL    = wireCalBtn(document.getElementById('pd-lim-left'),  ()=>{ const g=getGPs().find(g=>g.index===cfg.pedalIdx); return g?g.axes[cfg.pdAxisX]??0:0; }, (mn,mx)=>{ cal.pdX.limMin=Math.min(mn,cal.pdX.limMin??Infinity); cal.pdX.limMax=Math.max(mx,cal.pdX.limMax??-Infinity); updateLimBar('pd-pdlim-bar','pd-pdlim-val',cal.pdX); checkEqualised(cal.jsY,cal.pdX,'pd-eq-badge'); });
+  const feedLimPdR    = wireCalBtn(document.getElementById('pd-lim-right'), ()=>{ const g=getGPs().find(g=>g.index===cfg.pedalIdx); return g?g.axes[cfg.pdAxisX]??0:0; }, (mn,mx)=>{ cal.pdX.limMin=Math.min(mn,cal.pdX.limMin??Infinity); cal.pdX.limMax=Math.max(mx,cal.pdX.limMax??-Infinity); updateLimBar('pd-pdlim-bar','pd-pdlim-val',cal.pdX); checkEqualised(cal.jsY,cal.pdX,'pd-eq-badge'); });
+
+  startPoll(()=>{
+    const gps = getGPs();
+    const warn = document.getElementById('pd-warn');
+    warn.textContent = gps.length<2 ? `${gps.length} device(s) found — need at least 2. Press a button on each device.` : '';
+
+    renderDevList(jsList, gps, cfg.stickIdx, idx=>{
+      if(idx===cfg.pedalIdx) return;
+      cfg.stickIdx=idx;
+      const g=gps.find(g=>g.index===idx); if(g) cal.jsY.center=g.axes[cfg.jsAxisY]??0;
+      checkPdReady();
+    }, 'JS');
+
+    renderDevList(pdList, gps, cfg.pedalIdx, idx=>{
+      if(idx===cfg.stickIdx) return;
+      cfg.pedalIdx=idx; cal.pdX=CAL0();
+      const g=gps.find(g=>g.index===idx); if(g) cal.pdX.center=g.axes[cfg.pdAxisX]??0;
+      checkPdReady();
+    }, 'Pedals');
+
+    const js = cfg.stickIdx!==null ? gps.find(g=>g.index===cfg.stickIdx) : null;
+    const pd = cfg.pedalIdx!==null ? gps.find(g=>g.index===cfg.pedalIdx) : null;
+
+    renderAxisList(jsAxes, js, cfg.jsAxisY, axIdx=>{
+      cfg.jsAxisY=axIdx; cal.jsY=CAL0(); if(js) cal.jsY.center=js.axes[axIdx]??0;
+      if(jsYLbl) jsYLbl.textContent=`Axis ${axIdx}`;
+    }, 'js-ax');
+    if(jsYLbl) jsYLbl.textContent = js ? `Axis ${cfg.jsAxisY}` : 'none';
+    if(js){ feedJsUp(); feedJsDown(); feedLimJsUp(); feedLimJsDown(); setBar(jsYFill, js.axes[cfg.jsAxisY]??0); }
+
+    renderAxisList(pdAxes, pd, cfg.pdAxisX, axIdx=>{
+      cfg.pdAxisX=axIdx; cal.pdX=CAL0(); if(pd) cal.pdX.center=pd.axes[axIdx]??0;
+    }, 'pd-ax');
+    if(pd){ feedPdL(); feedPdR(); feedLimPdL(); feedLimPdR(); }
+
+    let ax=0,ay=0;
+    if(js) ay = normalise(js.axes[cfg.jsAxisY]??0, cal.jsY)*(cfg.invertJsY?-1:1);
+    if(pd) ax = normalise(pd.axes[cfg.pdAxisX]??0, cal.pdX)*(cfg.invertPdX?-1:1);
+    drawPreview(pdPreview, ax, ay);
+
+    checkPdReady();
+  });
+}
+
+function checkPdReady(){
+  document.getElementById('pd-confirm').disabled =
+    cfg.stickIdx===null||cfg.pedalIdx===null||cfg.stickIdx===cfg.pedalIdx;
+}
+
+function updatePdInvertUI(){
+  document.getElementById('js-iy-no').classList.toggle('chosen',!cfg.invertJsY);
+  document.getElementById('js-iy-yes').classList.toggle('chosen', cfg.invertJsY);
+  document.getElementById('pd-ir-no').classList.toggle('chosen',!cfg.invertPdX);
+  document.getElementById('pd-ir-yes').classList.toggle('chosen', cfg.invertPdX);
+}
+document.getElementById('js-iy-no').addEventListener('click',()=>{ cfg.invertJsY=false; updatePdInvertUI(); });
+document.getElementById('js-iy-yes').addEventListener('click',()=>{ cfg.invertJsY=true;  updatePdInvertUI(); });
+document.getElementById('pd-ir-no').addEventListener('click',()=>{ cfg.invertPdX=false; updatePdInvertUI(); });
+document.getElementById('pd-ir-yes').addEventListener('click',()=>{ cfg.invertPdX=true;  updatePdInvertUI(); });
+document.getElementById('pd-confirm').addEventListener('click',()=>{ stopPoll(); startGame(); });
+document.getElementById('pd-back').addEventListener('click',()=>{ stopPoll(); show('s-mode'); });
+
+// ══ MODE + RESULTS ════════════════════════════════════════════════════════════
+document.getElementById('btn-mode-stick').addEventListener('click',()=>{ mode='stick'; show('s-stick'); startStickSetup(); });
+document.getElementById('btn-mode-pedal').addEventListener('click',()=>{ mode='pedal'; show('s-pedal'); startPedalSetup(); });
+document.getElementById('btn-again').addEventListener('click', startGame);
+document.getElementById('btn-menu').addEventListener('click',()=>{ show('s-mode'); });
+
+// ══ INIT ══════════════════════════════════════════════════════════════════════
+resizeCanvas(); drawGame(); show('s-mode');
 </script>
 </body>
 </html>
