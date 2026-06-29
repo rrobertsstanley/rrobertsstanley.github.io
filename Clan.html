@@ -156,7 +156,7 @@
     <h1>⚙ CUSTOM MODE</h1>
     <h3>🎨 COLOURS</h3>
     <div class="slider-row"><label>Initial dot speed (px/s)</label><input type="range" id="c-speed-min" min="20" max="120" step="5" value="40"><span class="slider-val" id="v-speed-min">40</span></div>
-    <div class="slider-row"><label>Max dot speed (px/s)</label><input type="range" id="c-speed-max" min="40" max="200" step="5" value="120"><span class="slider-val" id="v-speed-max">120</span></div>
+    <div class="slider-row"><label>Max dot speed (px/s)</label><input type="range" id="c-speed-max" min="40" max="200" step="5" value="144"><span class="slider-val" id="v-speed-max">144</span></div>
     <div class="slider-row"><label>Initial spawn interval (s)</label><input type="range" id="c-spawn-max" min="0.5" max="5" step="0.1" value="2.2"><span class="slider-val" id="v-spawn-max">2.2s</span></div>
     <div class="slider-row"><label>Min spawn interval (s)</label><input type="range" id="c-spawn-min" min="0.2" max="3" step="0.1" value="0.5"><span class="slider-val" id="v-spawn-min">0.5s</span></div>
     <div class="slider-row"><label>Hit grace (px before tip enters zone)</label><input type="range" id="c-tolerance" min="0" max="60" step="5" value="0"><span class="slider-val" id="v-tolerance">0px</span></div>
@@ -247,7 +247,7 @@
 //  DEFAULTS
 // ═══════════════════════════════════
 const DEFAULTS = {
-  speedMin: 40, speedMax: 120,
+  speedMin: 40, speedMax: 144,
   spawnMax: 2.2, spawnMin: 0.5,
   tolerance: 0,
   lenMin: 4, lenMax: 6,
@@ -277,7 +277,20 @@ function spawnDot() {
   const cols=['R','Y','G'];
   const c=cols[Math.floor(Math.random()*3)];
   const y=20+Math.random()*200;
-  const speed=cfg.speedMin+difficulty()*(cfg.speedMax-cfg.speedMin);
+  const d=difficulty();
+  // Speed at the 2-min mark becomes the fixed minimum for the rest of the game
+  const twoMinD=2/cfg.duration; // d value at exactly 2 minutes
+  const speedAtTwoMin=cfg.speedMin+twoMinD*(cfg.speedMax-cfg.speedMin);
+  const variationOnset=twoMinD;
+  if(d<=variationOnset){
+    // Before 2 min: all dots travel at the same ramp speed, no variation
+    var speed=cfg.speedMin+d*(cfg.speedMax-cfg.speedMin);
+  } else {
+    // After 2 min: min speed fixed at speedAtTwoMin, max grows from speedAtTwoMin toward cfg.speedMax
+    const t=(d-variationOnset)/(1-variationOnset); // 0→1 over remaining game
+    const currentMax=speedAtTwoMin+t*(cfg.speedMax-speedAtTwoMin);
+    var speed=speedAtTwoMin+Math.random()*(currentMax-speedAtTwoMin);
+  }
   const el=document.createElement('div');
   el.className=`dot dot-${c}`;
   el.style.left='-20px';
@@ -348,11 +361,23 @@ function getSimilar(ch){
   for(const g of SIMILAR_GROUPS){
     if(g.includes(ch)){const o=g.filter(x=>x!==ch);if(o.length)return o[Math.floor(Math.random()*o.length)];}
   }
+  // fallback: visually close random consonant
   return ALL_CONS[Math.floor(Math.random()*ALL_CONS.length)];
 }
 function randLetters(n){let s='';for(let i=0;i<n;i++)s+=ALL_CONS[Math.floor(Math.random()*ALL_CONS.length)];return s;}
 function buildDistractor(target){
-  return target.split('').map(ch=>Math.random()*100<cfg.similarity?getSimilar(ch):ALL_CONS[Math.floor(Math.random()*ALL_CONS.length)]).join('');
+  const arr=target.split('');
+  // similarity 0-100: at 100% change only 1 char, at 0% change all chars
+  // number of positions to swap: 1 at high similarity, up to all at low similarity
+  const maxChanges=Math.max(1,Math.round((1-(cfg.similarity/100))*(arr.length-1)+1));
+  const minChanges=1; // always change at least 1
+  const numChanges=minChanges+Math.floor(Math.random()*(maxChanges-minChanges+1));
+  // pick random positions to change (no duplicates)
+  const positions=[...Array(arr.length).keys()];
+  for(let i=positions.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[positions[i],positions[j]]=[positions[j],positions[i]];}
+  const toChange=positions.slice(0,numChanges);
+  toChange.forEach(i=>{ arr[i]=getSimilar(arr[i]); });
+  return arr.join('');
 }
 
 let letterPhase='idle', targetSeq='', letterTimer=null, recallOpts={}, letterSpawnTimer=null;
