@@ -106,7 +106,7 @@
   .overlay-btn-alt:hover { background: #444; }
 
   .score-table { margin: 12px 0; border-collapse: collapse; }
-  .score-table td, .score-table th { padding: 5px 20px; border: 1px solid #555; text-align: center; font-size: 0.95rem; }
+  .score-table td, .score-table th { padding: 5px 12px; border: 1px solid #555; text-align: center; font-size: 0.88rem; }
   .score-table th { background: #222; color: #ffff00; }
   .score-table .total-row td { background: #003300; color: #00ff88; font-weight: bold; font-size: 1.05rem; }
 
@@ -196,12 +196,26 @@
 <div class="overlay" id="end-overlay">
   <h1>TEST COMPLETE</h1>
   <table class="score-table">
-    <thead><tr><th>Section</th><th>Correct</th><th>Attempts</th><th>Score</th></tr></thead>
+    <thead>
+      <tr><th>Section</th><th>✓ Correct</th><th>✗ Incorrect</th><th>— Missed</th><th>+Pts</th><th>−Pts</th><th>Score</th></tr>
+    </thead>
     <tbody>
-      <tr><td>🎨 Colours</td><td id="sc-colour-c">0</td><td id="sc-colour-a">0</td><td id="sc-colour-s">0</td></tr>
-      <tr><td>🔤 Letters</td><td id="sc-letter-c">0</td><td id="sc-letter-a">0</td><td id="sc-letter-s">0</td></tr>
-      <tr><td>🔢 Maths</td> <td id="sc-maths-c">0</td> <td id="sc-maths-a">0</td> <td id="sc-maths-s">0</td></tr>
-      <tr class="total-row"><td colspan="3">TOTAL SCORE</td><td id="sc-total">0</td></tr>
+      <tr>
+        <td>🎨 Colours</td>
+        <td id="sc-colour-c">0</td><td id="sc-colour-i">0</td><td id="sc-colour-m">0</td>
+        <td id="sc-colour-p">0</td><td id="sc-colour-n">0</td><td id="sc-colour-s">0</td>
+      </tr>
+      <tr>
+        <td>🔤 Letters</td>
+        <td id="sc-letter-c">0</td><td id="sc-letter-i">0</td><td id="sc-letter-m">0</td>
+        <td id="sc-letter-p">0</td><td id="sc-letter-n">0</td><td id="sc-letter-s">0</td>
+      </tr>
+      <tr>
+        <td>🔢 Maths</td>
+        <td id="sc-maths-c">0</td><td id="sc-maths-i">0</td><td id="sc-maths-m">0</td>
+        <td id="sc-maths-p">0</td><td id="sc-maths-n">0</td><td id="sc-maths-s">0</td>
+      </tr>
+      <tr class="total-row"><td colspan="6">TOTAL SCORE</td><td id="sc-total">0</td></tr>
     </tbody>
   </table>
   <button class="overlay-btn" id="restart-btn">PLAY AGAIN</button>
@@ -259,7 +273,7 @@ const DEFAULTS = {
 };
 let cfg = { ...DEFAULTS };
 
-const score = { colour:{correct:0,attempts:0}, letter:{correct:0,attempts:0}, maths:{correct:0,attempts:0}, total:0 };
+const score = { colour:{correct:0,incorrect:0,missed:0}, letter:{correct:0,incorrect:0,missed:0}, maths:{correct:0,incorrect:0,missed:0}, total:0 };
 let gameRunning=false, paused=false, timeLeft=0, elapsed=0, timerInterval=null;
 
 function difficulty() { return Math.min(elapsed/(cfg.duration*60),1); }
@@ -304,7 +318,7 @@ function updateDots(dt) {
     if(!d.active) return;
     d.x+=d.speed*dt;
     d.el.style.left=(d.x-10)+'px';
-    if(d.x>AREA_W+20){ d.active=false; d.el.remove(); score.colour.attempts++; }
+    if(d.x>AREA_W+20){ d.active=false; d.el.remove(); score.colour.missed++; }
   });
   dots=dots.filter(d=>d.active);
 }
@@ -326,14 +340,14 @@ function handleColourKey(key) {
       if(dist<bestDist){best=d;bestDist=dist;}
     }
   });
-  score.colour.attempts++;
   if(best){
     score.colour.correct++;
     awardPoints(10,'#00ff88',document.getElementById('colour-area'));
     best.active=false; best.el.remove();
     flashZone(c);
   } else {
-    awardPoints(-3,'#ff4444',document.getElementById('colour-area'));
+    score.colour.incorrect++;
+    awardPoints(-5,'#ff4444',document.getElementById('colour-area'));
   }
 }
 
@@ -405,7 +419,7 @@ function showRecall(){
   pos.forEach(p=>{ recallOpts[p]=p===correct?targetSeq:buildDistractor(targetSeq); });
   ['TL','TR','BL','BR'].forEach(p=>{ document.getElementById('txt-'+p).textContent=recallOpts[p]; });
   letterTimer=setTimeout(()=>{
-    if(letterPhase==='recall'){ score.letter.attempts++; clearRecall(); scheduleNextLetterRound(); }
+    if(letterPhase==='recall'){ score.letter.missed++; clearRecall(); scheduleNextLetterRound(); }
   }, cfg.recallWindow*1000);
 }
 
@@ -414,14 +428,14 @@ function handleLetterKey(key){
   const map={a:'TL',b:'TR',c:'BL',d:'BR'};
   const pos=map[key]; if(!pos) return;
   clearTimeout(letterTimer);
-  score.letter.attempts++;
   const cid='corner-'+pos;
   if(recallOpts[pos]===targetSeq){
     score.letter.correct++;
     awardPoints(20,'#00ff88',document.getElementById(cid));
     document.getElementById(cid).classList.add('corner-correct');
   } else {
-    awardPoints(-5,'#ff4444',document.getElementById(cid));
+    score.letter.incorrect++;
+    awardPoints(-10,'#ff4444',document.getElementById(cid));
     document.getElementById(cid).classList.add('corner-wrong');
   }
   letterPhase='feedback';
@@ -465,8 +479,8 @@ function newMathQuestion(){
   clearTimeout(mathTimer);
   mathTimer=setTimeout(()=>{
     if(mathAnswer!==null){
-      score.maths.attempts++;
-      document.getElementById('maths-feedback').textContent=`✗ was ${mathAnswer}`;
+      score.maths.missed++;
+      document.getElementById('maths-feedback').textContent=`✗ missed — was ${mathAnswer}`;
       mathAnswer=null; setTimeout(newMathQuestion,1200);
     }
   },tl);
@@ -483,12 +497,12 @@ function submitMath(){
   if(mathAnswer===null||mathInput==='') return;
   clearTimeout(mathTimer);
   const guess=parseInt(mathInput,10);
-  score.maths.attempts++;
   if(guess===mathAnswer){
     score.maths.correct++;
     document.getElementById('maths-feedback').textContent='✓ Correct!';
     awardPoints(15,'#00ff88',document.getElementById('maths-box'));
   } else {
+    score.maths.incorrect++;
     document.getElementById('maths-feedback').textContent=`✗ was ${mathAnswer}`;
     awardPoints(-5,'#ff4444',document.getElementById('maths-box'));
   }
@@ -528,7 +542,7 @@ function startGame(){
   ['start-overlay','end-overlay','custom-overlay'].forEach(id=>document.getElementById(id).style.display='none');
   gameRunning=true; paused=false;
   timeLeft=cfg.duration*60; elapsed=0;
-  Object.assign(score,{colour:{correct:0,attempts:0},letter:{correct:0,attempts:0},maths:{correct:0,attempts:0},total:0});
+  Object.assign(score,{colour:{correct:0,incorrect:0,missed:0},letter:{correct:0,incorrect:0,missed:0},maths:{correct:0,incorrect:0,missed:0},total:0});
   document.getElementById('score-live').textContent='Score: 0';
   const tm=cfg.duration+':00';
   document.getElementById('timer-display').textContent=tm;
@@ -554,18 +568,40 @@ function endGame(){
   gameRunning=false;
   clearInterval(timerInterval);
   clearTimeout(dotSpawnTimer); clearTimeout(letterSpawnTimer); clearTimeout(mathTimer); clearTimeout(letterTimer);
-  const cs=Math.round(score.colour.correct*10-(score.colour.attempts-score.colour.correct)*3);
-  const ls=Math.round(score.letter.correct*20-(score.letter.attempts-score.letter.correct)*5);
-  const ms=Math.round(score.maths.correct*15-(score.maths.attempts-score.maths.correct)*5);
+  // Colour: +10 correct, -5 incorrect, 0 missed
+  const c_pos=score.colour.correct*10;
+  const c_neg=score.colour.incorrect*5;
+  const cs=c_pos-c_neg;
+  // Letter: +20 correct, -10 incorrect, 0 missed
+  const l_pos=score.letter.correct*20;
+  const l_neg=score.letter.incorrect*10;
+  const ls=l_pos-l_neg;
+  // Maths: +15 correct, -5 incorrect, 0 missed
+  const m_pos=score.maths.correct*15;
+  const m_neg=score.maths.incorrect*5;
+  const ms=m_pos-m_neg;
+
   document.getElementById('sc-colour-c').textContent=score.colour.correct;
-  document.getElementById('sc-colour-a').textContent=score.colour.attempts;
+  document.getElementById('sc-colour-i').textContent=score.colour.incorrect;
+  document.getElementById('sc-colour-m').textContent=score.colour.missed;
+  document.getElementById('sc-colour-p').textContent='+'+c_pos;
+  document.getElementById('sc-colour-n').textContent='-'+c_neg;
   document.getElementById('sc-colour-s').textContent=cs;
+
   document.getElementById('sc-letter-c').textContent=score.letter.correct;
-  document.getElementById('sc-letter-a').textContent=score.letter.attempts;
+  document.getElementById('sc-letter-i').textContent=score.letter.incorrect;
+  document.getElementById('sc-letter-m').textContent=score.letter.missed;
+  document.getElementById('sc-letter-p').textContent='+'+l_pos;
+  document.getElementById('sc-letter-n').textContent='-'+l_neg;
   document.getElementById('sc-letter-s').textContent=ls;
+
   document.getElementById('sc-maths-c').textContent=score.maths.correct;
-  document.getElementById('sc-maths-a').textContent=score.maths.attempts;
+  document.getElementById('sc-maths-i').textContent=score.maths.incorrect;
+  document.getElementById('sc-maths-m').textContent=score.maths.missed;
+  document.getElementById('sc-maths-p').textContent='+'+m_pos;
+  document.getElementById('sc-maths-n').textContent='-'+m_neg;
   document.getElementById('sc-maths-s').textContent=ms;
+
   document.getElementById('sc-total').textContent=Math.max(0,cs+ls+ms);
   document.getElementById('end-overlay').style.display='flex';
 }
